@@ -2,6 +2,10 @@
 
 ## 2026-11-15 — RG280VへGCW Zero系エミュレータを導入
 
+- ReGBA 1.9.2の `Hardware` はSDLの拡大設定をラッパーからアスペクト比維持・最近傍へ指定し、比率と鮮明さが改善した。一方、`None` は銀色の枠と黒い枠が交互に出た。DRM画面を連続取得すると、公式ReGBAは枠を最初の3フレームにしか描かず、SDL/KMSDRMの3枚バッファのうち1枚に枠がないことを確認した。枠画像を一時的に外す試験は点滅を止めたが、ユーザーから枠を戻すよう指摘された。
+- 公式ソースを現行BuildrootとOpenDingux 2022のツールチェーンで再ビルドしたが、前者はゲーム起動時にSIGSEGV、後者は浮動小数点ABIの相違で `ELIBBAD` となった。後者をsoft floatとして実行可能にしてもSIGSEGVだったため、再ビルド版は採用しない。公式1.9.2 OPKと銀色の枠を維持し、ReGBAだけSDLの3枚バッファを2枚へ変える `LD_PRELOAD` 互換ライブラリを作成した。RG280V実機で起動し、DRM取得した連続6枚の枠領域のハッシュが一致した。ユーザーも物理画面で枠が表示され、点滅しないことを確認した。OPK・ライブラリ・ラッパーはADB転送後のSHA-256を照合した。不要になった試験用ツールチェーンのアーカイブとDockerボリューム、失敗した試験OPKを削除した。
+- ReGBA 2019版を実機で試したところ、ユーザーから緑の線とメニューを開けない問題が報告された。DRMの表示中フレームを取得する診断プログラムを一時的に作成。従来のfbdev取得はFEの古い画面しか読めなかった。ReGBA 1.9.2のDRMフレームは `XBGR1555` で、最初のPNG変換では誤ってRGB565として読んでいたため、取得画像に偽の緑色が出た。正しい15bit変換でGoodboy Galaxyの画面を確認した。
+- [ReGBA 1.9.2](https://github.com/jdgleaver/ReGBA/releases/tag/1.9.2)のRG350用OPKを一時試験。Castlevaniaでユーザーが表示改善とSTART＋SELECTのメニュー表示を確認。Goodboy Galaxyも同梱BIOSで起動し、ユーザーが綺麗な表示を確認した。同梱BIOSは[ソース公開済みのGPL代替実装](https://github.com/jdgleaver/ReGBA/tree/1.9.2/bios)で、OPK内とソース内のバイナリハッシュが一致した。MIT代替BIOSを入れた1.9.2版はGoodboyが起動画面から進まなかったため採用しない。取得・展開・新規イメージ用の指定を1.9.2へ切り替え、旧版の再パック処理を外した。
 - 追試で旧OPKのSDL 1.2 KMSDRMが `ID_INPUT_KEY` を持たないGPIOキーを列挙せず、ROMを起動しても入力FDがないことを発見。udevルールで `gpio-keys` に識別を付け、ReGBAが `/dev/input/event2` を開くことを `/proc` で確認した。新規イメージ用rootfsにルールを追加し、既存SDでもOPK起動前にルールを適用するラッパーを追加。ADB展開スクリプトで一式を再配置し、転送ハッシュと入力識別を確認した。再起動後の適用と物理キーの反応は確認待ち。
 - V90S版の `plumos_text_ui.c` を取り込み、FEがROMを選んだ後に起動計画を作り、エミュレータ終了後にFEを描画し直す経路を追加した。NESのFCEUXで、FE→ROM→FCEUX→FEの遷移をADBのスクリプト操作とプロセスログで確認した。
 - [RG350_APPREPOSITORY](https://github.com/RafaVico/RG350_APPREPOSITORY/) のコミット `2ed8306` にあるOPKをSHA-256固定で取得した。NESはFCEUX、GB/GBCはGambatte-DMS、SFCはPocketSNES、Mega DriveはGenesis Plus GX。GBAはReGBAを試した。

@@ -57,11 +57,9 @@ cp /workspace/assets/frontend/default.otf /workspace/assets/frontend/cjk-fallbac
 cp /workspace/assets/frontend/licenses/* "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/libpng14-build/libpng-1.4.22/LICENSE \
     "$data_root/plumos/licenses/libpng14-LICENSE"
-cp /workspace/output/rg280v-emulators/MIT-GBA-BIOS-LICENSE \
-    "$data_root/plumos/licenses/MIT-GBA-BIOS-LICENSE"
 cp /workspace/output/rg280v-emulators/lib/* "$data_root/plumos/lib/"
 for name in FCEUX_2019-11-15.opk gambatte-dms-multi-r572u4-20211021.opk \
-    PocketSNES_2019-12-12.opk ReGBA_2019-12-26-open-bios.opk GenesisPlusGX_2019-12-23.opk; do
+    PocketSNES_2019-12-12.opk ReGBA_1.9.2_rg280v.opk GenesisPlusGX_2019-12-23.opk; do
     cp "/workspace/output/rg280v-emulators/$name" "$data_root/plumos/emulators/$name"
 done
 cp /workspace/assets/frontend/theme.json "$data_root/plumos/themes/default/"
@@ -71,6 +69,7 @@ cp /workspace/assets/frontend/systems.json /workspace/assets/frontend/menus.json
     /workspace/assets/frontend/apps.json /workspace/assets/frontend/settings.json \
     "$data_root/plumos/config/frontend/"
 cp /workspace/assets/frontend/system-settings.json "$data_root/plumos/config/system/settings.json"
+cp /workspace/assets/frontend/regba-global-config.cfg "$data_root/plumos/config/"
 cp /workspace/assets/frontend/VERSION "$data_root/plumos/VERSION"
 chmod 0755 "$data_root/local/bin/rg280v-fbshow" "$data_root/local/init.d/S90status" \
     "$data_root/local/init.d/S95frontend" "$data_root/plumos/bin/"*
@@ -87,7 +86,8 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /plumos/emulators/FCEUX_2019-11-15.opk \
             /plumos/emulators/gambatte-dms-multi-r572u4-20211021.opk \
             /plumos/emulators/PocketSNES_2019-12-12.opk \
-            /plumos/emulators/ReGBA_2019-12-26-open-bios.opk \
+            /plumos/emulators/ReGBA_1.9.2_rg280v.opk \
+            /plumos/lib/libregba-doublebuf.so \
             /plumos/emulators/GenesisPlusGX_2019-12-23.opk \
             /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
             /plumos/provision/seed-v1; do

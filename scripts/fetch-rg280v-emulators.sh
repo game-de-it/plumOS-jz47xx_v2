@@ -23,8 +23,8 @@ fetch_checked() {
 fetch_checked FCEUX_2019-11-15.opk bf5d600a9dc194cacdb30a87719e4b09eb88cc72abaadf2bb2583e400c76c027
 fetch_checked gambatte-dms-multi-r572u4-20211021.opk 320495b9b14ff238afeb6feeebd11f990e3cd807fc65d673380b281b486f538d
 fetch_checked PocketSNES_2019-12-12.opk 1987de5708af7074abee335a36ee1b4cb4fb0c79d5a46b521f51e7c9720ff1ae
-fetch_checked ReGBA_2019-12-26.opk c2a48ed46d1ec37e9dd9baed2c18c62c04005fbd83a10e2ba6390845420dd52d
+fetch_checked ReGBA_1.9.2_rg350.opk 1e7e0a3c67aae88c0d10752572156db7d1501b4c5eb6999a882be6ae2bf23e93 \
+    https://github.com/jdgleaver/ReGBA/releases/download/1.9.2/regba_rg350.opk
+fetch_checked ReGBA_1.9.2-GPL-2.0.txt ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6 \
+    https://raw.githubusercontent.com/jdgleaver/ReGBA/4396f9eca3320b7e2955e2815cfe6332542b91be/doc/gpl-2.0_en.txt
 fetch_checked GenesisPlusGX_2019-12-23.opk 38919450a9a379642549ce99ac6805d6d84e17e84ba338a426f731bc655d5e65
-gba_bios_source=https://raw.githubusercontent.com/Cult-of-GBA/BIOS/a30e9a96df083628b650724b7d4d7112b4070b98
-fetch_checked mit-gba-bios.bin 61af6e8c2db6cf24aa6924e8133f6a50833158fca33ff08ea5e11e1a06e132f2 "$gba_bios_source/bios.bin"
-fetch_checked MIT-GBA-BIOS-LICENSE 761675b95595be4c2e452876a9c414479da22089f7ccf5a6613ca40a1c80675d "$gba_bios_source/LICENSE"

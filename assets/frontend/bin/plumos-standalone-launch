@@ -11,7 +11,17 @@ case "$1" in
     fceux) opk="$root/emulators/FCEUX_2019-11-15.opk" ;;
     gambatte) opk="$root/emulators/gambatte-dms-multi-r572u4-20211021.opk" ;;
     pocketsnes) opk="$root/emulators/PocketSNES_2019-12-12.opk" ;;
-    regba) opk="$root/emulators/ReGBA_2019-12-26-open-bios.opk" ;;
+    regba)
+        opk="$root/emulators/ReGBA_1.9.2_rg280v.opk"
+        export LD_PRELOAD="$root/lib/libregba-doublebuf.so${LD_PRELOAD:+:$LD_PRELOAD}"
+        export SDL_VIDEO_KMSDRM_SCALING_MODE=1
+        export SDL_VIDEO_KMSDRM_SCALING_SHARPNESS=0
+        config="$root/home/.gpsp/global_config.cfg"
+        if [ ! -e "$config" ]; then
+            mkdir -p "$(dirname "$config")"
+            cp "$root/config/regba-global-config.cfg" "$config"
+        fi
+        ;;
     genesisplusgx) opk="$root/emulators/GenesisPlusGX_2019-12-23.opk" ;;
     *) echo "unsupported emulator: $1" >&2; exit 2 ;;
 esac

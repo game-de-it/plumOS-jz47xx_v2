@@ -27,18 +27,20 @@ FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standa
 | NES | FCEUX | ROMを読み込み、FEから起動してFEへ復帰 |
 | GB/GBC | Gambatte-DMS | GBC ROM読み込みと映像・音声デバイスを確認。GBは起動計画を確認 |
 | SFC | PocketSNES | ROM指定で起動し、映像・音声デバイスを確認 |
-| GBA | ReGBA + MIT代替BIOS | ROM指定で起動し、映像・音声デバイスを確認 |
+| GBA | ReGBA 1.9.2 + 同梱GPL代替BIOS | Goodboy Galaxyを表示し、START＋SELECTでメニューを開くことを実機確認 |
 | Mega Drive | Genesis Plus GX | ROM指定で起動し、映像・音声デバイスを確認 |
 
-上記のROM指定・映像音声デバイスの確認時点では、旧OPKがGPIOキーの入力デバイスを開いていなかった。その後udevルールを適用し、ReGBAが `/dev/input/event2` を開くことを確認した。実画面、キー操作、音声の物理確認は残る。旧PicoDrive OPKは `ELIBBAD` で起動できなかったため採用しない。その他の機種は既存の起動設定が残るが、エミュレータ未導入のため起動成功を確認していない。
+上記のROM指定・映像音声デバイスの確認時点では、旧OPKがGPIOキーの入力デバイスを開いていなかった。その後udevルールを適用し、ReGBAが `/dev/input/event2` を開くことを確認した。旧ReGBA 2019版では画面に緑の線が出て、メニューも開かなかった。ReGBA 1.9.2ではユーザーがGoodboy Galaxyの綺麗な表示とSTART＋SELECTで開くメニューを確認した。同梱BIOSのSHA-256 `661a9afb93624f2c5e77d07dab137bd8d23cff79e8639c62fe621b49bb064749` は[公開ソース](https://github.com/jdgleaver/ReGBA/tree/1.9.2/bios)内のバイナリと一致し、READMEにNormmatt提供のVBA-Mベースのオープンソース代替BIOSと記載されている。純正BIOSは含めない。音声とゲーム操作の物理確認は残る。旧PicoDrive OPKは `ELIBBAD` で起動できなかったため採用しない。その他の機種は既存の起動設定が残るが、エミュレータ未導入のため起動成功を確認していない。
 
 ## 開発時の更新
 
 `scripts/build-rg280v-fe.sh` でクロスビルド、`ADB_SERVER_PORT=5039 scripts/deploy-rg280v-fe.sh` で実機へ更新する。既存の設定JSONは既定で保存し、開発版の既定値で置換する時だけ `PLUMOS_FE_UPDATE_CONFIG=1` を付ける。自動起動サービスを入れる時は `PLUMOS_FE_INSTALL_SERVICE=1` を付ける。SDイメージの再生成は不要。
 
-エミュレータ一式は `ADB_SERVER_PORT=5039 scripts/deploy-rg280v-emulators.sh` でSD1 p2へ展開する。OPK、補助ライブラリ、GPIO入力ルールをSHA-256で照合し、FE設定の6機種分の起動プロファイルだけ更新する。既存設定は `.pre-emulators` に退避する。取得元と補助ライブラリの再現手順は `scripts/fetch-rg280v-emulators.sh`、`scripts/build-rg280v-emulator-libs.sh`、`scripts/repack-rg280v-regba.sh` に固定した。
+エミュレータ一式は `ADB_SERVER_PORT=5039 scripts/deploy-rg280v-emulators.sh` でSD1 p2へ展開する。OPK、補助ライブラリ、GPIO入力ルールをSHA-256で照合し、FE設定の6機種分の起動プロファイルだけ更新する。既存設定は `.pre-emulators` に退避する。取得元と補助ライブラリの再現手順は `scripts/fetch-rg280v-emulators.sh`、`scripts/build-rg280v-emulator-libs.sh` に固定した。ReGBA 1.9.2は[公開リリース](https://github.com/jdgleaver/ReGBA/releases/tag/1.9.2)から取得し、同じタグの[ソース](https://github.com/jdgleaver/ReGBA/tree/1.9.2)を記録する。
 
-`scripts/capture-rg280v-fe.sh` はfbdevを読み、実機相当の320×240 PNGへ変換する。開発用の出力は `output/` 以下に置き、Gitには含めない。
+`scripts/capture-rg280v-fe.sh` はFEのfbdevを読み、実機相当の320×240 PNGへ変換する。エミュレータがDRMを使っている場合は `ADB_SERVER_PORT=5039 scripts/capture-rg280v-drm.sh output/rg280v-fe/drm-screenshot.png` で表示中のDRMプレーンを取得する。ReGBAの15bit `XB15` とFEの32bit `XR24` を判別してPNGに変換し、元データとDRM情報もPNGの隣に残す。開発用の出力は `output/` 以下に置き、Gitには含めない。
+
+ReGBAの `Image scaling = Aspect, fast` はソフトウェアで隣接画素を平均するため、輪郭が柔らかくなる。`Hardware filter` はハードウェア拡大モード向けの項目で、この設定には作用しない。RG280Vの現行カーネルにはReGBAが書き込む旧OpenDinguxの `jz-lcd.0/sharpness_upscaling` が無い。起動ラッパーはSDLのアスペクト比維持と最近傍補間を指定する。`None` の銀色の枠はReGBAが起動直後にだけ描くため、SDLの3枚バッファでは未描画のバッファと交互に表示される。ReGBA専用の `libregba-doublebuf.so` が `SDL_SetVideoMode` のフラグを2枚バッファへ変更する。公式ReGBA本体と枠画像は維持し、DRM取得した連続6フレームで枠が消えないことと、物理画面でも枠が表示され点滅しないことを確認した。
 
 最終的なSDイメージには `scripts/make-rg280v-image.sh` がFEとエミュレータ一式をSD1 p2へ同梱する。初回セットアップ完了後、同じ起動サービスでFEを起動する。エミュレータ追加後のイメージ生成と起動はまだ実機で未確認。
 
