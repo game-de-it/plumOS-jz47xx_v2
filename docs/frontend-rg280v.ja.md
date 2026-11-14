@@ -27,7 +27,7 @@ FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standa
 | 機種 | OPK | 確認状況 |
 | --- | --- | --- |
 | NES | FCEUX 2.6.6 | マリオで映像・入力・高品質設定での正常なBGM、SELECT＋STARTのメニュー、FEへの復帰を実機確認 |
-| GB/GBC | Gambatte-DMS | GB映像とSELECT＋STARTのメニューを実機確認。線形リサンプラーでSuper Mario LandのBGMが正常。メニューからゲームへ復帰を確認。FEへの終了経路を再試験中 |
+| GB/GBC | Gambatte-DMS | GB映像、Super Mario LandのBGM、SELECT＋STARTのメニュー、設定後のゲーム復帰とFEへの終了を実機確認 |
 | SFC | PocketSNES | ROM指定で起動し、映像・音声デバイスを確認 |
 | GBA | ReGBA 1.9.2 + 同梱GPL代替BIOS | Goodboy Galaxyを表示し、START＋SELECTでメニューを開くことを実機確認 |
 | Mega Drive | Genesis Plus GX | ROM指定で起動し、映像・音声デバイスを確認 |
