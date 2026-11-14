@@ -14,6 +14,7 @@ grep -a -q 'ylm,rg280v' "$images/rg280v.dtb"
 [[ -x "$build/target/etc/init.d/rcS" ]]
 [[ -x "$build/target/usr/sbin/plumos-usb-ecm" ]]
 [[ -x "$build/target/usr/sbin/plumos-first-boot" ]]
+[[ -d "$build/target/media/user" ]]
 [[ -x "$build/target/sbin/mkfs.fat" ]]
 [[ ! -e "$build/target/etc/init.d/S94plumos-dev-usb" ]]
 [[ ! -e "$build/target/usr/sbin/frontend_start" ]]

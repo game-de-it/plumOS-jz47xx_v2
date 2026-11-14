@@ -7,3 +7,6 @@ target=$1
 # are superseded by plumOS rcS, including on incremental builds.
 find "$target/etc/init.d" -maxdepth 1 -type f -name 'S[0-9]*' -delete
 rm -f "$target/usr/sbin/frontend_start"
+
+# The root is SquashFS at runtime, so rcS cannot create this mountpoint later.
+mkdir -p "$target/media/user"

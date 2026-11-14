@@ -36,6 +36,7 @@ case "$boot:$runtime" in
 esac
 disk=${boot%p1}
 [ "$runtime" = "${disk}p2" ] || fail 'boot and runtime are on different cards'
+[ -d /media/user ] || fail 'user mountpoint missing'
 p3=${disk}p3
 name=${disk#/dev/}
 
@@ -87,7 +88,7 @@ if [ -z "$fs" ] && [ -f "$state/create-intent" ]; then
     label=$(blkid -s LABEL -o value "$p3" 2>/dev/null || true)
 fi
 [ "$fs" = vfat ] && [ "$label" = PLUMOS ] || fail "unexpected p3 filesystem $fs $label"
-grep -q " $p3 /media/user " /proc/mounts 2>/dev/null ||
+awk -v device="$p3" '$1 == device && $2 == "/media/user" { found = 1 } END { exit !found }' /proc/mounts ||
     mount -t vfat -o rw,nosuid,nodev,utf8,umask=022 "$p3" /media/user || fail 'p3 mount failed'
 touch /media/user/.plumos-provisioning
 for dir in roms bios apps updates Images Screenshots Music; do
