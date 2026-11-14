@@ -10,6 +10,7 @@ local_emulators="$repo_root/output/rg280v-emulators"
 
 "$repo_root/scripts/fetch-rg280v-emulators.sh"
 "$repo_root/scripts/repack-rg280v-regba.sh"
+"$repo_root/scripts/repack-rg280v-gambatte.sh"
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 if [[ ! -f "$local_emulators/lib/libvorbisfile.so.3" ]]; then
@@ -38,7 +39,7 @@ copy_checked "$repo_root/assets/frontend/bin/plumos-standalone-launch" "$remote/
 copy_checked "$repo_root/assets/frontend/regba-global-config.cfg" "$remote/config/regba-global-config.cfg" 0644
 copy_checked "$repo_root/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules" \
     "$remote/config/70-plumos-gpio-keys.rules" 0644
-for name in fceux_gcw0-2.6.6-2023-08-30.opk gambatte-dms-multi-r572u4-20211021.opk \
+for name in fceux_gcw0-2.6.6-2023-08-30.opk gambatte-dms-rg280v.opk \
     PocketSNES_2019-12-12.opk ReGBA_1.9.2_rg280v.opk GenesisPlusGX_2019-12-23.opk; do
     copy_checked "$local_emulators/$name" "$remote/emulators/$name" 0644
 done

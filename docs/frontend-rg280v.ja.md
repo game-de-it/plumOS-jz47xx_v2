@@ -27,7 +27,7 @@ FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standa
 | 機種 | OPK | 確認状況 |
 | --- | --- | --- |
 | NES | FCEUX 2.6.6 | マリオで映像・入力・高品質設定での正常なBGM、SELECT＋STARTのメニュー、FEへの復帰を実機確認 |
-| GB/GBC | Gambatte-DMS | GB映像とSELECT＋STARTのメニューを実機確認。ゲームBGMは無音で調査中。メニュー効果音は正常 |
+| GB/GBC | Gambatte-DMS | GB映像とSELECT＋STARTのメニューを実機確認。線形リサンプラーでSuper Mario LandのBGMが正常。メニューからゲームへ復帰を確認。FEへの終了経路を再試験中 |
 | SFC | PocketSNES | ROM指定で起動し、映像・音声デバイスを確認 |
 | GBA | ReGBA 1.9.2 + 同梱GPL代替BIOS | Goodboy Galaxyを表示し、START＋SELECTでメニューを開くことを実機確認 |
 | Mega Drive | Genesis Plus GX | ROM指定で起動し、映像・音声デバイスを確認 |
@@ -36,7 +36,7 @@ FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standa
 
 NESは[公開FCEUX 2.6.6](https://github.com/plrguez/fceux-for-retrogame/releases/tag/2023-08-30)を採用した。旧版・新版とも低品質音声設定 `SDL.Sound.Quality = 0` では音が小さく不自然だった。新版の `1` では実機で正常なBGMを確認したため、起動前にグローバル設定と対象ROMの設定を `1` にする。物理電源ボタンはplumOS用に残し、FCEUX専用のSDL互換ライブラリでSELECT＋STARTをエミュレータのメニューキーに変換する。FE起動時に下地のfbdevを黒で埋め、エミュレータ終了時に古いADB READY画像が露出しないことを実機で確認した。
 
-Gambatte-DMSにも専用のSDL入力ライブラリを適用し、SELECT＋STARTでメニューを開く。実機で操作を確認した。ゲーム中のBGMは無音だが、メニュー効果音は聞こえる。診断時のゲームPCM最大振幅は4で、メニューPCMは3713だった。音声デバイスのオープンは成功しており、ゲーム音のリサンプリング方式を比較中。計測用ライブラリは配布物に含めない。
+Gambatte-DMSにも専用のSDL入力ライブラリを適用し、SELECT＋STARTでメニューを開く。実機で操作を確認した。標準の高品質リサンプラーではゲームPCMの最大振幅が4で、メニューPCMは3713だった。線形リサンプラーではゲームPCMの最大振幅が30720となり、Super Mario LandのBGMが正常に聞こえることをユーザーが確認した。元OPKの起動定義に `--resampler 0` を指定した再パックを使用する。計測用ライブラリは配布物に含めない。比較版のアスペクト比設定中に終了したのは計測ライブラリが音声コールバックを書き換える欠陥による可能性が高く、計測を外した正式版のメニュー復帰を再試験する。
 
 ## 開発時の更新
 
