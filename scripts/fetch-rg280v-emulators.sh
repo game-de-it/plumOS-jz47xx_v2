@@ -20,7 +20,8 @@ fetch_checked() {
     echo "verified $name"
 }
 
-fetch_checked FCEUX_2019-11-15.opk bf5d600a9dc194cacdb30a87719e4b09eb88cc72abaadf2bb2583e400c76c027
+fetch_checked fceux_gcw0-2.6.6-2023-08-30.opk f6786d0de50c590fea1d3066885dd0395065e860793e299d36d6311b1a803f39 \
+    https://github.com/plrguez/fceux-for-retrogame/releases/download/2023-08-30/fceux_gcw0-2.6.6-2023-08-30.opk
 fetch_checked gambatte-dms-multi-r572u4-20211021.opk 320495b9b14ff238afeb6feeebd11f990e3cd807fc65d673380b281b486f538d
 fetch_checked PocketSNES_2019-12-12.opk 1987de5708af7074abee335a36ee1b4cb4fb0c79d5a46b521f51e7c9720ff1ae
 fetch_checked ReGBA_1.9.2_rg350.opk 1e7e0a3c67aae88c0d10752572156db7d1501b4c5eb6999a882be6ae2bf23e93 \

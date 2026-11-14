@@ -18,19 +18,23 @@ STARTはUI設定、システム設定、ヘルプ、再起動、電源断。UI�
 
 ROM一覧はSD2の実データを検出する。ギャラリーは標準表示でXボタンから一覧表示へ切り替えられる。現在のSD2にROMサムネイルはないため、ギャラリーでは代替文字を表示する。GCW Zeroアプリは個別に互換性を検証する。
 
+RG280Vの物理A/B/X/YはLinuxキーコード29/56/57/42で、FEでは順に決定/戻る/表示切替/お気に入りへ割り当てる。SD2のFAT32はUTF-8オプションでマウントし、日本語ファイル名を一覧へ取り込む。FEの主フォントとCJK代替フォントはSD1 p2の `/media/data/plumos/fonts` から読み込む。
+
 ## エミュレータ
 
 FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standalone-launch` からOPKを実行する。エミュレータのHOMEはSD1 p2の `/media/data/plumos/home` とし、設定やセーブが読み取り専用rootfsへ向かないようにする。旧OPKのSDL 1.2 KMSDRMがGPIOキーを認識できるよう、`ID_INPUT_KEY=1` のudevルールをrootfsに入れる。既存の試験用SDでは起動ラッパーがSD1 p2のルールを `/run/udev/rules.d` に読み込み、必要な場合だけイベント情報を更新する。
 
 | 機種 | OPK | 確認状況 |
 | --- | --- | --- |
-| NES | FCEUX | ROMを読み込み、FEから起動してFEへ復帰 |
+| NES | FCEUX 2.6.6 | マリオで映像・入力・高品質設定での正常なBGM、SELECT＋STARTのメニュー、FEへの復帰を実機確認 |
 | GB/GBC | Gambatte-DMS | GBC ROM読み込みと映像・音声デバイスを確認。GBは起動計画を確認 |
 | SFC | PocketSNES | ROM指定で起動し、映像・音声デバイスを確認 |
 | GBA | ReGBA 1.9.2 + 同梱GPL代替BIOS | Goodboy Galaxyを表示し、START＋SELECTでメニューを開くことを実機確認 |
 | Mega Drive | Genesis Plus GX | ROM指定で起動し、映像・音声デバイスを確認 |
 
 上記のROM指定・映像音声デバイスの確認時点では、旧OPKがGPIOキーの入力デバイスを開いていなかった。その後udevルールを適用し、ReGBAが `/dev/input/event2` を開くことを確認した。旧ReGBA 2019版では画面に緑の線が出て、メニューも開かなかった。ReGBA 1.9.2ではユーザーがGoodboy Galaxyの綺麗な表示とSTART＋SELECTで開くメニューを確認した。同梱BIOSのSHA-256 `661a9afb93624f2c5e77d07dab137bd8d23cff79e8639c62fe621b49bb064749` は[公開ソース](https://github.com/jdgleaver/ReGBA/tree/1.9.2/bios)内のバイナリと一致し、READMEにNormmatt提供のVBA-Mベースのオープンソース代替BIOSと記載されている。純正BIOSは含めない。音声とゲーム操作の物理確認は残る。旧PicoDrive OPKは `ELIBBAD` で起動できなかったため採用しない。その他の機種は既存の起動設定が残るが、エミュレータ未導入のため起動成功を確認していない。
+
+NESは[公開FCEUX 2.6.6](https://github.com/plrguez/fceux-for-retrogame/releases/tag/2023-08-30)を採用した。旧版・新版とも低品質音声設定 `SDL.Sound.Quality = 0` では音が小さく不自然だった。新版の `1` では実機で正常なBGMを確認したため、起動前にグローバル設定と対象ROMの設定を `1` にする。物理電源ボタンはplumOS用に残し、FCEUX専用のSDL互換ライブラリでSELECT＋STARTをエミュレータのメニューキーに変換する。FE起動時に下地のfbdevを黒で埋め、エミュレータ終了時に古いADB READY画像が露出しないことを実機で確認した。
 
 ## 開発時の更新
 

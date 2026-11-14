@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu
+
+[ "$#" -eq 1 ] || exit 2
+root=${PLUMOS_ROOT:-/media/data/plumos}
+config_dir="$root/home/.fceux"
+mkdir -p "$config_dir"
+
+set_quality() {
+    file=$1
+    if [ ! -f "$file" ]; then
+        printf 'SDL.Sound.Quality = 1\n' >"$file"
+        return
+    fi
+    temp="$file.plumos-$$"
+    awk '
+        /^SDL\.Sound\.Quality = / {
+            print "SDL.Sound.Quality = 1"
+            found = 1
+            next
+        }
+        { print }
+        END { if (!found) print "SDL.Sound.Quality = 1" }
+    ' "$file" >"$temp"
+    mv "$temp" "$file"
+}
+
+set_quality "$config_dir/fceux.cfg"
+name=${1##*/}
+name=${name%.*}
+game_config="$config_dir/cfg/$name.cfg"
+if [ -f "$game_config" ]; then
+    set_quality "$game_config"
+fi

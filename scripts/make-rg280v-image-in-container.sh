@@ -58,7 +58,7 @@ cp /workspace/assets/frontend/licenses/* "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/libpng14-build/libpng-1.4.22/LICENSE \
     "$data_root/plumos/licenses/libpng14-LICENSE"
 cp /workspace/output/rg280v-emulators/lib/* "$data_root/plumos/lib/"
-for name in FCEUX_2019-11-15.opk gambatte-dms-multi-r572u4-20211021.opk \
+for name in fceux_gcw0-2.6.6-2023-08-30.opk gambatte-dms-multi-r572u4-20211021.opk \
     PocketSNES_2019-12-12.opk ReGBA_1.9.2_rg280v.opk GenesisPlusGX_2019-12-23.opk; do
     cp "/workspace/output/rg280v-emulators/$name" "$data_root/plumos/emulators/$name"
 done
@@ -82,12 +82,14 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \
             /plumos/bin/plumos-text-ui /plumos/bin/plumos-standalone-launch \
             /plumos/bin/plumos-prepare-opk-input \
+            /plumos/bin/plumos-fceux-prepare \
             /plumos/config/70-plumos-gpio-keys.rules \
-            /plumos/emulators/FCEUX_2019-11-15.opk \
+            /plumos/emulators/fceux_gcw0-2.6.6-2023-08-30.opk \
             /plumos/emulators/gambatte-dms-multi-r572u4-20211021.opk \
             /plumos/emulators/PocketSNES_2019-12-12.opk \
             /plumos/emulators/ReGBA_1.9.2_rg280v.opk \
             /plumos/lib/libregba-doublebuf.so \
+            /plumos/lib/libfceux-menu.so \
             /plumos/emulators/GenesisPlusGX_2019-12-23.opk \
             /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
             /plumos/provision/seed-v1; do

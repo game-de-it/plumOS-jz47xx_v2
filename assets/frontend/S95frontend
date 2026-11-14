@@ -8,7 +8,18 @@ case "${1:-}" in
             exit 0
         fi
         mkdir -p "$root/Logs" "$root/state/frontend"
-        if [ ! -s "$root/state/frontend/library-index.json" ]; then
+        sd2_fixed=0
+        if grep ' /media/data/sd2 vfat ' /proc/mounts | grep -q 'iocharset=iso8859-1'; then
+            if umount /media/data/sd2; then
+                if mount -t vfat -o ro,nosuid,nodev,utf8,umask=022 \
+                    /dev/mmcblk1p1 /media/data/sd2; then
+                    sd2_fixed=1
+                else
+                    mount -t vfat -o ro,nosuid,nodev /dev/mmcblk1p1 /media/data/sd2
+                fi
+            fi
+        fi
+        if [ "$sd2_fixed" = 1 ] || [ ! -s "$root/state/frontend/library-index.json" ]; then
             if [ -d /media/data/sd2/roms ]; then
                 sdcard=/media/data/sd2
             else
@@ -16,6 +27,11 @@ case "${1:-}" in
             fi
             PLUMOS_ROOT="$root" PLUMOS_SDCARD_ROOT="$sdcard" \
                 "$root/bin/plumos-library-scan" >>"$root/Logs/frontend.log" 2>&1
+        fi
+        # The DRM frontend can expose the old fbdev status image when an OPK
+        # releases the display. Keep that backing framebuffer black.
+        if [ -c /dev/fb0 ]; then
+            dd if=/dev/zero of=/dev/fb0 bs=4096 count=150 2>/dev/null || true
         fi
         nohup "$root/bin/plumos-fe-launch" </dev/null >>"$root/Logs/frontend.log" 2>&1 &
         echo "$!" >"$pidfile"

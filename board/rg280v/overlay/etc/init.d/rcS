@@ -87,11 +87,17 @@ fi
 if [ -n "$data_device" ] && [ -b /dev/mmcblk1p1 ]; then
     sd2_fs=$(blkid -s TYPE -o value /dev/mmcblk1p1 2>/dev/null)
     case "$sd2_fs" in
-        vfat|ext4)
+        vfat)
             mkdir -p /media/data/sd2
-            mount -t "$sd2_fs" -o ro,nosuid,nodev \
+            mount -t vfat -o ro,nosuid,nodev,utf8,umask=022 \
                 /dev/mmcblk1p1 /media/data/sd2 2>/dev/null && \
-                log "SD2_MOUNTED $sd2_fs" || log SD2_MOUNT_FAILED
+                log "SD2_MOUNTED vfat:utf8" || log SD2_MOUNT_FAILED
+            ;;
+        ext4)
+            mkdir -p /media/data/sd2
+            mount -t ext4 -o ro,nosuid,nodev \
+                /dev/mmcblk1p1 /media/data/sd2 2>/dev/null && \
+                log "SD2_MOUNTED ext4" || log SD2_MOUNT_FAILED
             ;;
         *) log "SD2_UNSUPPORTED ${sd2_fs:-unknown}" ;;
     esac

@@ -4990,6 +4990,10 @@ static int choose_mali_font_path(struct ui_state *ui, const char *requested,
     return 1;
   }
   out[0] = '\0';
+  if (ui && join_path(out, out_size, ui->plumos_root, "fonts/default.otf") &&
+      file_exists(out)) {
+    return 1;
+  }
   for (i = 0; i < sizeof(rel_candidates) / sizeof(rel_candidates[0]); i++) {
     char candidate[PATH_MAX];
     if (join_path(candidate, sizeof(candidate), ui->sdcard_root, rel_candidates[i]) &&
@@ -5020,6 +5024,10 @@ static int choose_mali_fallback_font_path(struct ui_state *ui, const char *prima
   out[0] = '\0';
   if (!ui) {
     return 0;
+  }
+  if (join_path(out, out_size, ui->plumos_root, "fonts/cjk-fallback.ttc") &&
+      file_exists(out) && (!primary || strcmp(out, primary) != 0)) {
+    return 1;
   }
   for (i = 0; i < sizeof(rel_candidates) / sizeof(rel_candidates[0]); i++) {
     char candidate[PATH_MAX];
@@ -14294,6 +14302,20 @@ static void handle_action(struct ui_state *ui, enum ui_action action) {
 }
 
 static enum ui_action action_from_key_code(unsigned int code) {
+  if (runtime_device_is_rg280v()) {
+    switch (code) {
+    case KEY_LEFTCTRL:
+      return ACTION_A;
+    case KEY_LEFTALT:
+      return ACTION_B;
+    case KEY_SPACE:
+      return ACTION_X;
+    case KEY_LEFTSHIFT:
+      return ACTION_Y;
+    default:
+      break;
+    }
+  }
   switch (code) {
   case KEY_UP:
   case BTN_DPAD_UP:

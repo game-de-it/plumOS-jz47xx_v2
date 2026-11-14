@@ -10,6 +10,7 @@ local_emulators="$repo_root/output/rg280v-emulators"
 
 "$repo_root/scripts/fetch-rg280v-emulators.sh"
 "$repo_root/scripts/repack-rg280v-regba.sh"
+"$repo_root/scripts/build-rg280v-fceux-menu.sh"
 if [[ ! -f "$local_emulators/lib/libvorbisfile.so.3" ]]; then
     "$repo_root/scripts/build-rg280v-emulator-libs.sh"
 fi
@@ -31,11 +32,12 @@ copy_checked() {
 
 copy_checked "$repo_root/output/rg280v-fe/plumos-text-ui" "$remote/bin/plumos-text-ui" 0755
 copy_checked "$repo_root/assets/frontend/bin/plumos-prepare-opk-input" "$remote/bin/plumos-prepare-opk-input" 0755
+copy_checked "$repo_root/assets/frontend/bin/plumos-fceux-prepare" "$remote/bin/plumos-fceux-prepare" 0755
 copy_checked "$repo_root/assets/frontend/bin/plumos-standalone-launch" "$remote/bin/plumos-standalone-launch" 0755
 copy_checked "$repo_root/assets/frontend/regba-global-config.cfg" "$remote/config/regba-global-config.cfg" 0644
 copy_checked "$repo_root/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules" \
     "$remote/config/70-plumos-gpio-keys.rules" 0644
-for name in FCEUX_2019-11-15.opk gambatte-dms-multi-r572u4-20211021.opk \
+for name in fceux_gcw0-2.6.6-2023-08-30.opk gambatte-dms-multi-r572u4-20211021.opk \
     PocketSNES_2019-12-12.opk ReGBA_1.9.2_rg280v.opk GenesisPlusGX_2019-12-23.opk; do
     copy_checked "$local_emulators/$name" "$remote/emulators/$name" 0644
 done

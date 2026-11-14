@@ -8,7 +8,11 @@ fi
 
 root=${PLUMOS_ROOT:-/media/data/plumos}
 case "$1" in
-    fceux) opk="$root/emulators/FCEUX_2019-11-15.opk" ;;
+    fceux)
+        opk="$root/emulators/fceux_gcw0-2.6.6-2023-08-30.opk"
+        export LD_PRELOAD="$root/lib/libfceux-menu.so${LD_PRELOAD:+:$LD_PRELOAD}"
+        "$root/bin/plumos-fceux-prepare" "$2"
+        ;;
     gambatte) opk="$root/emulators/gambatte-dms-multi-r572u4-20211021.opk" ;;
     pocketsnes) opk="$root/emulators/PocketSNES_2019-12-12.opk" ;;
     regba)
