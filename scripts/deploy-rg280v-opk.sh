@@ -6,9 +6,10 @@ if [[ $# -ne 1 || ! -f "$1" || "$1" != *.opk ]]; then
     exit 2
 fi
 
-serial=10.1.1.2:5555
-adb connect "$serial" >/dev/null
-adb -s "$serial" get-state >/dev/null
-adb -s "$serial" shell mkdir -p /media/data/apps
-adb -s "$serial" push "$1" "/media/data/apps/$(basename "$1")"
+port=${ADB_SERVER_PORT:-5037}
+serial=${PLUMOS_RG280V_ADB_SERIAL:-10.1.1.2:5555}
+adb -P "$port" connect "$serial" >/dev/null
+adb -P "$port" -s "$serial" get-state >/dev/null
+adb -P "$port" -s "$serial" shell mkdir -p /media/data/apps
+adb -P "$port" -s "$serial" push "$1" "/media/data/apps/$(basename "$1")"
 printf 'Deployed %s to /media/data/apps\n' "$(basename "$1")"

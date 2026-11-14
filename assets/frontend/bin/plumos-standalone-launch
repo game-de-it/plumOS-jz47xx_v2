@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]; then
+    echo 'usage: plumos-standalone-launch EMULATOR ROM' >&2
+    exit 2
+fi
+
+root=${PLUMOS_ROOT:-/media/data/plumos}
+case "$1" in
+    fceux) opk="$root/emulators/FCEUX_2019-11-15.opk" ;;
+    gambatte) opk="$root/emulators/gambatte-dms-multi-r572u4-20211021.opk" ;;
+    pocketsnes) opk="$root/emulators/PocketSNES_2019-12-12.opk" ;;
+    regba) opk="$root/emulators/ReGBA_2019-12-26-open-bios.opk" ;;
+    genesisplusgx) opk="$root/emulators/GenesisPlusGX_2019-12-23.opk" ;;
+    *) echo "unsupported emulator: $1" >&2; exit 2 ;;
+esac
+
+[ -r "$opk" ] || { echo "emulator missing: $opk" >&2; exit 1; }
+[ -f "$2" ] || { echo "ROM missing: $2" >&2; exit 1; }
+mkdir -p "$root/home"
+export HOME="$root/home"
+export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec /usr/bin/opkrun "$opk" "$2"

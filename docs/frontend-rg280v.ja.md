@@ -16,15 +16,31 @@ V90S公開版の `plumos_controller_ui.c`、fbdevレンダラー、ROMスキャ�
 
 STARTはUI設定、システム設定、ヘルプ、再起動、電源断。UI設定は一覧更新、表示方式、空の機種、ROM並び順、機種画面を開いた際の再スキャン。システム設定は音量、明るさ、本体情報。Wi-Fi、ネットワークサービス、未実装のAppsは表示しない。
 
-ROM一覧はSD2の実データを検出する。ギャラリーは標準表示でXボタンから一覧表示へ切り替えられる。現在のSD2にROMサムネイルはないため、ギャラリーでは代替文字を表示する。エミュレータ本体と起動プロファイルの移植は別工程。現段階でROM起動の成功は主張しない。GCW Zeroアプリも別工程で互換性を検証する。
+ROM一覧はSD2の実データを検出する。ギャラリーは標準表示でXボタンから一覧表示へ切り替えられる。現在のSD2にROMサムネイルはないため、ギャラリーでは代替文字を表示する。GCW Zeroアプリは個別に互換性を検証する。
+
+## エミュレータ
+
+FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standalone-launch` からOPKを実行する。エミュレータのHOMEはSD1 p2の `/media/data/plumos/home` とし、設定やセーブが読み取り専用rootfsへ向かないようにする。
+
+| 機種 | OPK | 確認状況 |
+| --- | --- | --- |
+| NES | FCEUX | ROMを読み込み、FEから起動してFEへ復帰 |
+| GB/GBC | Gambatte-DMS | GBC ROM読み込みと映像・音声デバイスを確認。GBは起動計画を確認 |
+| SFC | PocketSNES | ROM指定で起動し、映像・音声デバイスを確認 |
+| GBA | ReGBA + MIT代替BIOS | ROM指定で起動し、映像・音声デバイスを確認 |
+| Mega Drive | Genesis Plus GX | ROM指定で起動し、映像・音声デバイスを確認 |
+
+実画面、キー操作、音声の物理確認は残る。旧PicoDrive OPKは `ELIBBAD` で起動できなかったため採用しない。その他の機種は既存の起動設定が残るが、エミュレータ未導入のため起動成功を確認していない。
 
 ## 開発時の更新
 
 `scripts/build-rg280v-fe.sh` でクロスビルド、`ADB_SERVER_PORT=5039 scripts/deploy-rg280v-fe.sh` で実機へ更新する。既存の設定JSONは既定で保存し、開発版の既定値で置換する時だけ `PLUMOS_FE_UPDATE_CONFIG=1` を付ける。自動起動サービスを入れる時は `PLUMOS_FE_INSTALL_SERVICE=1` を付ける。SDイメージの再生成は不要。
 
+エミュレータ一式は `ADB_SERVER_PORT=5039 scripts/deploy-rg280v-emulators.sh` でSD1 p2へ展開する。OPKと補助ライブラリをSHA-256で照合し、FE設定の6機種分の起動プロファイルだけ更新する。既存設定は `.pre-emulators` に退避する。取得元と補助ライブラリの再現手順は `scripts/fetch-rg280v-emulators.sh`、`scripts/build-rg280v-emulator-libs.sh`、`scripts/repack-rg280v-regba.sh` に固定した。
+
 `scripts/capture-rg280v-fe.sh` はfbdevを読み、実機相当の320×240 PNGへ変換する。開発用の出力は `output/` 以下に置き、Gitには含めない。
 
-最終的なSDイメージには `scripts/make-rg280v-image.sh` がFEをビルドしてSD1 p2へ同梱する。初回セットアップ完了後、同じ起動サービスでFEを起動する。
+最終的なSDイメージには `scripts/make-rg280v-image.sh` がFEとエミュレータ一式をSD1 p2へ同梱する。初回セットアップ完了後、同じ起動サービスでFEを起動する。エミュレータ追加後のイメージ生成と起動はまだ実機で未確認。
 
 ## 描画性能
 

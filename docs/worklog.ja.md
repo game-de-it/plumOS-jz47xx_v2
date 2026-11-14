@@ -1,5 +1,15 @@
 # 作業ログ
 
+## 2026-11-15 — RG280VへGCW Zero系エミュレータを導入
+
+- V90S版の `plumos_text_ui.c` を取り込み、FEがROMを選んだ後に起動計画を作り、エミュレータ終了後にFEを描画し直す経路を追加した。NESのFCEUXで、FE→ROM→FCEUX→FEの遷移をADBのスクリプト操作とプロセスログで確認した。
+- [RG350_APPREPOSITORY](https://github.com/RafaVico/RG350_APPREPOSITORY/) のコミット `2ed8306` にあるOPKをSHA-256固定で取得した。NESはFCEUX、GB/GBCはGambatte-DMS、SFCはPocketSNES、Mega DriveはGenesis Plus GX。GBAはReGBAを試した。
+- Gambatteに不足するSDL_image/SDL_mixer、Genesis Plus GXに不足するlibogg/libvorbis、SFC/GBAに不足するlibpng14をJZ47xx向けにビルドし、SD1 p2の `/media/data/plumos/lib` に配置した。OPKからだけ `LD_LIBRARY_PATH` に追加し、ベースrootfsの共有ライブラリは置き換えない。
+- ReGBAの元OPKには純正GBA BIOSと同じMD5のファイルが入っていた。最終イメージへは入れず、MITライセンスの[代替BIOS](https://github.com/Cult-of-GBA/BIOS)に差し替えたOPKを再生成した。再生成物のSHA-256と、実機のOPK内のBIOS SHA-256が一致した。BIOSを抜いただけの版は音声デバイスを開かなかったが、代替BIOS版は映像・音声デバイスを開いた。
+- 直接起動試験ではGBC、SFC、GBA、Mega Driveの各ROMを指定してエミュレータプロセスが継続し、DRMとALSAを開いた。NESはROMロードとFE復帰も確認。GBはFEの起動計画でROMとGambatteの対応を確認した。ユーザーによる実画面・操作・音声の結果は確認待ち。
+- PicoDrive旧OPKは `execve` が `ELIBBAD` で失敗したため採用しない。Mega DriveはGenesis Plus GXに変更した。現在のFE設定は既存項目を保持し、6機種の起動プロファイルだけ更新した。
+- SDイメージは再生成せずADBで配置した。次回イメージ生成スクリプトにはエミュレータと補助ライブラリの同梱を追加したが、その生成物と実機起動はまだ検証していない。
+
 ## 2026-11-15 — RG280V FEの描画を60fps目標で改善
 
 - V90S版FEの画面を実機で表示できたが、ユーザーからスクロールの点滅と引っ掛かりが報告された。320×480のfbdevは仮想画面の余白がなくページ切り替えに使えないため、メモリ上に1フレームを描いてから画面へ転送する方式を採用した。

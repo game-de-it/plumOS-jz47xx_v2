@@ -43,14 +43,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:quicknes",
-        "retroarch:fceumm",
-        "retroarch:nestopia",
-        "picoarch:quicknes",
-        "picoarch:fceumm",
-        "picoarch:nestopia"
+        "standalone:fceux"
       ],
-      "default_launch_profile": "retroarch:quicknes",
+      "default_launch_profile": "standalone:fceux",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
@@ -116,22 +111,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:snes9x2005",
-        "retroarch:snes9x",
-        "retroarch:chimerasnes",
-        "retroarch:mednafen_supafaust",
-        "retroarch:snes9x2002",
-        "retroarch:snes9x2005_plus",
-        "retroarch:snes9x2010",
-        "picoarch:snes9x2005",
-        "picoarch:snes9x",
-        "picoarch:chimerasnes",
-        "picoarch:mednafen_supafaust",
-        "picoarch:snes9x2002",
-        "picoarch:snes9x2005_plus",
-        "picoarch:snes9x2010"
+        "standalone:pocketsnes"
       ],
-      "default_launch_profile": "retroarch:snes9x2005",
+      "default_launch_profile": "standalone:pocketsnes",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
@@ -191,16 +173,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:gambatte",
-        "retroarch:mgba",
-        "retroarch:gearboy",
-        "retroarch:tgbdual",
-        "retroarch:vbam",
-        "picoarch:gambatte",
-        "picoarch:gearboy",
-        "picoarch:vbam"
+        "standalone:gambatte"
       ],
-      "default_launch_profile": "retroarch:gambatte",
+      "default_launch_profile": "standalone:gambatte",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
@@ -261,16 +236,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:gambatte",
-        "retroarch:mgba",
-        "retroarch:gearboy",
-        "retroarch:tgbdual",
-        "retroarch:vbam",
-        "picoarch:gambatte",
-        "picoarch:gearboy",
-        "picoarch:vbam"
+        "standalone:gambatte"
       ],
-      "default_launch_profile": "retroarch:gambatte",
+      "default_launch_profile": "standalone:gambatte",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
@@ -325,15 +293,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:gpsp",
-        "retroarch:mgba",
-        "retroarch:mednafen_gba",
-        "retroarch:meteor",
-        "retroarch:vba_next",
-        "picoarch:gpsp",
-        "picoarch:mgba"
+        "standalone:regba"
       ],
-      "default_launch_profile": "retroarch:gpsp",
+      "default_launch_profile": "standalone:regba",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
@@ -397,12 +359,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:genesis_plus_gx",
-        "retroarch:picodrive",
-        "picoarch:genesis_plus_gx",
-        "picoarch:picodrive"
+        "standalone:genesisplusgx"
       ],
-      "default_launch_profile": "retroarch:genesis_plus_gx",
+      "default_launch_profile": "standalone:genesisplusgx",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,

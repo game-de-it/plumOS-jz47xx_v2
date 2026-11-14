@@ -19,5 +19,10 @@ mkdir -p "$out"
 "$cc" -std=gnu99 -Os -pipe -Wall -Wextra -D_GNU_SOURCE \
     /workspace/src/frontend/plumos_library_scan.c \
     -o "$out/plumos-library-scan"
-"$strip" "$out/plumos-controller-ui" "$out/plumos-library-scan"
-file "$out/plumos-controller-ui" "$out/plumos-library-scan"
+"$cc" -std=gnu99 -Os -pipe -Wall -Wextra -D_GNU_SOURCE \
+    /workspace/src/frontend/plumos_text_ui.c \
+    -o "$out/plumos-text-ui"
+"$strip" "$out/plumos-controller-ui" "$out/plumos-library-scan" \
+    "$out/plumos-text-ui"
+file "$out/plumos-controller-ui" "$out/plumos-library-scan" \
+    "$out/plumos-text-ui"

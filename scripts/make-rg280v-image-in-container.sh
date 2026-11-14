@@ -39,7 +39,8 @@ mkdir -p "$data_root/local/bin" "$data_root/local/share" "$data_root/local/init.
     "$data_root/plumos/themes/default/logos/systems" \
     "$data_root/plumos/themes/default/images" "$data_root/plumos/config/frontend" \
     "$data_root/plumos/config/system" "$data_root/plumos/state/frontend" \
-    "$data_root/plumos/Logs"
+    "$data_root/plumos/Logs" "$data_root/plumos/emulators" \
+    "$data_root/plumos/lib" "$data_root/plumos/home"
 printf 'RG280V first-boot seed v1\n' > "$data_root/plumos/provision/seed-v1"
 cp /workspace/output/rg280v-status/rg280v-fbshow "$data_root/local/bin/rg280v-fbshow"
 cp /workspace/output/rg280v-status/adb-ready.ppm "$data_root/local/share/adb-ready.ppm"
@@ -47,10 +48,20 @@ cp /workspace/output/rg280v-status/first-boot.ppm "$data_root/local/share/first-
 cp /workspace/output/rg280v-status/first-boot-error.ppm "$data_root/local/share/first-boot-error.ppm"
 cp /workspace/board/rg280v/adb/S90status "$data_root/local/init.d/S90status"
 cp /workspace/assets/frontend/S95frontend "$data_root/local/init.d/S95frontend"
-cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/plumos-library-scan "$data_root/plumos/bin/"
+cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/plumos-library-scan \
+    /workspace/output/rg280v-fe/plumos-text-ui "$data_root/plumos/bin/"
 cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
 cp /workspace/assets/frontend/default.otf /workspace/assets/frontend/cjk-fallback.ttc "$data_root/plumos/fonts/"
 cp /workspace/assets/frontend/licenses/* "$data_root/plumos/licenses/"
+cp /workspace/output/rg280v-emulators/libpng14-build/libpng-1.4.22/LICENSE \
+    "$data_root/plumos/licenses/libpng14-LICENSE"
+cp /workspace/output/rg280v-emulators/MIT-GBA-BIOS-LICENSE \
+    "$data_root/plumos/licenses/MIT-GBA-BIOS-LICENSE"
+cp /workspace/output/rg280v-emulators/lib/* "$data_root/plumos/lib/"
+for name in FCEUX_2019-11-15.opk gambatte-dms-multi-r572u4-20211021.opk \
+    PocketSNES_2019-12-12.opk ReGBA_2019-12-26-open-bios.opk GenesisPlusGX_2019-12-23.opk; do
+    cp "/workspace/output/rg280v-emulators/$name" "$data_root/plumos/emulators/$name"
+done
 cp /workspace/assets/frontend/theme.json "$data_root/plumos/themes/default/"
 cp /workspace/assets/frontend/logos/systems/*.png "$data_root/plumos/themes/default/logos/systems/"
 cp /workspace/assets/frontend/images/*.png "$data_root/plumos/themes/default/images/"
@@ -68,6 +79,12 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /local/share/first-boot.ppm /local/share/first-boot-error.ppm \
             /local/init.d/S90status /local/init.d/S95frontend \
             /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \
+            /plumos/bin/plumos-text-ui /plumos/bin/plumos-standalone-launch \
+            /plumos/emulators/FCEUX_2019-11-15.opk \
+            /plumos/emulators/gambatte-dms-multi-r572u4-20211021.opk \
+            /plumos/emulators/PocketSNES_2019-12-12.opk \
+            /plumos/emulators/ReGBA_2019-12-26-open-bios.opk \
+            /plumos/emulators/GenesisPlusGX_2019-12-23.opk \
             /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
             /plumos/provision/seed-v1; do
     debugfs -R "stat $path" "$stage/data.ext4" 2>/dev/null | grep -q 'Inode:' || {
