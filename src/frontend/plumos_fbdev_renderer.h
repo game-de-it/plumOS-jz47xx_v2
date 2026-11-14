@@ -26,6 +26,10 @@
 #include FT_FREETYPE_H
 #endif
 
+#ifdef PLUMOS_FBDEV_ENABLE_DRM
+#include "plumos_drm_pageflip.h"
+#endif
+
 #ifndef PLUMOS_FBDEV_RENDER_LINE_MAX
 #define PLUMOS_FBDEV_RENDER_LINE_MAX 512
 #endif
@@ -95,6 +99,11 @@ struct plumos_fbdev_renderer {
   uint32_t visible_yoffset;
   uint32_t draw_yoffset;
   int double_buffer;
+  int vsync_probe_done;
+  int vsync_supported;
+#ifdef PLUMOS_FBDEV_ENABLE_DRM
+  struct plumos_drm_pageflip drm;
+#endif
   unsigned int profile_frames;
   unsigned long long profile_sum_us;
   unsigned long long profile_max_us;
@@ -282,7 +291,30 @@ static int plumos_fbdev_present(struct plumos_fbdev_renderer *r) {
   if (!r || !r->mem) {
     return 0;
   }
+#ifdef PLUMOS_FBDEV_ENABLE_DRM
+  if (r->drm.active) {
+    if (!plumos_drm_pageflip_present(&r->drm)) return 0;
+    r->mem = r->drm.buffers[r->drm.draw_index].mem;
+    return 1;
+  }
+#endif
   if (r->fb_mem) {
+    if (getenv("PLUMOS_FBDEV_WAIT_VSYNC") &&
+        strcmp(getenv("PLUMOS_FBDEV_WAIT_VSYNC"), "1") == 0 &&
+        (!r->vsync_probe_done || r->vsync_supported)) {
+#ifdef FBIO_WAITFORVSYNC
+      int arg = 0;
+      int result = ioctl(r->fd, FBIO_WAITFORVSYNC, &arg);
+      if (!r->vsync_probe_done) {
+        fprintf(stderr, "fbdev-vsync result=%d errno=%d\n", result,
+                result == 0 ? 0 : errno);
+        r->vsync_probe_done = 1;
+        r->vsync_supported = result == 0;
+      }
+#else
+      r->vsync_probe_done = 1;
+#endif
+    }
     memcpy(r->fb_mem + r->visible_offset, r->mem, (size_t)r->frame_bytes);
     return 1;
   }
@@ -3686,6 +3718,23 @@ static int plumos_fbdev_renderer_init(struct plumos_fbdev_renderer *r,
     r->active_offset = 0;
     r->double_buffer = 0;
   }
+#ifdef PLUMOS_FBDEV_ENABLE_DRM
+  if (getenv("PLUMOS_FBDEV_DRM") &&
+      strcmp(getenv("PLUMOS_FBDEV_DRM"), "1") == 0 &&
+      r->fb_mem && r->bytes_per_pixel == 4 &&
+      plumos_drm_pageflip_open(&r->drm, r->var.xres,
+                               r->var.yres * (r->vertical_scale ?
+                                               r->vertical_scale : 1))) {
+    free(r->mem);
+    r->mem = r->drm.buffers[r->drm.draw_index].mem;
+    r->map_size = (size_t)r->drm.buffers[r->drm.draw_index].size;
+    r->fix.line_length = r->drm.buffers[r->drm.draw_index].pitch;
+    r->frame_bytes = (long)r->fix.line_length *
+                     (long)r->var.yres *
+                     (long)(r->vertical_scale ? r->vertical_scale : 1);
+    r->active_offset = 0;
+  }
+#endif
   return 1;
 }
 
@@ -3750,7 +3799,10 @@ static int plumos_fbdev_render_lines(struct plumos_fbdev_renderer *r,
     draw_end_us = plumos_fbdev_profile_us();
   }
   if (ok) {
-    plumos_fbdev_present(r);
+    ok = plumos_fbdev_present(r);
+    if (!ok) {
+      fprintf(stderr, "display present failed: %s\n", strerror(errno));
+    }
   }
   if (profile) {
     unsigned long long now_us = plumos_fbdev_profile_us();
@@ -3816,6 +3868,12 @@ static void plumos_fbdev_renderer_shutdown(struct plumos_fbdev_renderer *r) {
   plumos_fbdev_png_cache_clear(r);
   free(r->gallery_background_cache);
   r->gallery_background_cache = NULL;
+#endif
+#ifdef PLUMOS_FBDEV_ENABLE_DRM
+  if (r->drm.active) {
+    plumos_drm_pageflip_close(&r->drm);
+    r->mem = NULL;
+  }
 #endif
   if (r->fb_mem) {
     free(r->mem);

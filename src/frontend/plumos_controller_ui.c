@@ -14864,7 +14864,7 @@ static int ui_periodic_refresh_interval_ms(const struct ui_state *ui) {
     }
     if (ui->gallery_transition_active ||
         (ui_uses_graphic_mode(ui) && ui->screen == SCREEN_GALLERY)) {
-      return 16;
+      return ui->gallery_transition_active ? 16 : 33;
     }
     if (ui->rom_scan_refresh_pid > 0) {
       return 250;
