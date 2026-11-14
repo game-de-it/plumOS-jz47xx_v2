@@ -5,15 +5,13 @@ out=/workspace/output/rg280v-emulators
 mkdir -p "$out/lib"
 if ! make -C /workspace/work/buildroot O=/workspace/output/rg280v \
     BR2_EXTERNAL=/workspace/work/buildroot/board/opendingux:/workspace \
-    sdl_image sdl_mixer libvorbis > "$out/sdl-libs-build.log" 2>&1; then
+    sdl_image sdl_mixer > "$out/sdl-libs-build.log" 2>&1; then
     tail -60 "$out/sdl-libs-build.log" >&2
     exit 1
 fi
 
 syslibs=/workspace/output/rg280v/target/usr/lib
 cp -L "$syslibs/libSDL_image-1.2.so.0" "$syslibs/libSDL_mixer-1.2.so.0" "$out/lib/"
-cp -L "$syslibs/libogg.so.0" "$syslibs/libvorbis.so.0" \
-    "$syslibs/libvorbisfile.so.3" "$out/lib/"
 
 build="$out/libpng14-build"
 if [[ ! -f "$build/libpng-1.4.22/.libs/libpng14.so.14" ]]; then

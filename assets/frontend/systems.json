@@ -359,9 +359,9 @@
         ]
       },
       "launch_profiles": [
-        "standalone:genesisplusgx"
+        "standalone:picodrive"
       ],
-      "default_launch_profile": "standalone:genesisplusgx",
+      "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,

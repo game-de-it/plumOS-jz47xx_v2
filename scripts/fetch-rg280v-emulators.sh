@@ -28,4 +28,3 @@ fetch_checked ReGBA_1.9.2_rg350.opk 1e7e0a3c67aae88c0d10752572156db7d1501b4c5eb6
     https://github.com/jdgleaver/ReGBA/releases/download/1.9.2/regba_rg350.opk
 fetch_checked ReGBA_1.9.2-GPL-2.0.txt ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6 \
     https://raw.githubusercontent.com/jdgleaver/ReGBA/4396f9eca3320b7e2955e2815cfe6332542b91be/doc/gpl-2.0_en.txt
-fetch_checked GenesisPlusGX_2019-12-23.opk 38919450a9a379642549ce99ac6805d6d84e17e84ba338a426f731bc655d5e65

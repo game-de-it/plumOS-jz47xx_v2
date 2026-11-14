@@ -11,9 +11,12 @@ local_emulators="$repo_root/output/rg280v-emulators"
 "$repo_root/scripts/fetch-rg280v-emulators.sh"
 "$repo_root/scripts/repack-rg280v-regba.sh"
 "$repo_root/scripts/repack-rg280v-gambatte.sh"
+"$repo_root/scripts/build-rg280v-picodrive.sh"
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
-if [[ ! -f "$local_emulators/lib/libvorbisfile.so.3" ]]; then
+if [[ ! -f "$local_emulators/lib/libSDL_image-1.2.so.0" ||
+      ! -f "$local_emulators/lib/libSDL_mixer-1.2.so.0" ||
+      ! -f "$local_emulators/lib/libpng14.so.14" ]]; then
     "$repo_root/scripts/build-rg280v-emulator-libs.sh"
 fi
 "$repo_root/scripts/build-rg280v-fe.sh"
@@ -40,11 +43,12 @@ copy_checked "$repo_root/assets/frontend/regba-global-config.cfg" "$remote/confi
 copy_checked "$repo_root/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules" \
     "$remote/config/70-plumos-gpio-keys.rules" 0644
 for name in fceux_gcw0-2.6.6-2023-08-30.opk gambatte-dms-rg280v.opk \
-    PocketSNES_2019-12-12.opk ReGBA_1.9.2_rg280v.opk GenesisPlusGX_2019-12-23.opk; do
+    PocketSNES_2019-12-12.opk ReGBA_1.9.2_rg280v.opk PicoDrive_rg280v.opk; do
     copy_checked "$local_emulators/$name" "$remote/emulators/$name" 0644
 done
-for source in "$local_emulators"/lib/*; do
-    copy_checked "$source" "$remote/lib/$(basename "$source")" 0644
+for name in libSDL_image-1.2.so.0 libSDL_mixer-1.2.so.0 libpng14.so.14 \
+    libregba-doublebuf.so libfceux-menu.so libgambatte-menu.so; do
+    copy_checked "$local_emulators/lib/$name" "$remote/lib/$name" 0644
 done
 
 temporary=$(mktemp -d)

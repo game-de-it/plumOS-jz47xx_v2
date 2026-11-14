@@ -8,11 +8,13 @@ revision=9f46ee4e9680d108e548fb427e7c7e1aa1bb9d5a
 mkdir -p "$out"
 
 if [[ ! -d "$src/.git" ]]; then
-    git clone https://github.com/irixxxx/picodrive.git "$src"
+    git clone --depth 1 https://github.com/irixxxx/picodrive.git "$src"
 fi
-git -C "$src" fetch origin "$revision"
+if ! git -C "$src" cat-file -e "$revision^{commit}" 2>/dev/null; then
+    git -C "$src" fetch --depth 1 origin "$revision"
+fi
 git -C "$src" checkout --detach "$revision"
-git -C "$src" submodule update --init
+git -C "$src" submodule update --init --depth 1
 
 patch="$repo_root/patches/rg280v-picodrive.patch"
 if git -C "$src/platform/libpicofe" apply --reverse --check "$patch" 2>/dev/null; then
@@ -32,8 +34,19 @@ docker run --rm --platform linux/arm64 \
         export CROSS_COMPILE=/workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-
         export SYSROOT=/workspace/output/rg280v/host/mipsel-gcw0-linux-uclibc/sysroot
         export SDL_CONFIG="$SYSROOT/usr/bin/sdl-config"
+        export SOURCE_DATE_EPOCH=0
         ./configure --platform=odbeta-gcw0
+        make clean
         make -j4
+        unset SOURCE_DATE_EPOCH
+        mksquashfs .od_data PicoDrive.opk -all-root -noappend -no-exports \
+            -no-xattrs -mkfs-time 0 -all-time 0
+        tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+            --exclude=.git --exclude="*.o" --exclude=.od_data \
+            --exclude=picodrive --exclude=PicoDrive.opk \
+            --exclude=picodrive.map \
+            -czf /workspace/output/rg280v-emulators/PicoDrive_rg280v-source.tar.gz \
+            -C /workspace/output/rg280v-emulators picodrive-source
     ' >"$out/picodrive-build.log" 2>&1
 
 cp "$src/PicoDrive.opk" "$out/PicoDrive_rg280v.opk"
