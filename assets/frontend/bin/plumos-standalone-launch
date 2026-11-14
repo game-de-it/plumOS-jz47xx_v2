@@ -13,7 +13,10 @@ case "$1" in
         export LD_PRELOAD="$root/lib/libfceux-menu.so${LD_PRELOAD:+:$LD_PRELOAD}"
         "$root/bin/plumos-fceux-prepare" "$2"
         ;;
-    gambatte) opk="$root/emulators/gambatte-dms-multi-r572u4-20211021.opk" ;;
+    gambatte)
+        opk="$root/emulators/gambatte-dms-multi-r572u4-20211021.opk"
+        export LD_PRELOAD="$root/lib/libgambatte-menu.so${LD_PRELOAD:+:$LD_PRELOAD}"
+        ;;
     pocketsnes) opk="$root/emulators/PocketSNES_2019-12-12.opk" ;;
     regba)
         opk="$root/emulators/ReGBA_1.9.2_rg280v.opk"

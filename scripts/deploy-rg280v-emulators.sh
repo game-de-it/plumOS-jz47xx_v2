@@ -11,6 +11,7 @@ local_emulators="$repo_root/output/rg280v-emulators"
 "$repo_root/scripts/fetch-rg280v-emulators.sh"
 "$repo_root/scripts/repack-rg280v-regba.sh"
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
+"$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 if [[ ! -f "$local_emulators/lib/libvorbisfile.so.3" ]]; then
     "$repo_root/scripts/build-rg280v-emulator-libs.sh"
 fi

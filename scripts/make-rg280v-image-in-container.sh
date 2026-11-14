@@ -90,6 +90,7 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /plumos/emulators/ReGBA_1.9.2_rg280v.opk \
             /plumos/lib/libregba-doublebuf.so \
             /plumos/lib/libfceux-menu.so \
+            /plumos/lib/libgambatte-menu.so \
             /plumos/emulators/GenesisPlusGX_2019-12-23.opk \
             /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
             /plumos/provision/seed-v1; do
