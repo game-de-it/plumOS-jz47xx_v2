@@ -17,6 +17,8 @@ grep -a -q 'ylm,rg280v' "$images/rg280v.dtb"
 [[ ! -e "$build/target/usr/sbin/frontend_start" ]]
 grep -q 'tty1::respawn:/bin/sh' "$build/target/etc/inittab"
 grep -q '/sbin/ip addr add 10.1.1.2/30' "$build/target/etc/init.d/rcS"
+grep -q 'USER_MOUNTED' "$build/target/etc/init.d/rcS"
+grep -q 'user_label" = PLUMOS' "$build/target/etc/init.d/rcS"
 [[ $(wc -c < "$images/ubiboot-rg350.bin") -le 8192 ]]
 
 "$build/host/bin/unsquashfs" -ll "$images/modules.squashfs" > "$build/modules-list.txt"

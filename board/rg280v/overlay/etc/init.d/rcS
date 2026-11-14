@@ -13,7 +13,7 @@ log() {
 mount -t proc proc /proc 2>/dev/null || true
 mount -t sysfs sysfs /sys 2>/dev/null || true
 mount -t devtmpfs devtmpfs /dev 2>/dev/null || true
-mkdir -p /dev/pts /dev/shm /sys/kernel/config /media/data
+mkdir -p /dev/pts /dev/shm /sys/kernel/config /media/data /media/user
 mount -t devpts devpts /dev/pts 2>/dev/null || true
 mount -t tmpfs -o mode=1777 tmpfs /dev/shm 2>/dev/null || true
 mount -t tmpfs -o mode=0755 tmpfs /var 2>/dev/null || true
@@ -55,6 +55,28 @@ if [ -n "$data_device" ]; then
     log "DATA_MOUNTED $data_device"
 else
     log DATA_MOUNT_FAILED
+fi
+
+# p3 is optional so that an existing two-partition development SD still boots.
+if [ -n "$data_device" ]; then
+    case "$data_device" in
+        /dev/mmcblk*p2)
+            user_device=${data_device%p2}p3
+            if [ -b "$user_device" ]; then
+                user_fs=$(blkid -s TYPE -o value "$user_device" 2>/dev/null)
+                user_label=$(blkid -s LABEL -o value "$user_device" 2>/dev/null)
+                if [ "$user_fs" = vfat ] && [ "$user_label" = PLUMOS ]; then
+                    mount -t vfat -o rw,nosuid,nodev,utf8,umask=022 \
+                        "$user_device" /media/user 2>/dev/null && \
+                        log "USER_MOUNTED $user_device" || log USER_MOUNT_FAILED
+                else
+                    log "USER_SKIPPED ${user_fs:-unknown}:${user_label:-unlabeled}"
+                fi
+            else
+                log USER_ABSENT
+            fi
+            ;;
+    esac
 fi
 
 if [ -r /boot/modules.squashfs ]; then
