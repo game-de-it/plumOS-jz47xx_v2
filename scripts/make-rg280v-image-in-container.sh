@@ -31,9 +31,21 @@ for name in uzImage.bin rootfs.squashfs modules.squashfs mininit-syspart; do
 done
 mdir -i "$stage/boot.vfat" ::/dev ::/root >/dev/null
 
+data_root="$stage/data-root"
+mkdir -p "$data_root/local/bin" "$data_root/local/share" "$data_root/local/init.d"
+cp /workspace/output/rg280v-status/rg280v-fbshow "$data_root/local/bin/rg280v-fbshow"
+cp /workspace/output/rg280v-status/adb-ready.ppm "$data_root/local/share/adb-ready.ppm"
+cp /workspace/board/rg280v/adb/S90status "$data_root/local/init.d/S90status"
+chmod 0755 "$data_root/local/bin/rg280v-fbshow" "$data_root/local/init.d/S90status"
 truncate -s 0 "$stage/data.ext4"
 truncate -s $((data_sectors * 512)) "$stage/data.ext4"
-mkfs.ext4 -F -q -L PLUMOSDATA "$stage/data.ext4"
+mkfs.ext4 -F -q -d "$data_root" -L PLUMOSDATA "$stage/data.ext4"
+for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm /local/init.d/S90status; do
+    debugfs -R "stat $path" "$stage/data.ext4" 2>/dev/null | grep -q 'Inode:' || {
+        echo "Missing data file in ext4: $path" >&2
+        exit 1
+    }
+done
 
 truncate -s 0 "$destination"
 truncate -s $((total_sectors * 512)) "$destination"
