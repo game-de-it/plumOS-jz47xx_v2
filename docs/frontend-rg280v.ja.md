@@ -20,7 +20,7 @@ ROM一覧はSD2の実データを検出する。ギャラリーは標準表示�
 
 ## エミュレータ
 
-FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standalone-launch` からOPKを実行する。エミュレータのHOMEはSD1 p2の `/media/data/plumos/home` とし、設定やセーブが読み取り専用rootfsへ向かないようにする。
+FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standalone-launch` からOPKを実行する。エミュレータのHOMEはSD1 p2の `/media/data/plumos/home` とし、設定やセーブが読み取り専用rootfsへ向かないようにする。旧OPKのSDL 1.2 KMSDRMがGPIOキーを認識できるよう、`ID_INPUT_KEY=1` のudevルールをrootfsに入れる。既存の試験用SDでは起動ラッパーがSD1 p2のルールを `/run/udev/rules.d` に読み込み、必要な場合だけイベント情報を更新する。
 
 | 機種 | OPK | 確認状況 |
 | --- | --- | --- |
@@ -30,13 +30,13 @@ FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standa
 | GBA | ReGBA + MIT代替BIOS | ROM指定で起動し、映像・音声デバイスを確認 |
 | Mega Drive | Genesis Plus GX | ROM指定で起動し、映像・音声デバイスを確認 |
 
-実画面、キー操作、音声の物理確認は残る。旧PicoDrive OPKは `ELIBBAD` で起動できなかったため採用しない。その他の機種は既存の起動設定が残るが、エミュレータ未導入のため起動成功を確認していない。
+上記のROM指定・映像音声デバイスの確認時点では、旧OPKがGPIOキーの入力デバイスを開いていなかった。その後udevルールを適用し、ReGBAが `/dev/input/event2` を開くことを確認した。実画面、キー操作、音声の物理確認は残る。旧PicoDrive OPKは `ELIBBAD` で起動できなかったため採用しない。その他の機種は既存の起動設定が残るが、エミュレータ未導入のため起動成功を確認していない。
 
 ## 開発時の更新
 
 `scripts/build-rg280v-fe.sh` でクロスビルド、`ADB_SERVER_PORT=5039 scripts/deploy-rg280v-fe.sh` で実機へ更新する。既存の設定JSONは既定で保存し、開発版の既定値で置換する時だけ `PLUMOS_FE_UPDATE_CONFIG=1` を付ける。自動起動サービスを入れる時は `PLUMOS_FE_INSTALL_SERVICE=1` を付ける。SDイメージの再生成は不要。
 
-エミュレータ一式は `ADB_SERVER_PORT=5039 scripts/deploy-rg280v-emulators.sh` でSD1 p2へ展開する。OPKと補助ライブラリをSHA-256で照合し、FE設定の6機種分の起動プロファイルだけ更新する。既存設定は `.pre-emulators` に退避する。取得元と補助ライブラリの再現手順は `scripts/fetch-rg280v-emulators.sh`、`scripts/build-rg280v-emulator-libs.sh`、`scripts/repack-rg280v-regba.sh` に固定した。
+エミュレータ一式は `ADB_SERVER_PORT=5039 scripts/deploy-rg280v-emulators.sh` でSD1 p2へ展開する。OPK、補助ライブラリ、GPIO入力ルールをSHA-256で照合し、FE設定の6機種分の起動プロファイルだけ更新する。既存設定は `.pre-emulators` に退避する。取得元と補助ライブラリの再現手順は `scripts/fetch-rg280v-emulators.sh`、`scripts/build-rg280v-emulator-libs.sh`、`scripts/repack-rg280v-regba.sh` に固定した。
 
 `scripts/capture-rg280v-fe.sh` はfbdevを読み、実機相当の320×240 PNGへ変換する。開発用の出力は `output/` 以下に置き、Gitには含めない。
 

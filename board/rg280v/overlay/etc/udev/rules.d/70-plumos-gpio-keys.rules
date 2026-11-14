@@ -1,0 +1,2 @@
+# SDL 1.2 KMSDRM discovers handheld keys through ID_INPUT_KEY.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="gpio-keys", ENV{ID_INPUT_KEY}="1"

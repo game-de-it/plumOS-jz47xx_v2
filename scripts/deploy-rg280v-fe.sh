@@ -40,9 +40,11 @@ copy_if_missing() {
 copy_checked "$repo_root/output/rg280v-fe/plumos-controller-ui" "$remote/bin/plumos-controller-ui" 0755
 copy_checked "$repo_root/output/rg280v-fe/plumos-library-scan" "$remote/bin/plumos-library-scan" 0755
 copy_checked "$repo_root/output/rg280v-fe/plumos-text-ui" "$remote/bin/plumos-text-ui" 0755
-for name in plumos-fe-launch plumos-volume-control plumos-display-control plumos-safe-shutdown plumos-standalone-launch; do
+for name in plumos-fe-launch plumos-volume-control plumos-display-control plumos-safe-shutdown plumos-standalone-launch plumos-prepare-opk-input; do
     copy_checked "$repo_root/assets/frontend/bin/$name" "$remote/bin/$name" 0755
 done
+copy_checked "$repo_root/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules" \
+    "$remote/config/70-plumos-gpio-keys.rules" 0644
 copy_checked "$repo_root/assets/frontend/default.otf" "$remote/fonts/default.otf" 0644
 copy_checked "$repo_root/assets/frontend/cjk-fallback.ttc" "$remote/fonts/cjk-fallback.ttc" 0644
 copy_checked "$repo_root/assets/frontend/licenses/NotoSansJP-OFL.txt" "$remote/licenses/NotoSansJP-OFL.txt" 0644

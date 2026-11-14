@@ -51,6 +51,8 @@ cp /workspace/assets/frontend/S95frontend "$data_root/local/init.d/S95frontend"
 cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/plumos-library-scan \
     /workspace/output/rg280v-fe/plumos-text-ui "$data_root/plumos/bin/"
 cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
+cp /workspace/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules \
+    "$data_root/plumos/config/70-plumos-gpio-keys.rules"
 cp /workspace/assets/frontend/default.otf /workspace/assets/frontend/cjk-fallback.ttc "$data_root/plumos/fonts/"
 cp /workspace/assets/frontend/licenses/* "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/libpng14-build/libpng-1.4.22/LICENSE \
@@ -80,6 +82,8 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /local/init.d/S90status /local/init.d/S95frontend \
             /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \
             /plumos/bin/plumos-text-ui /plumos/bin/plumos-standalone-launch \
+            /plumos/bin/plumos-prepare-opk-input \
+            /plumos/config/70-plumos-gpio-keys.rules \
             /plumos/emulators/FCEUX_2019-11-15.opk \
             /plumos/emulators/gambatte-dms-multi-r572u4-20211021.opk \
             /plumos/emulators/PocketSNES_2019-12-12.opk \

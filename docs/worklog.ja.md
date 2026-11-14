@@ -2,6 +2,7 @@
 
 ## 2026-11-15 — RG280VへGCW Zero系エミュレータを導入
 
+- 追試で旧OPKのSDL 1.2 KMSDRMが `ID_INPUT_KEY` を持たないGPIOキーを列挙せず、ROMを起動しても入力FDがないことを発見。udevルールで `gpio-keys` に識別を付け、ReGBAが `/dev/input/event2` を開くことを `/proc` で確認した。新規イメージ用rootfsにルールを追加し、既存SDでもOPK起動前にルールを適用するラッパーを追加。ADB展開スクリプトで一式を再配置し、転送ハッシュと入力識別を確認した。再起動後の適用と物理キーの反応は確認待ち。
 - V90S版の `plumos_text_ui.c` を取り込み、FEがROMを選んだ後に起動計画を作り、エミュレータ終了後にFEを描画し直す経路を追加した。NESのFCEUXで、FE→ROM→FCEUX→FEの遷移をADBのスクリプト操作とプロセスログで確認した。
 - [RG350_APPREPOSITORY](https://github.com/RafaVico/RG350_APPREPOSITORY/) のコミット `2ed8306` にあるOPKをSHA-256固定で取得した。NESはFCEUX、GB/GBCはGambatte-DMS、SFCはPocketSNES、Mega DriveはGenesis Plus GX。GBAはReGBAを試した。
 - Gambatteに不足するSDL_image/SDL_mixer、Genesis Plus GXに不足するlibogg/libvorbis、SFC/GBAに不足するlibpng14をJZ47xx向けにビルドし、SD1 p2の `/media/data/plumos/lib` に配置した。OPKからだけ `LD_LIBRARY_PATH` に追加し、ベースrootfsの共有ライブラリは置き換えない。
