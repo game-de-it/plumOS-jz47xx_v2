@@ -19,6 +19,9 @@ for event in /sys/class/input/event*; do
     }
     mkdir -p /run/udev/rules.d
     cp "$rule" /run/udev/rules.d/70-plumos-gpio-keys.rules
+    if ! pidof udevd >/dev/null 2>&1; then
+        /sbin/udevd --daemon
+    fi
     udevadm control --reload
     udevadm test "$event" >/dev/null 2>&1
     udevadm info --query=property --name="/dev/input/${event##*/}" \
