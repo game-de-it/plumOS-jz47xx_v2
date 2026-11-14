@@ -1,0 +1,35 @@
+diff --git a/in_sdl.c b/in_sdl.c
+index 129b3bc..f661763 100644
+--- a/in_sdl.c
++++ b/in_sdl.c
+@@ -664,6 +664,12 @@ static int in_sdl_update(void *drv_data, const int *binds, int *result)
+ 			if ((mask & 1) == 0)
+ 				continue;
+ 			sym = i * KEYBITS_WORD_BITS + bit;
++#ifdef __GCW0__
++			/* RG280V: SELECT opens the menu only while START is held. */
++			if (sym == SDLK_ESCAPE &&
++			    !get_keystate(state->keystate, SDLK_RETURN))
++				continue;
++#endif
+ 
+ 			for (b = 0; b < IN_BINDTYPE_COUNT; b++)
+ 				result[b] |= binds[IN_BIND_OFFS(sym, b)];
+diff --git a/plat_sdl.c b/plat_sdl.c
+index 031e162..f8d21cf 100644
+--- a/plat_sdl.c
++++ b/plat_sdl.c
+@@ -255,6 +255,13 @@ int plat_sdl_init(void)
+       g_menuscreen_h = h;
+   }
+ 
++#if defined(__GCW0__) && defined(__OPENDINGUX__)
++  /* RG280V reports a 320x480 mode; the usable game surface is 320x240.
++   * Selecting 320x480 initially stretches the first game frame until the
++   * menu recreates the SDL surface. */
++  if (fs_w == 320 && fs_h == 480)
++    g_menuscreen_h = 240;
++#endif
+   plat_sdl_screen = SDL_SetVideoMode(g_menuscreen_w, g_menuscreen_h, 0,
+       (flags = get_screen_flags()));
+   if (plat_sdl_screen == NULL) {
