@@ -1,0 +1,24 @@
+#!/bin/sh
+# Development transport: USB CDC Ethernet for macOS, then TCP ADB on usb0.
+
+case "$1" in
+    start)
+        mkdir -p /usr/local/etc /var/log
+        if [ ! -e /usr/local/etc/usb.conf ]; then
+            printf 'USB_MODE=cdc\n' > /usr/local/etc/usb.conf
+        fi
+        if [ -d /sys/kernel/config/usb_gadget ] && [ -n "$(ls /sys/class/udc 2>/dev/null)" ]; then
+            /usr/sbin/usb restart cdc >>/var/log/plumos-usb.log 2>&1 || true
+        fi
+        if [ -x /usr/bin/adbd ]; then
+            /usr/bin/adbd >>/var/log/plumos-adbd.log 2>&1 &
+            echo $! >/run/plumos-adbd.pid
+        fi
+        ;;
+    stop)
+        if [ -r /run/plumos-adbd.pid ]; then
+            kill "$(cat /run/plumos-adbd.pid)" 2>/dev/null || true
+            rm -f /run/plumos-adbd.pid
+        fi
+        ;;
+esac
