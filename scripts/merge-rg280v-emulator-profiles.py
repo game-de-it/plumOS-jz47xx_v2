@@ -9,7 +9,7 @@ from pathlib import Path
 installed_path, defaults_path, output_path = map(Path, sys.argv[1:])
 installed = json.loads(installed_path.read_text())
 defaults = json.loads(defaults_path.read_text())
-supported = {"nes", "gb", "gbc", "sfc", "gba", "megadrive"}
+supported = {"nes", "gb", "gbc", "sfc", "gba", "megadrive", "mastersystem", "gamegear"}
 profiles = {system["id"]: system for system in defaults["systems"] if system["id"] in supported}
 for system in installed["systems"]:
     if system.get("id") in profiles:

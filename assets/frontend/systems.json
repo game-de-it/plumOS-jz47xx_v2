@@ -426,14 +426,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:genesis_plus_gx",
-        "retroarch:picodrive",
-        "retroarch:gearsystem",
-        "picoarch:genesis_plus_gx",
-        "picoarch:picodrive",
-        "picoarch:gearsystem"
+        "standalone:picodrive"
       ],
-      "default_launch_profile": "retroarch:genesis_plus_gx",
+      "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
@@ -500,14 +495,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:genesis_plus_gx",
-        "retroarch:picodrive",
-        "retroarch:gearsystem",
-        "picoarch:genesis_plus_gx",
-        "picoarch:picodrive",
-        "picoarch:gearsystem"
+        "standalone:picodrive"
       ],
-      "default_launch_profile": "retroarch:genesis_plus_gx",
+      "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
