@@ -9,6 +9,7 @@
 - 検証: Buildrootを再設定して `mkfs.fat` を含め、rootfsとseedイメージを再ビルド。シェル構文、ビルド検証、p1/p2の領域表とp2の印・画面データの同梱を確認。4GiBの模擬MBRイメージに `sfdisk --append` でp1/p2を維持したままp3を作る試験が成功。
 - 生成物: `output/plumos-rg280v-firstboot-seed.img`、SHA-256 `7988a97ea66527d82921dc98b080b3344823a35636949f7c1cdf799c32ec3f82`。
 - 未確認: RG280Vでの初回起動、領域表変更後の自動再起動、p3のFAT初期化、p3の全容量、途中停止からの再開、画面表示。実機の確認前に完成版とは扱わない。
+- 実機書き込み準備: 試験用SD1をMacの `disk5`（123729870848 bytes、内蔵SDXCリーダー、p1 `PLUMOSBOOT`、p2 Linux）として確認。イメージのSHA-256は上記と一致した。`diskutil unmountDisk` 後に管理者権限で先頭1.5GiBのバックアップを試みたが、macOSが raw SD の読み取りを `Operation not permitted` として拒否し、バックアップ・書き込みとも未実施。ユーザーが書き込み操作を引き継ぐ。書き込み先はこの試験用SD1、ファイルは上記seedイメージ。
 
 ## 2026-11-15 — RG280Vのユーザーデータ領域を分離
 
