@@ -10,6 +10,7 @@ plumOS所有の `inittab`、`rcS`、`plumos-usb-ecm` がマウント、USB CDC�
 旧P2版とLinux 5.19は使わない。
 
 既存の2パーティションSDはRG280Vの起動・ADB検証用として引き続き起動できる。
+新規seedにはp2の `plumos/provision/seed-v1` を置き、初回セットアップの対象にする。
 SD1 p2の `/media/data/local/init.d/S*` をADBで更新できる起動フックとして使う。
 開発中のUSB ECMはMacのネットワーク設定との突き合わせのためMACを固定している。
 他機種対応時には機種固有IDから安定したMACを生成する。
@@ -35,11 +36,13 @@ Linux 4.9、AArch64バイナリを流用するものではない。
 | 生セクタ | UBIBoot。通常のアプリ更新では変更しない。 |
 | SD1 p1 FAT32 `PLUMOSBOOT` | カーネル・機種別DTB・起動引き渡し・将来のSystem A/B。UBIBootがFATから読むため、V90Sの独立したraw boot領域はここに統合する。 |
 | SD1 p2 ext4 `PLUMOSDATA` | 管理対象ランタイム、設定、ログ、更新状態。 |
-| SD1 p3 FAT32 `PLUMOS` | Mac/Windowsから配置するROM、BIOS、アプリ、更新ファイル。新規イメージに作成し、`/media/user` にマウントする。 |
+| SD1 p3 FAT32 `PLUMOS` | Mac/Windowsから配置するROM、BIOS、アプリ、更新ファイル。新規seedの初回起動で未割当領域に作成し、`/media/user` にマウントする。 |
 | SD2 | 任意のROM・BIOS・メディア。存在しなくても起動し、自動フォーマットしない。 |
 
-RG280Vの旧試験SDはp1 FATとp2 ext4だけ。新規イメージはp3 FATを追加し、p2に
-`/local/init.d` と状態画面を格納する。p3がない場合も起動を続ける。
+RG280Vの旧試験SDはp1 FATとp2 ext4だけ。旧3領域試験イメージは固定512MiBの
+p3を持ち、初回セットアップには非対応。新しいseedはp3を持たず、p2に
+`/local/init.d` と状態画面、初回起動印を格納する。印のない既存SDでは
+自動パーティション変更をしない。
 V90Sに倣う最終構成へ移す際も、
 ADBで更新できる永続アプリ領域と利用者データ領域は別にする。
 

@@ -1,0 +1,102 @@
+#!/bin/sh
+set -eu
+
+boot=$1
+runtime=$2
+state=/media/data/plumos/provision
+[ -f "$state/seed-v1" ] || exit 0
+mkdir -p "$state"
+
+screen() {
+    [ -x /media/data/local/bin/rg280v-fbshow ] || return 0
+    [ -r "/media/data/local/share/$1.ppm" ] || return 0
+    echo 0 >/sys/class/vtconsole/vtcon1/bind 2>/dev/null || true
+    /media/data/local/bin/rg280v-fbshow "/media/data/local/share/$1.ppm" || true
+}
+screen first-boot
+
+fail() {
+    echo "plumOS first boot: ERROR $*" >/dev/console
+    echo "ERROR $*" >"$state/error"
+    /usr/sbin/plumos-bootlog "FIRST_BOOT_ERROR $*" || true
+    screen first-boot-error
+    sync
+    exit 1
+}
+say() {
+    echo "plumOS first boot: $*" >/dev/console
+    echo "$*" >>"$state/first-boot.log"
+    /usr/sbin/plumos-bootlog "FIRST_BOOT $*" || true
+    sync
+}
+
+case "$boot:$runtime" in
+    /dev/mmcblk*p1:/dev/mmcblk*p2) ;;
+    *) fail "unsupported boot devices $boot $runtime" ;;
+esac
+disk=${boot%p1}
+[ "$runtime" = "${disk}p2" ] || fail 'boot and runtime are on different cards'
+p3=${disk}p3
+name=${disk#/dev/}
+
+for spec in "${disk}p1:8192:1048576:PLUMOSBOOT" \
+            "${disk}p2:1056768:2097152:PLUMOSDATA"; do
+    device=${spec%%:*}
+    rest=${spec#*:}
+    start=${rest%%:*}
+    rest=${rest#*:}
+    size=${rest%%:*}
+    label=${rest#*:}
+    part=${device#/dev/}
+    [ "$(cat "/sys/class/block/$part/start" 2>/dev/null)" = "$start" ] || fail "unexpected $part start"
+    [ "$(cat "/sys/class/block/$part/size" 2>/dev/null)" = "$size" ] || fail "unexpected $part size"
+    [ "$(blkid -s LABEL -o value "$device" 2>/dev/null)" = "$label" ] || fail "unexpected $part label"
+done
+
+disk_sectors=$(cat "/sys/class/block/$name/size" 2>/dev/null)
+case "$disk_sectors" in ''|*[!0-9]*) fail 'invalid card size' ;; esac
+[ "$disk_sectors" -ge 8388608 ] || fail 'card smaller than 4 GiB'
+user_start=3153920
+user_size=$(( (disk_sectors - 2048 - user_start) / 2048 * 2048 ))
+[ "$user_size" -ge 1048576 ] || fail 'insufficient user space'
+
+if [ ! -b "$p3" ]; then
+    [ ! -f "$state/complete" ] || fail 'completed setup lost p3'
+    say 'creating user partition'
+    dd if="$disk" of="$state/mbr-before.bin" bs=512 count=1 2>/dev/null || fail 'cannot back up MBR'
+    touch "$state/create-intent"
+    sync
+    printf 'start=%s, size=%s, type=b\n' "$user_start" "$user_size" |
+        sfdisk --append --no-reread --no-tell-kernel "$disk" >>"$state/first-boot.log" 2>&1 ||
+        fail 'partition creation failed'
+    say 'partition table written; rebooting to detect p3'
+    reboot -f || fail 'automatic reboot failed'
+    sleep 5
+    fail 'automatic reboot did not occur'
+fi
+
+p3_name=${p3#/dev/}
+[ "$(cat "/sys/class/block/$p3_name/start" 2>/dev/null)" = "$user_start" ] || fail 'unexpected p3 start'
+[ "$(cat "/sys/class/block/$p3_name/size" 2>/dev/null)" = "$user_size" ] || fail 'unexpected p3 size'
+fs=$(blkid -s TYPE -o value "$p3" 2>/dev/null || true)
+label=$(blkid -s LABEL -o value "$p3" 2>/dev/null || true)
+if [ -z "$fs" ] && [ -f "$state/create-intent" ]; then
+    say 'formatting newly created p3'
+    mkfs.fat -F 32 -n PLUMOS "$p3" >>"$state/first-boot.log" 2>&1 || fail 'FAT format failed'
+    fs=$(blkid -s TYPE -o value "$p3" 2>/dev/null || true)
+    label=$(blkid -s LABEL -o value "$p3" 2>/dev/null || true)
+fi
+[ "$fs" = vfat ] && [ "$label" = PLUMOS ] || fail "unexpected p3 filesystem $fs $label"
+grep -q " $p3 /media/user " /proc/mounts 2>/dev/null ||
+    mount -t vfat -o rw,nosuid,nodev,utf8,umask=022 "$p3" /media/user || fail 'p3 mount failed'
+touch /media/user/.plumos-provisioning
+for dir in roms bios apps updates Images Screenshots Music; do
+    mkdir -p "/media/user/$dir" || fail "cannot create $dir"
+done
+sync
+rm -f /media/user/.plumos-provisioning
+touch /media/user/.plumos-ready
+sync
+touch "$state/complete"
+rm -f "$state/error"
+say 'complete'

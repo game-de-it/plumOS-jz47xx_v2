@@ -121,6 +121,15 @@ if [ -x /usr/bin/adbd ]; then
     log "ADB_PID=$!"
 fi
 
+if [ -n "$data_device" ] && [ -f /media/data/plumos/provision/seed-v1 ]; then
+    if /usr/sbin/plumos-first-boot "$boot_device" "$data_device"; then
+        log FIRST_BOOT_READY
+    else
+        log FIRST_BOOT_FAILED
+        exit 1
+    fi
+fi
+
 if [ -n "$data_device" ]; then
     mkdir -p /media/data/local/init.d
     for service in /media/data/local/init.d/S*; do
