@@ -1,5 +1,15 @@
 # RG280V bring-up
 
+## 実機で確認した現在地
+
+Linux 6.8、mininit、plumOS `rcS` はRG280Vで起動し、SD1 p2のext4、
+モジュール領域、診断シェルまで進む。2026-11-15に、データ通信できる
+USBケーブルでMacからping、ADB connect、shell、pushを実機確認した。
+Mac側は `en106` に `10.1.1.1/30`、端末側は `usb0` に `10.1.1.2/30`。
+ADBが起動しなかった原因はloopback未設定で、`127.0.0.1/8` を設定して解決した。
+SD2の16GB FATカードは読み取り専用でマウントし、`bios` と `roms` を確認した。
+フロントエンドとUSB-DACは未検証。
+
 ## 固定した基盤
 
 - OpenDingux buildroot `98ce2f08d1ca54d8916b47f37ee866d1d0a0d4e0`。
@@ -10,15 +20,16 @@
 - 起動用FAT領域に `/dev` と `/root` を作る。LinuxがFATをrootとして
   マウントした直後、devtmpfsとmininitがこれらのマウント先を使う。
 - `configs/plumos_rg280v_defconfig` は不要なゲーム・メディア・Wi-Fiパッケージを
-  除いた初期構成。gmenu2x、OPK、表示、音声、USB、診断手段は残す。
+  除いた初期構成。現在はOpenDingux skeletonをビルド素材にしつつ、
+  plumOSの `inittab` と `rcS` だけを起動する。ADB確立後にskeletonも置き換える。
 
 ## USBと開発ループ
 
-Macとの接続はOpenDinguxにあるCDC Ethernetを先に使う。RG280VのUSB
+Macとの接続はplumOSの初期化処理からCDC Ethernetを先に使う。RG280VのUSB
 ポートがperipheralとして認識されれば、`usb0` を `10.1.1.2/30` にし、
 `adbd` をTCP 5555で起動する。ホスト側は `10.1.1.1/30` に設定して
-`adb connect 10.1.1.2:5555` を試す。ADBが失敗した場合は同じリンク上の
-SSHでログを回収する。開発用構成のため、無線ネットワークは含めない。
+`adb connect 10.1.1.2:5555` を試す。ADBが失敗した場合は起動用FAT領域の
+`plumos-boot.log` を読む。開発用構成のため、無線ネットワークは含めない。
 MacではUSB Ethernetとして現れたインターフェースに `10.1.1.1/30` を設定する。
 ADB接続後は `scripts/capture-rg280v.sh` で基本ログを保存できる。
 
@@ -30,7 +41,7 @@ OPKは `scripts/deploy-rg280v-opk.sh path/to/app.opk` で転送できる。
 
 1. UARTログが取得可能なら接続し、起動停止位置を記録する。
 2. LCD、ボタン、バッテリー、内蔵音声、SD2、電源断を確認する。
-3. USB CDC接続、Macからのping、SSH、ADB shell/pushを確認する。
+3. USB CDC接続、Macからのping、ADB shell/pushを確認する。
 4. 10回の冷間起動、長時間待機、アプリ起動・終了を確認する。
 5. host側の配線・役割・VBUSを調べる。外部給電ハブでDACの列挙を試し、
    列挙が成立してから `snd-usb-audio` とALSAの経路を検証する。

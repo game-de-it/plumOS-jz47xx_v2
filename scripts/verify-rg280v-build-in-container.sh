@@ -11,7 +11,12 @@ done
 grep -q 'CONFIG_SND_USB_AUDIO=m' "$build/build/linux-custom/.config"
 grep -a -q 'ylm,rg280v' "$images/rg280v.dtb"
 [[ -x "$build/target/usr/bin/adbd" ]]
-[[ -x "$build/target/etc/init.d/S94plumos-dev-usb" ]]
+[[ -x "$build/target/etc/init.d/rcS" ]]
+[[ -x "$build/target/usr/sbin/plumos-usb-ecm" ]]
+[[ ! -e "$build/target/etc/init.d/S94plumos-dev-usb" ]]
+[[ ! -e "$build/target/usr/sbin/frontend_start" ]]
+grep -q 'tty1::respawn:/bin/sh' "$build/target/etc/inittab"
+grep -q '/sbin/ip addr add 10.1.1.2/30' "$build/target/etc/init.d/rcS"
 [[ $(wc -c < "$images/ubiboot-rg350.bin") -le 8192 ]]
 
 "$build/host/bin/unsquashfs" -ll "$images/modules.squashfs" > "$build/modules-list.txt"

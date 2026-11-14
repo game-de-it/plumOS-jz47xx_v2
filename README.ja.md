@@ -1,12 +1,12 @@
 # plumOS jz47xx v2
 
-RG280Vから着手する、OpenDinguxベースのplumOSです。現在は実機検証前の
-bring-up構成です。SDカードに書き込める成果物を作るまではリリースしません。
+RG280Vから着手するplumOSです。OpenDingux Linux 6.8と起動引き渡しを使い、
+ユーザー環境はplumOS側で構築します。現在は実機の起動・ADB診断段階です。
 
 ## 現在の目標
 
-1. RG280VでOpenDinguxのカーネル・DTB・最小ユーザー環境を起動する。
-2. USB CDC Ethernet経由のADBとSSHで、イメージを作り直さずに試験する。
+1. RG280VでOpenDinguxのカーネル・DTBとplumOSの最小ユーザー環境を起動する。
+2. USB CDC Ethernet経由のADBで、イメージを作り直さずに試験する。
 3. 画面、入力、内蔵音声、電源操作、SDの安定性を確認する。
 4. USB hostとUSB-DACの成立条件を実機で調べる。
 
@@ -16,6 +16,8 @@ bring-up構成です。SDカードに書き込める成果物を作るまでは�
 OpenDingux Linux 6.8を使い、実機で評価します。
 
 設計と検証手順は [docs/bringup-rg280v.ja.md](docs/bringup-rg280v.ja.md) を参照。
+V90Sの領域役割をJZ47xxへ適用する方針は
+[docs/architecture.ja.md](docs/architecture.ja.md) に記載。
 
 ## ビルド
 

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Early bring-up trace on the FAT partition, independent of /media/data.
+mount -o remount,rw /boot 2>/dev/null || exit 0
+printf '%s\n' "$*" >>/boot/plumos-boot.log
+sync
+mount -o remount,ro /boot 2>/dev/null || true

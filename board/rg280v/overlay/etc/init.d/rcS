@@ -1,0 +1,130 @@
+#!/bin/sh
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export PATH
+
+log() {
+    message="plumOS RG280V: $*"
+    printf '%s\n' "$message" >/dev/console 2>/dev/null || true
+    printf '%s\n' "$message" >/dev/kmsg 2>/dev/null || true
+    /usr/sbin/plumos-bootlog "$message"
+}
+
+mount -t proc proc /proc 2>/dev/null || true
+mount -t sysfs sysfs /sys 2>/dev/null || true
+mount -t devtmpfs devtmpfs /dev 2>/dev/null || true
+mkdir -p /dev/pts /dev/shm /sys/kernel/config /media/data
+mount -t devpts devpts /dev/pts 2>/dev/null || true
+mount -t tmpfs -o mode=1777 tmpfs /dev/shm 2>/dev/null || true
+mount -t tmpfs -o mode=0755 tmpfs /var 2>/dev/null || true
+mkdir -p /var/log /var/run /var/tmp
+mount -t configfs configfs /sys/kernel/config 2>/dev/null || true
+
+/sbin/ip addr add 127.0.0.1/8 dev lo 2>/dev/null || true
+/sbin/ip link set lo up 2>/dev/null || true
+
+log START
+
+boot_device=$(awk '$2 == "/boot" {print $1; exit}' /proc/mounts)
+case "$boot_device" in
+    /dev/mmcblk*p1) data_candidate=${boot_device%p1}p2 ;;
+    *)
+        for argument in $(cat /proc/cmdline); do
+            case "$argument" in
+                root=/dev/mmcblk*p1) boot_device=${argument#root=} ;;
+            esac
+        done
+        case "$boot_device" in
+            /dev/mmcblk*p1) data_candidate=${boot_device%p1}p2 ;;
+            *) data_candidate= ;;
+        esac
+        ;;
+esac
+log "BOOT_DEVICE=${boot_device:-unknown}"
+data_device=
+for candidate in "$data_candidate" /dev/mmcblk0p2; do
+    [ -n "$candidate" ] || continue
+    [ -b "$candidate" ] || continue
+    if mount -t ext4 -o nosuid,nodev "$candidate" /media/data 2>/dev/null; then
+        data_device=$candidate
+        break
+    fi
+done
+if [ -n "$data_device" ]; then
+    mkdir -p /media/data/plumos/logs /media/data/local/etc
+    log "DATA_MOUNTED $data_device"
+else
+    log DATA_MOUNT_FAILED
+fi
+
+if [ -r /boot/modules.squashfs ]; then
+    mount -t squashfs -o loop,ro /boot/modules.squashfs /lib/modules 2>/dev/null && \
+        log MODULES_MOUNTED || log MODULES_MOUNT_FAILED
+fi
+
+if [ -n "$data_device" ] && [ -b /dev/mmcblk1p1 ]; then
+    sd2_fs=$(blkid -s TYPE -o value /dev/mmcblk1p1 2>/dev/null)
+    case "$sd2_fs" in
+        vfat|ext4)
+            mkdir -p /media/data/sd2
+            mount -t "$sd2_fs" -o ro,nosuid,nodev \
+                /dev/mmcblk1p1 /media/data/sd2 2>/dev/null && \
+                log "SD2_MOUNTED $sd2_fs" || log SD2_MOUNT_FAILED
+            ;;
+        *) log "SD2_UNSUPPORTED ${sd2_fs:-unknown}" ;;
+    esac
+fi
+
+if [ -x /usr/sbin/plumos-usb-ecm ]; then
+    /usr/sbin/plumos-usb-ecm >/var/log/plumos-usb.log 2>&1
+    log "USB_GADGET_STATUS=$?"
+    /usr/sbin/plumos-bootlog "USB_DETAIL: $(tail -n 12 /var/log/plumos-usb.log)"
+fi
+
+for attempt in 1 2 3 4 5; do
+    [ -d /sys/class/net/usb0 ] && break
+    sleep 1
+done
+if [ -d /sys/class/net/usb0 ]; then
+    /sbin/ip addr add 10.1.1.2/30 dev usb0 2>/var/log/plumos-ip.log || true
+    /sbin/ip link set usb0 up 2>>/var/log/plumos-ip.log
+    log "USB_IP_STATUS=$?"
+    /usr/sbin/udhcpd -f -S /etc/udhcpd.conf >/var/log/plumos-dhcp.log 2>&1 &
+else
+    log USB_INTERFACE_MISSING
+fi
+
+if [ -x /usr/bin/adbd ]; then
+    /usr/bin/adbd >/var/log/plumos-adbd.log 2>&1 &
+    log "ADB_PID=$!"
+fi
+
+if [ -n "$data_device" ]; then
+    mkdir -p /media/data/local/init.d
+    for service in /media/data/local/init.d/S*; do
+        [ -x "$service" ] || continue
+        "$service" start >>/var/log/plumos-local.log 2>&1
+        log "LOCAL_SERVICE=${service##*/}:$?"
+    done
+fi
+
+if [ -n "$data_device" ]; then
+    {
+        cat /proc/cmdline
+        cat /proc/mounts
+        /sbin/ip addr
+        cat /var/log/plumos-*.log
+    } >/media/data/plumos/logs/boot-snapshot.txt 2>&1
+    sync
+fi
+
+log READY
+
+(
+    sleep 10
+    log "USB_LATE_OPERSTATE=$(cat /sys/class/net/usb0/operstate 2>/dev/null)"
+    log "USB_LATE_CARRIER=$(cat /sys/class/net/usb0/carrier 2>/dev/null)"
+    log "USB_LATE_DHCP=$(tail -n 4 /var/log/plumos-dhcp.log 2>/dev/null)"
+    log "ADB_LATE_PIDS=$(pidof adbd 2>/dev/null)"
+    log "ADB_LATE_LOG=$(cat /var/log/plumos-adbd.log 2>/dev/null)"
+) &

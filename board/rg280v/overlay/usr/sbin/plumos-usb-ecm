@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Stable ECM identity for the RG280V development link.
+set -eu
+
+gadget=/sys/kernel/config/usb_gadget/plumos
+[ -d /sys/kernel/config/usb_gadget ] || exit 1
+set -- /sys/class/udc/*
+[ -e "$1" ] || exit 1
+udc=${1##*/}
+
+mkdir -p "$gadget/strings/0x409" \
+    "$gadget/configs/c.1/strings/0x409" \
+    "$gadget/functions/ecm.net"
+printf '%s\n' 0x049f >"$gadget/idVendor"
+printf '%s\n' 0x505a >"$gadget/idProduct"
+printf '%s\n' 00000000 >"$gadget/strings/0x409/serialnumber"
+printf '%s\n' OpenDingux >"$gadget/strings/0x409/manufacturer"
+printf '%s\n' 'Generic CDC' >"$gadget/strings/0x409/product"
+printf '%s\n' cdc >"$gadget/configs/c.1/strings/0x409/configuration"
+printf '%s\n' 02:2b:55:50:96:56 >"$gadget/functions/ecm.net/host_addr"
+printf '%s\n' 06:43:3c:0e:3a:5c >"$gadget/functions/ecm.net/dev_addr"
+ln -s "$gadget/functions/ecm.net" "$gadget/configs/c.1/ecm.net"
+printf '%s\n' "$udc" >"$gadget/UDC"

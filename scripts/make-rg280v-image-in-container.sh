@@ -3,7 +3,7 @@ set -euo pipefail
 
 source_dir=/workspace/output/rg280v/images
 stage=/workspace/output/rg280v/image-stage
-destination=/workspace/output/plumos-rg280v-bringup-r2.img
+destination=/workspace/output/plumos-rg280v-adb-bringup.img
 boot_start=8192
 boot_sectors=1048576
 data_start=$((boot_start + boot_sectors))
