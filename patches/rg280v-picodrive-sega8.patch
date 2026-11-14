@@ -1,0 +1,24 @@
+diff --git a/platform/opendingux/inputmap.c b/platform/opendingux/inputmap.c
+index 9912a8d..acfc3e1 100644
+--- a/platform/opendingux/inputmap.c
++++ b/platform/opendingux/inputmap.c
+@@ -152,6 +152,19 @@ static void bindswap(int k1, int k2)
+ 
+ void plat_target_setup_input(void)
+ {
++	if (getenv("PLUMOS_SEGA8_NO_FF") != NULL) {
++		int i;
++		/* RG280V Sega 8-bit: keep the game's A/B layout, but stop the
++		 * physical X button from latching fast-forward. */
++		for (i = 0; _in_sdl_defbinds[i].code; i++) {
++			struct in_default_bind *bind = &_in_sdl_defbinds[i];
++			if (bind->code == SDLK_SPACE && bind->btype == IN_BINDTYPE_EMU &&
++			    bind->bit == PEVB_FF) {
++				bind->code = 0;
++				break;
++			}
++		}
++	}
+ 	if (strcmp(plat_device, "miyoo") == 0) {
+ 		/* swapped A/B and X/Y keys */
+ 		keyswap(SDLK_LALT, SDLK_LCTRL);

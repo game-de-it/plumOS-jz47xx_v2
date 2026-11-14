@@ -32,6 +32,11 @@ case "$1" in
     picodrive)
         opk="$root/emulators/PicoDrive_rg280v.opk"
         export PICOFE_GL=0
+        case "$2" in
+            */roms/mastersystem/*|*/roms/gamegear/*|*.sms|*.SMS|*.gg|*.GG)
+                export PLUMOS_SEGA8_NO_FF=1
+                ;;
+        esac
         ;;
     *) echo "unsupported emulator: $1" >&2; exit 2 ;;
 esac

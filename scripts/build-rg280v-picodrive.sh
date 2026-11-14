@@ -22,6 +22,12 @@ if git -C "$src/platform/libpicofe" apply --reverse --check "$patch" 2>/dev/null
 else
     git -C "$src/platform/libpicofe" apply "$patch"
 fi
+sega8_patch="$repo_root/patches/rg280v-picodrive-sega8.patch"
+if git -C "$src" apply --reverse --check "$sega8_patch" 2>/dev/null; then
+    :
+else
+    git -C "$src" apply "$sega8_patch"
+fi
 
 docker run --rm --platform linux/arm64 \
     --user "$(id -u):$(id -g)" -e HOME=/tmp \

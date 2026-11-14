@@ -31,7 +31,7 @@ FEはV90S版の `plumos-text-ui` でROMの起動計画を作り、`plumos-standa
 | SFC | PocketSNES | ROM指定で起動し、映像・音声デバイスを確認 |
 | GBA | ReGBA 1.9.2 + 同梱GPL代替BIOS | Goodboy Galaxyを表示し、START＋SELECTでメニューを開くことを実機確認 |
 | Mega Drive | PicoDrive | Bare Knuckleの比率・音声・操作、SELECT＋STARTメニュー、FE復帰を実機確認 |
-| Master System | PicoDrive | FEの起動設定を追加。実機確認中 |
+| Master System | PicoDrive | 映像・音声を実機確認。A/BとXの修正版を確認中 |
 | Game Gear | PicoDrive | FEの起動設定を追加。実機確認中 |
 
 上記のROM指定・映像音声デバイスの確認時点では、旧OPKがGPIOキーの入力デバイスを開いていなかった。その後udevルールを適用し、ReGBAが `/dev/input/event2` を開くことを確認した。旧ReGBA 2019版では画面に緑の線が出て、メニューも開かなかった。ReGBA 1.9.2ではユーザーがGoodboy Galaxyの綺麗な表示とSTART＋SELECTで開くメニューを確認した。同梱BIOSのSHA-256 `661a9afb93624f2c5e77d07dab137bd8d23cff79e8639c62fe621b49bb064749` は[公開ソース](https://github.com/jdgleaver/ReGBA/tree/1.9.2/bios)内のバイナリと一致し、READMEにNormmatt提供のVBA-Mベースのオープンソース代替BIOSと記載されている。純正BIOSは含めない。旧PicoDrive OPKは `ELIBBAD` で起動できなかった。現行PicoDriveソースをRG280Vのツールチェーンで再ビルドした版はBare Knuckleの比率・音声・操作を実機確認した。その他の機種は既存の起動設定が残るが、エミュレータ未導入のため起動成功を確認していない。
