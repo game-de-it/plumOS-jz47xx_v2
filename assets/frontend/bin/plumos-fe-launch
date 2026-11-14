@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+root=/media/data/plumos
+if [ -d /media/data/sd2/roms ]; then
+    sdcard=/media/data/sd2
+else
+    sdcard=/media/user
+fi
+export PLUMOS_ROOT="$root" PLUMOS_SDCARD_ROOT="$sdcard"
+export PLUMOS_DEVICE_ID=rg280v PLUMOS_DEVICE_NAME='ANBERNIC RG280V'
+export PLUMOS_RENDERER=fbdev PLUMOS_FB=/dev/fb0
+export PLUMOS_INPUT_EVENT=/dev/input/event2
+export PLUMOS_POWER_INPUT_EVENT=/dev/input/event2
+export PLUMOS_FBDEV_VERTICAL_SCALE=2 PLUMOS_FBDEV_DOUBLE_BUFFER=0
+export PLUMOS_FBDEV_SOFTWARE_BACKBUFFER=1
+export PLUMOS_CONTROLLER_CPU_DEFAULT=0
+export PLUMOS_FRONTEND_MODE=manual
+mkdir -p "$root/Logs" "$root/state/frontend"
+exec "$root/bin/plumos-controller-ui" --renderer fbdev "$@"

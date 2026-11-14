@@ -1,9 +1,11 @@
 #!/bin/sh
 
 [ "$1" = start ] || exit 0
+[ -x /media/data/plumos/bin/plumos-fe-launch ] && exit 0
 (
     # The init trace writes to the console for ten seconds after rcS completes.
     sleep 12
+    [ -x /media/data/plumos/bin/plumos-fe-launch ] && exit 0
     [ -x /media/data/local/bin/rg280v-fbshow ] || exit 0
     [ -r /media/data/local/share/adb-ready.ppm ] || exit 0
     [ "$(cat /sys/class/net/usb0/carrier 2>/dev/null)" = 1 ] || exit 0

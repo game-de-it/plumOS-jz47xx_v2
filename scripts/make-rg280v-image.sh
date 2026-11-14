@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 "$repo_root/scripts/build-rg280v-status.sh"
+"$repo_root/scripts/build-rg280v-fe.sh"
 "$repo_root/scripts/verify-rg280v-build.sh"
 docker run --rm --platform linux/arm64 \
     --user "$(id -u):$(id -g)" -e HOME=/tmp \

@@ -1,0 +1,33 @@
+#!/bin/sh
+root=/media/data/plumos
+pidfile=/var/run/plumos-fe.pid
+case "${1:-}" in
+    start)
+        [ -x "$root/bin/plumos-fe-launch" ] || exit 0
+        if [ -r "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+            exit 0
+        fi
+        mkdir -p "$root/Logs" "$root/state/frontend"
+        if [ ! -s "$root/state/frontend/library-index.json" ]; then
+            if [ -d /media/data/sd2/roms ]; then
+                sdcard=/media/data/sd2
+            else
+                sdcard=/media/user
+            fi
+            PLUMOS_ROOT="$root" PLUMOS_SDCARD_ROOT="$sdcard" \
+                "$root/bin/plumos-library-scan" >>"$root/Logs/frontend.log" 2>&1
+        fi
+        nohup "$root/bin/plumos-fe-launch" </dev/null >>"$root/Logs/frontend.log" 2>&1 &
+        echo "$!" >"$pidfile"
+        ;;
+    stop)
+        if [ -r "$pidfile" ]; then
+            kill "$(cat "$pidfile")" 2>/dev/null || true
+            rm -f "$pidfile"
+        fi
+        ;;
+    restart)
+        "$0" stop
+        "$0" start
+        ;;
+esac

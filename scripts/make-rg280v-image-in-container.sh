@@ -32,21 +32,44 @@ done
 mdir -i "$stage/boot.vfat" ::/dev ::/root >/dev/null
 
 data_root="$stage/data-root"
+rm -rf "$data_root"
 mkdir -p "$data_root/local/bin" "$data_root/local/share" "$data_root/local/init.d" \
-    "$data_root/plumos/provision"
+    "$data_root/plumos/provision" "$data_root/plumos/bin" \
+    "$data_root/plumos/fonts" "$data_root/plumos/licenses" \
+    "$data_root/plumos/themes/default/logos/systems" \
+    "$data_root/plumos/themes/default/images" "$data_root/plumos/config/frontend" \
+    "$data_root/plumos/config/system" "$data_root/plumos/state/frontend" \
+    "$data_root/plumos/Logs"
 printf 'RG280V first-boot seed v1\n' > "$data_root/plumos/provision/seed-v1"
 cp /workspace/output/rg280v-status/rg280v-fbshow "$data_root/local/bin/rg280v-fbshow"
 cp /workspace/output/rg280v-status/adb-ready.ppm "$data_root/local/share/adb-ready.ppm"
 cp /workspace/output/rg280v-status/first-boot.ppm "$data_root/local/share/first-boot.ppm"
 cp /workspace/output/rg280v-status/first-boot-error.ppm "$data_root/local/share/first-boot-error.ppm"
 cp /workspace/board/rg280v/adb/S90status "$data_root/local/init.d/S90status"
-chmod 0755 "$data_root/local/bin/rg280v-fbshow" "$data_root/local/init.d/S90status"
+cp /workspace/assets/frontend/S95frontend "$data_root/local/init.d/S95frontend"
+cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/plumos-library-scan "$data_root/plumos/bin/"
+cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
+cp /workspace/assets/frontend/default.otf /workspace/assets/frontend/cjk-fallback.ttc "$data_root/plumos/fonts/"
+cp /workspace/assets/frontend/licenses/* "$data_root/plumos/licenses/"
+cp /workspace/assets/frontend/theme.json "$data_root/plumos/themes/default/"
+cp /workspace/assets/frontend/logos/systems/*.png "$data_root/plumos/themes/default/logos/systems/"
+cp /workspace/assets/frontend/images/*.png "$data_root/plumos/themes/default/images/"
+cp /workspace/assets/frontend/systems.json /workspace/assets/frontend/menus.json \
+    /workspace/assets/frontend/apps.json /workspace/assets/frontend/settings.json \
+    "$data_root/plumos/config/frontend/"
+cp /workspace/assets/frontend/system-settings.json "$data_root/plumos/config/system/settings.json"
+cp /workspace/assets/frontend/VERSION "$data_root/plumos/VERSION"
+chmod 0755 "$data_root/local/bin/rg280v-fbshow" "$data_root/local/init.d/S90status" \
+    "$data_root/local/init.d/S95frontend" "$data_root/plumos/bin/"*
 truncate -s 0 "$stage/data.ext4"
 truncate -s $((data_sectors * 512)) "$stage/data.ext4"
 mkfs.ext4 -F -q -d "$data_root" -L PLUMOSDATA "$stage/data.ext4"
 for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /local/share/first-boot.ppm /local/share/first-boot-error.ppm \
-            /local/init.d/S90status /plumos/provision/seed-v1; do
+            /local/init.d/S90status /local/init.d/S95frontend \
+            /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \
+            /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
+            /plumos/provision/seed-v1; do
     debugfs -R "stat $path" "$stage/data.ext4" 2>/dev/null | grep -q 'Inode:' || {
         echo "Missing data file in ext4: $path" >&2
         exit 1

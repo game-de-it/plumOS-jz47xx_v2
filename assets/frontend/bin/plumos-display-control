@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+backlight=/sys/class/backlight/backlight/brightness
+maximum=/sys/class/backlight/backlight/max_brightness
+case "${1:-}" in
+    status)
+        [ -r "$maximum" ] && [ -w "$backlight" ]
+        ;;
+    apply)
+        level=${2:?brightness 1..6 required}
+        case "$level" in 1|2|3|4|5|6) ;; *) exit 2 ;; esac
+        max=$(cat "$maximum")
+        [ "$max" -ge 6 ] || exit 1
+        raw=$(( (level * max + 3) / 6 ))
+        [ "$raw" -ge 1 ] || raw=1
+        printf '%s\n' "$raw" >"$backlight"
+        ;;
+    *) exit 2 ;;
+esac

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cc=/workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-gcc
+strip=/workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-strip
+sysroot=$($cc -print-sysroot)
+out=/workspace/output/rg280v-fe
+mkdir -p "$out"
+
+"$cc" -std=gnu99 -Os -pipe -Wall -Wextra -D_GNU_SOURCE \
+    -DPLUMOS_ENABLE_FBDEV_RENDERER=1 \
+    -DPLUMOS_FBDEV_ENABLE_PNG=1 \
+    -DPLUMOS_FBDEV_ENABLE_FREETYPE=1 \
+    -I"$sysroot/usr/include/freetype2" \
+    /workspace/src/frontend/plumos_controller_ui.c \
+    -o "$out/plumos-controller-ui" -lpng -lfreetype -lz
+"$cc" -std=gnu99 -Os -pipe -Wall -Wextra -D_GNU_SOURCE \
+    /workspace/src/frontend/plumos_library_scan.c \
+    -o "$out/plumos-library-scan"
+"$strip" "$out/plumos-controller-ui" "$out/plumos-library-scan"
+file "$out/plumos-controller-ui" "$out/plumos-library-scan"
