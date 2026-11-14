@@ -3,7 +3,7 @@ set -euo pipefail
 
 source_dir=/workspace/output/rg280v/images
 stage=/workspace/output/rg280v/image-stage
-destination=/workspace/output/plumos-rg280v-bringup.img
+destination=/workspace/output/plumos-rg280v-bringup-r2.img
 boot_start=8192
 boot_sectors=1048576
 data_start=$((boot_start + boot_sectors))
@@ -18,6 +18,7 @@ fi
 truncate -s 0 "$stage/boot.vfat"
 truncate -s $((boot_sectors * 512)) "$stage/boot.vfat"
 mkfs.vfat -F 32 -n PLUMOSBOOT "$stage/boot.vfat" >/dev/null
+mmd -i "$stage/boot.vfat" ::/dev ::/root
 
 cat "$source_dir/uzImage.bin" "$source_dir/rg280v.dtb" > "$stage/uzImage.bin"
 for name in uzImage.bin rootfs.squashfs modules.squashfs mininit-syspart; do
@@ -28,6 +29,7 @@ for name in uzImage.bin rootfs.squashfs modules.squashfs mininit-syspart; do
     fi
     mcopy -o -i "$stage/boot.vfat" "$input" ::/
 done
+mdir -i "$stage/boot.vfat" ::/dev ::/root >/dev/null
 
 truncate -s 0 "$stage/data.ext4"
 truncate -s $((data_sectors * 512)) "$stage/data.ext4"
@@ -52,6 +54,7 @@ cmp -s -n $((data_sectors * 512)) \
     -i 0:$((data_start * 512)) "$stage/data.ext4" "$destination"
 cmp -s -n "$(stat -c '%s' "$source_dir/ubiboot-rg350.bin")" \
     -i 0:512 "$source_dir/ubiboot-rg350.bin" "$destination"
+mdir -i "$destination@@$((boot_start * 512))" ::/dev ::/root >/dev/null
 
 for name in uzImage.bin rootfs.squashfs modules.squashfs mininit-syspart; do
     if [[ "$name" == uzImage.bin ]]; then

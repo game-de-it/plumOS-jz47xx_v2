@@ -7,6 +7,8 @@
   `3181c26b25abd135dc2d44ed71b72664ff89c0c8` (6.8)。
 - OpenDingux の kernel defconfig と RG280V DTBを使う。USB AudioとUSB診断の
   ドライバのみfragmentで追加し、host役割を強制する設定は加えない。
+- 起動用FAT領域に `/dev` と `/root` を作る。LinuxがFATをrootとして
+  マウントした直後、devtmpfsとmininitがこれらのマウント先を使う。
 - `configs/plumos_rg280v_defconfig` は不要なゲーム・メディア・Wi-Fiパッケージを
   除いた初期構成。gmenu2x、OPK、表示、音声、USB、診断手段は残す。
 
