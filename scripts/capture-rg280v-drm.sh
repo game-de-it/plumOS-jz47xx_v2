@@ -56,6 +56,8 @@ if fmt == 'XB15' and bpp == 16:
                                        ((pixel >> 5) & 31) * 255 // 31,
                                        ((pixel >> 10) & 31) * 255 // 31))
     image = Image.frombytes('RGB', (width, height), bytes(rgb))
+elif fmt == 'RG16' and bpp == 16:
+    image = Image.frombytes('RGB', (width, height), data, 'raw', 'BGR;16', pitch, 1)
 elif fmt == 'XR24' and bpp == 32:
     image = Image.frombytes('RGB', (width, height), data, 'raw', 'BGRX', pitch, 1)
 else:
