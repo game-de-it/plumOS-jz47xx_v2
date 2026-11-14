@@ -8,7 +8,8 @@ USBケーブルでMacからping、ADB connect、shell、pushを実機確認し�
 Mac側は `en106` に `10.1.1.1/30`、端末側は `usb0` に `10.1.1.2/30`。
 ADBが起動しなかった原因はloopback未設定で、`127.0.0.1/8` を設定して解決した。
 SD2の16GB FATカードは読み取り専用でマウントし、`bios` と `roms` を確認した。
-フロントエンドとUSB-DACは未検証。
+FBDEVへ描く開発用の大きな状態画面も実機で確認した。フロントエンドと
+USB-DACは未検証。
 
 ## 固定した基盤
 
@@ -32,6 +33,9 @@ Macとの接続はplumOSの初期化処理からCDC Ethernetを先に使う。RG
 `plumos-boot.log` を読む。開発用構成のため、無線ネットワークは含めない。
 MacではUSB Ethernetとして現れたインターフェースに `10.1.1.1/30` を設定する。
 ADB接続後は `scripts/capture-rg280v.sh` で基本ログを保存できる。
+`scripts/deploy-rg280v-status.sh` は大きな開発用状態画面をADBで配布する。
+RG280VのFBDEVは320×480行として見え、物理画面では縦が半分に縮むため、
+320×240のデザインを縦に2倍して描く。
 
 アプリの反復は `/media/data/apps` または `/media/data/local` への転送、
 対象プロセスの再起動で行う。カーネルとDTBはSDイメージの再生成が必要。
