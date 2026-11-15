@@ -14311,6 +14311,9 @@ static void handle_action(struct ui_state *ui, enum ui_action action) {
 static enum ui_action action_from_key_code(unsigned int code) {
   if (runtime_device_is_rg280v()) {
     switch (code) {
+    case KEY_ESC:
+      /* OpenDingux's RG280V device tree reports physical SELECT as ESC. */
+      return ACTION_SELECT;
     case KEY_LEFTCTRL:
       return ACTION_A;
     case KEY_LEFTALT:
