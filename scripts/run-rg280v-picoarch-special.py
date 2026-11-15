@@ -14,7 +14,8 @@ ROOT = Path(__file__).resolve().parent.parent
 ROM2 = Path(os.environ.get("PLUMOS_ROM2_ROOT",
                            "<local-path>"))
 OUT = ROOT / "output/validation/rg280v-picoarch-20261115/smoke"
-REMOTE = "/media/data/plumos/smoke/special"
+REMOTE = os.environ.get("PLUMOS_PICOARCH_SPECIAL_REMOTE",
+                        "/media/data/plumos/smoke/special")
 WANTED = None
 
 spec = importlib.util.spec_from_file_location(
@@ -25,7 +26,8 @@ spec.loader.exec_module(smoke)
 
 
 def push(source, destination):
-    smoke.adb(["push", str(source), destination], timeout=180)
+    smoke.adb(["push", str(source), destination],
+              timeout=900 if source.is_dir() else 180)
 
 
 def run(core, system, local_files, content):
@@ -88,8 +90,9 @@ def main():
             run("pcsx_rearmed", "psx", [ROM2 / "psx/chroQW.img"], "chroQW.img")
             run("opera", "3do", [ROM2 / "_etc/3do/biofury.iso"], "biofury.iso")
 
-            neocd = ROM2 / "_etc/neogeocd/Fatal Fury"
-            run("neocd", "neogeocd", [neocd], "Fatal Fury/Fatal Fury.cue")
+            neocd = ROM2 / "_etc/neogeocd/Fatal Fury WAV"
+            run("neocd", "neogeocd", [neocd],
+                "Fatal Fury WAV/Fatal Fury WAV.cue")
 
             run("fbalpha2012_neogeo", "neogeo", [
                 ROM2 / "_etc/neogeo/ART OF FIGHTING/aof.zip",
