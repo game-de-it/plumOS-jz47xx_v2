@@ -1,5 +1,9 @@
 # 作業ログ
 
+## 2026-11-16 — マスターシステムFE候補の実機確認
+
+- ユーザーがマスターシステムの全候補を正常と報告。PicoArchログではGenesis Plus GX、PicoDrive、GearsystemのSD2 ROM起動・コア終了を確認し、単体PicoDriveが端末のFE選択中。構成変更なし。候補別FPS数値などは未取得。詳細は`docs/validation/rg280v-mastersystem-cores-2026-11-16.md`。次はGame Gear。
+
 ## 2026-11-16 — Mega Drive Genesis Plus GXの場面依存FPS低下
 
 - ユーザーがGenesis Plus GXの全確認ROMで、場面により約60 FPSから約30 FPSへ落ちると報告。ほかのMega Drive候補は正常との報告。
