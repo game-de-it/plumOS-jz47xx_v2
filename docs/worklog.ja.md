@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — GBCのFE登録候補
+
+- ユーザーがGBCの4候補（単体Gambatte、PicoArch Gambatte、Gearboy、VBA-M）をすべて正常と実機確認。端末ログではPicoArchの3候補がSD2の`Horde DX (USA).gbc`を起動・終了。FEのrecentには単体GambatteでGBC ROMの起動履歴が残る。
+- 候補構成と既定の単体Gambatteは維持。個別候補のFPS数値やセーブ永続性はこの報告では未取得。次はGBAの登録順、単体ReGBA、PicoArch gpSP、mGBA。詳細は`docs/validation/rg280v-gbc-cores-2026-11-16.md`。
+
 ## 2026-11-16 — GBのFE登録候補
 
 - ユーザーがGBの登録候補を確認し「すべて動作OK」と報告。FE候補は単体Gambatte、PicoArch Gambatte、Gearboy、VBA-Mの順。
