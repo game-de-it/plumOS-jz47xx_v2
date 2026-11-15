@@ -1,5 +1,12 @@
 # 作業ログ
 
+## 2026-11-16 — GBA mGBAの30 FPS
+
+- ユーザーがGBAのReGBA・gpSPは正常、mGBAだけ約30 FPSと報告。端末のPicoArchログでは同じSD2の`Densetsu no Stafy 3 (Japan).gba`をgpSPとmGBAで起動・終了している。
+- mGBAのFrameskip既定値は0、個別上書きなし。同ROMの20秒診断で安定窓29.99 FPS、`SDL_Flip`待ち平均12.176 ms。1フレーム約33.34 msのうち画面待ち以外が約21.16 msで、60 Hzの16.7 msを超える。待機ループ最適化を`Detect and Remove`へ強めた比較ビルドも29.99 FPSで改善しなかったため、元コアをSHA-256照合して復元。
+- mGBAをGBAのFE候補から削除し、ReGBAとgpSPを維持する。詳細は`docs/validation/rg280v-gba-mgba-2026-11-16.md`。
+- FE設定を端末へ配置して読み戻し一致を確認。GBA選択を単体ReGBAへ戻してFEを再起動し、端末プロセスと旧mGBAコアのハッシュを照合。
+
 ## 2026-11-16 — GBCのFE登録候補
 
 - ユーザーがGBCの4候補（単体Gambatte、PicoArch Gambatte、Gearboy、VBA-M）をすべて正常と実機確認。端末ログではPicoArchの3候補がSD2の`Horde DX (USA).gbc`を起動・終了。FEのrecentには単体GambatteでGBC ROMの起動履歴が残る。

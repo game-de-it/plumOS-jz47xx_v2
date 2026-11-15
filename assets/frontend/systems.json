@@ -369,8 +369,7 @@
       },
       "launch_profiles": [
         "standalone:regba",
-        "picoarch:gpsp",
-        "picoarch:mgba"
+        "picoarch:gpsp"
       ],
       "default_launch_profile": "standalone:regba",
       "default_cpu_policy": "ondemand",
