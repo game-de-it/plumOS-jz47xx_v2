@@ -1,5 +1,9 @@
 # 作業ログ
 
+## 2026-11-16 — PicoArchのCPU使用率項目名
+
+- RG280Vの「Audio and Video」で `Show CPU %` の項目名が欠けることをDRM画面で確認。共通メニュー描画が項目名を可変書式として扱い、末尾の `%` を解釈していた。固定書式で文字列を渡す修正をビルド・配置し、実機ハッシュを照合した。ユーザーがFEからQuickNESを再起動し、項目名の表示を確認。詳細は `docs/validation/rg280v-picoarch-cpu-menu-2026-11-16.md`。
+
 ## 2026-11-16 — QuickNESメニューの実機確認
 
 - ユーザーがFEからQuickNESを起動し、物理SELECT＋STARTで開いたメニューの背景と文字を正常と確認。音声・ゲーム操作・メニューからの終了は今回の確認範囲外。検証記録を `docs/validation/rg280v-quicknes-color-2026-11-15.md` に追記した。

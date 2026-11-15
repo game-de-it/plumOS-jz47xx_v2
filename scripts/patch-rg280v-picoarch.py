@@ -20,6 +20,11 @@ replace("Makefile", "scaler_neon.o unzip.o", "scaler_c.o unzip.o")
 replace("Makefile", "-lpng12", "-lpng16")
 replace("scale.h", "#define SCREEN_WIDTH 640\n#define SCREEN_HEIGHT 480", "#define SCREEN_WIDTH 320\n#define SCREEN_HEIGHT 240")
 replace("menu.c", "#define MENU_X2 1", "#define MENU_X2 0")
+replace("libpicofe/menu.c", "text_out16(x, y, name);",
+        'text_out16(x, y, "%s", name);')
+replace("libpicofe/menu.c",
+        "text_out16(5, g_menuscreen_h - me_mfont_h - 4, menu_error_msg);",
+        'text_out16(5, g_menuscreen_h - me_mfont_h - 4, "%s", menu_error_msg);')
 
 scaler_source = (source / "scaler_neon.c").read_text()
 marker = "void scale1x_c16("
