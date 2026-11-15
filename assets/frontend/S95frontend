@@ -38,7 +38,14 @@ case "${1:-}" in
         ;;
     stop)
         if [ -r "$pidfile" ]; then
-            kill "$(cat "$pidfile")" 2>/dev/null || true
+            old_pid=$(cat "$pidfile")
+            kill "$old_pid" 2>/dev/null || true
+            # Let the previous process release DRM before starting a new one.
+            attempt=0
+            while kill -0 "$old_pid" 2>/dev/null && [ "$attempt" -lt 30 ]; do
+                sleep 0.1
+                attempt=$((attempt + 1))
+            done
             rm -f "$pidfile"
         fi
         ;;

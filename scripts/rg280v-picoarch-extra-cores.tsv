@@ -15,7 +15,7 @@ pokemini|A|https://github.com/libretro/PokeMini.git|9ba2c2d98bef98794095f3ef50e2
 prboom|A|https://github.com/libretro/libretro-prboom.git|4e671fa0a4b7b892e17ac4e1803c9d627653a4c1||Makefile|platform=unix
 retro8|A|https://github.com/libretro/retro8.git|bc388ec7d217a08265d116aaa74afc0ca3f204f5||Makefile|platform=unix
 fake08|A|https://github.com/jtothebell/fake-08.git|aebd6b9648d1c450910ad79c78f9280dfbd20b25|platform/libretro|Makefile|platform=unix
-scummvm|A|https://github.com/libretro/scummvm.git|660e13b0764fe2be39b6d723345ecabfbb318cc5||Makefile|platform=unix
+scummvm|A|https://github.com/libretro/scummvm.git|660e13b0764fe2be39b6d723345ecabfbb318cc5|backends/platform/libretro|Makefile|platform=unix LITE=1 NO_WIP=1 FORCE_OPENGLNONE=1 USE_MT32EMU= USE_VORBIS= USE_THEORADEC= USE_FLUIDSYNTH= USE_FREETYPE2= USE_MPEG2= USE_IMGUI=
 easyrpg|A|https://github.com/EasyRPG/Player.git|084e67ff3f07a3c196573759414cced5ff966d9d||CMakeLists.txt|target=easyrpg_libretro
 bluemsx|A|https://github.com/libretro/blueMSX-libretro.git|acf358be18644a9df0ed9602d63c2f73d4fe605a||Makefile.libretro|platform=unix
 neocd|A|https://github.com/libretro/neocd_libretro.git|b7d96e794f2dfa500cba46c78cbc3c28349cfd05||Makefile|platform=unix USE_LTO=0
@@ -48,7 +48,7 @@ puae|O|https://github.com/libretro/libretro-uae.git|0b883572b3d67cdfa2ac4a05d0d2
 puae2021|O|https://github.com/libretro/libretro-uae.git|2.6.1||Makefile|platform=unix
 squirreljme|O|https://github.com/XerTheSquirrel/SquirrelJME.git|0d8554644bdae671fef6a843ea136c3d567221e3|ratufacoat|makefilelibretro|platform=unix
 tgbdual|O|https://github.com/libretro/tgbdual-libretro.git|a6f3018e6a23030afc1873845ee54d4b2d8ec9d3||Makefile|platform=unix
-theodore|O|https://github.com/Zlika/theodore.git|563fb989f12c7176824b34bbc726bf24d933e86c||Makefile|platform=unix
+theodore|O|https://github.com/Zlika/theodore.git|563fb989f12c7176824b34bbc726bf24d933e86c||Makefile|platform=unix GCC_SECURITY_FLAGS=
 tyrquake|O|https://github.com/libretro/tyrquake.git|89f3e032757b9b56e8d62a528a4a2472e60631aa||Makefile|platform=unix
 uw8|O|https://github.com/libretro/uw8-libretro.git|d7d60f5fc741d9bf22a5771f7de96a80c9fd6525||Makefile|platform=unix
 uzem|O|https://github.com/libretro/libretro-uzem.git|08e39e19167727c89fb995e3fa70dde252e6aab0||Makefile|platform=unix

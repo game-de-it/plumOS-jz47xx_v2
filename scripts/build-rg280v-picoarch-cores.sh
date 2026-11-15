@@ -29,6 +29,26 @@ build_one() {
         git -C "$checkout" checkout -q --detach FETCH_HEAD
     fi
     git -C "$checkout" submodule update --init --depth 1 --quiet
+    case "$id" in
+        opera|mednafen_pcfx)
+            rthreads="$source_dir/libretro-common/rthreads/rthreads.c" ;;
+        np2kai)
+            rthreads="$checkout/sdl/libretro/libretro-common/rthreads/rthreads.c" ;;
+        *) rthreads= ;;
+    esac
+    if [[ -n "$rthreads" ]]; then
+        python3 - "$rthreads" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+source = path.read_text()
+before = '#if defined(VITA) || defined(BSD) || defined(ORBIS)'
+after = before + ' || defined(__linux__)'
+if before in source and after not in source:
+    path.write_text(source.replace(before, after, 1))
+PY
+    fi
     echo "BUILD $id"
     if [[ "$makefile" == CMakeLists.txt ]]; then
         if ! docker run --rm --platform linux/arm64 \
@@ -51,6 +71,9 @@ build_one() {
                            -DBUILD_PERF=OFF -DBUILD_SUITE=OFF -DBUILD_CINEMA=OFF
                            -DUSE_FFMPEG=OFF -DUSE_LIBZIP=OFF -DUSE_MINIZIP=OFF
                            -DUSE_PNG=OFF -DUSE_SQLITE3=OFF -DUSE_LUA=OFF)
+                elif [[ "$target" == easyrpg_libretro ]]; then
+                    extra=(-DPLAYER_TARGET_PLATFORM=libretro
+                           -DPLAYER_AUDIO_BACKEND=libretro)
                 fi
                 cmake -S . -B build-rg280v -DCMAKE_SYSTEM_NAME=Linux \
                     -DCMAKE_C_COMPILER="${cross}gcc" -DCMAKE_CXX_COMPILER="${cross}g++" \
@@ -70,9 +93,11 @@ build_one() {
             set -e
             export PATH=/workspace/output/rg280v/host/bin:$PATH
             cross=/workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-
-            make -f "$1" -j4 CC="${cross}gcc" CXX="${cross}g++" AR="${cross}ar" \
+            ar_args=(AR="${cross}ar")
+            [[ "$3" == lutro ]] && ar_args=()
+            make -f "$1" -j4 CC="${cross}gcc" CXX="${cross}g++" "${ar_args[@]}" \
                 RANLIB="${cross}ranlib" STRIP="${cross}strip" $2
-        ' bash "$makefile" "$args" >"$log" 2>&1; then
+        ' bash "$makefile" "$args" "$id" >"$log" 2>&1; then
         echo "FAIL $id: $log"
         return 1
     fi
