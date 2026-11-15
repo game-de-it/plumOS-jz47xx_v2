@@ -75,25 +75,59 @@ if video.count("#include <math.h>") != 1:
     raise SystemExit("SDL includes changed")
 video = video.replace("#include <math.h>", "#include <math.h>\n#include <stdint.h>\n#include <stdlib.h>\n#include <string.h>\n#include \"main.h\"", 1)
 old_flip = "static void *fb_flip(void)\n{\n\tSDL_Flip(screen);"
-new_flip = '''static void *fb_flip(void)
+new_flip = '''static int needs_rgb565_handoff_swap(void)
+{
+    return core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888 ||
+           (core_pixel_format == RETRO_PIXEL_FORMAT_RGB565 &&
+            strcmp(core_name, "quicknes") == 0);
+}
+
+static void swap_rgb565_words(uint16_t *pixels, int width, int height, int pitch)
+{
+    for (int y = 0; y < height; y++) {
+        uint16_t *line = (uint16_t *)((uint8_t *)pixels + y * pitch);
+        for (int x = 0; x < width; x++) {
+            uint16_t pixel = line[x];
+            line[x] = (uint16_t)((pixel << 8) | (pixel >> 8));
+        }
+    }
+}
+
+static void *fb_flip(int convert_pixels)
 {
     /* QuickNES and host-converted XRGB8888 need swapped words at the RG280V
        SDL handoff. Other RGB565 cores, including fake08, do not. */
-    if (core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888 ||
-        (core_pixel_format == RETRO_PIXEL_FORMAT_RGB565 &&
-         strcmp(core_name, "quicknes") == 0)) {
-        for (int y = 0; y < screen->h; y++) {
-            uint16_t *line = (uint16_t *)((uint8_t *)screen->pixels + y * screen->pitch);
-            for (int x = 0; x < screen->w; x++) {
-                uint16_t pixel = line[x];
-                line[x] = (uint16_t)((pixel << 8) | (pixel >> 8));
-            }
-        }
-    }
+    if (convert_pixels && needs_rgb565_handoff_swap())
+        swap_rgb565_words(screen->pixels, screen->w, screen->h, screen->pitch);
     SDL_Flip(screen);'''
 if video.count(old_flip) != 1:
     raise SystemExit("SDL flip marker changed")
 video = video.replace(old_flip, new_flip, 1)
+menu_bg_copy = "\tmemcpy(g_menubg_src_ptr, screen->pixels, g_menubg_src_h * g_menubg_src_pp * sizeof(uint16_t));"
+if video.count(menu_bg_copy) != 1:
+    raise SystemExit("menu background copy marker changed")
+video = video.replace(menu_bg_copy,
+                      "\t/* Convert the saved game frame once for the menu's RGB565 darkener. */\n"
+                      "\tif (needs_rgb565_handoff_swap())\n"
+                      "\t\tswap_rgb565_words(g_menubg_src_ptr, g_menubg_src_w,\n"
+                      "\t\t                      g_menubg_src_h, g_menubg_src_pp * sizeof(uint16_t));", 1)
+if video.count("g_menuscreen_ptr = fb_flip();") != 2:
+    raise SystemExit("menu flip markers changed")
+video = video.replace("g_menuscreen_ptr = fb_flip();", "g_menuscreen_ptr = fb_flip(0);", 1)
+video = video.replace("g_menuscreen_ptr = fb_flip();", "g_menuscreen_ptr = fb_flip(0);", 1)
+video = video.replace("\tfb_flip();\n\tSDL_LockSurface(screen);", "\tfb_flip(0);\n\tSDL_LockSurface(screen);", 1)
+video = video.replace("void plat_video_flip(void)\n{\n\tfb_flip();",
+                      "void plat_video_flip(void)\n{\n"
+                      "\tif (g_menubg_src_ptr && g_menubg_src_w == screen->w &&\n"
+                      "\t    g_menubg_src_h == screen->h &&\n"
+                      "\t    g_menubg_src_pp * sizeof(uint16_t) == screen->pitch)\n"
+                      "\t{\n"
+                      "\t\tmemcpy(g_menubg_src_ptr, screen->pixels,\n"
+                      "\t\t       g_menubg_src_h * screen->pitch);\n"
+                      "\t}\n"
+                      "\tfb_flip(1);", 1)
+if video.count("fb_flip();"):
+    raise SystemExit("unhandled SDL flip call")
 pattern = r"// begin miyoo hardware scaling support.*?// end miyoo hardware scaling support"
 replacement = (
     "/* RG280V uses SDL/KMSDRM's 320x240 RGB565 surface. */\n"
