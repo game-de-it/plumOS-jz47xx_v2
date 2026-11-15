@@ -6,6 +6,7 @@
 - PicoArchホストへLibretroの単調時刻・性能計測インターフェースを実装し、Lutro Pongが実機で描画され約60 FPSで更新された。更新した実行ファイルは端末とMacでSHA-256一致を確認した。
 - ユーザー所持のBIOS・機種データをSD1に試験用として配置し、Hatari、O2EM、PC-FXの起動段階が進んだ。CannonballとDinothawrはバンドルの配置修正で画面が出た。これらのBIOS/ROMはGit・イメージに含めない。
 - Neo GeoはZIP名と親BIOSの配置で起動するが緑の横線と47.83 FPSを確認した。NeoCDはBIOSを見つけた後、検証用CUEのMP3トラック非対応で停止。BlueMSXは機種データ追加後も画面・速度が不十分。その他の未解決項目と判定限界を `docs/validation/rg280v-picoarch-remediation-2026-11-15.md` に記録した。
+- Neo Geoを等倍・フィルターなしでも再試験したところ59.01 FPSまで改善したが緑の描画破損は残った。試験用設定は端末から削除してFEプロセスの復帰を確認。描画破損は拡大処理だけの問題ではない。
 
 ## 2026-11-15 — PicoArchコア拡充の途中経過と実機障害
 

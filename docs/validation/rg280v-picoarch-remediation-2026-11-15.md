@@ -10,7 +10,7 @@
 | Hatari / Atari ST | ユーザー所持の `tos.img` をBIOS領域に配置 | 起動画面あり、36.63 FPS | ゲーム画面・音・速度 |
 | O2EM / Odyssey² | ユーザー所持の `o2rom.bin` をBIOS領域に配置 | 画面あり、59.74 FPS、PCM信号あり | 色・音質・入力 |
 | Mednafen PC-FX | ユーザー所持の `pcfx.rom` をBIOS領域に配置 | NEC BIOS画面まで進行 | ゲーム起動・FPS・音 |
-| FBA2012 Neo Geo | アーケードZIP名 `aof.zip` を保持し、親 `neogeo.zip` も隣に配置 | 起動するが緑の横線が残る。最終窓47.83 FPS | 描画破損と速度の修正 |
+| FBA2012 Neo Geo | アーケードZIP名 `aof.zip` を保持し、親 `neogeo.zip` も隣に配置 | 起動するが緑の横線が残る。通常の拡大では最終窓47.83 FPS。等倍・効果なし・文字最適化なしでは59.01 FPSになったが緑の破損は残った | コアの描画データの修正 |
 | NeoCD | BIOSを要求されるサブディレクトリへ配置 | BIOS探索は通るがCUE内のMP3トラックをコアが拒否し終了 | 対応形式のディスクで再試験 |
 | BlueMSX | `Machines` と `Databases` をBIOS領域に配置 | 一部ROMは起動するが取得画面は全黒、約21 FPS | 機種設定とROMの適合性 |
 
@@ -19,3 +19,5 @@
 未解決のNES三コアの色違いと低FPS、通常PCEの黒画面、遅いSFC・Pico-8・Amigaコア、クラッシュしたコアは前回報告のまま。NESは既存の単体FCEUX、PCEはFast、SFCは2002/2005系をFEの実用経路とする。機械試験だけで「色、音、FPSに異常なし」とは判定できない。
 
 詳細な取得画像と計測ログはローカルの `output/validation/rg280v-picoarch-fixes-20261115/` に保存した（ROM等の配布物を含むためGit対象外）。
+
+Neo Geoの等倍・フィルターなし設定は切り分け後に端末から削除し、常用設定には反映していない。FEプロセスが復帰したことを確認した。
