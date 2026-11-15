@@ -180,7 +180,6 @@
         "standalone:pocketsnes",
         "picoarch:snes9x2005",
         "picoarch:chimerasnes",
-        "picoarch:mednafen_supafaust",
         "picoarch:snes9x2002",
         "picoarch:snes9x2005_plus",
         "picoarch:snes9x2010"
