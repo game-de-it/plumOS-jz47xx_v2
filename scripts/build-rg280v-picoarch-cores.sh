@@ -32,6 +32,9 @@ build_one() {
     if [[ "$id" == quicknes ]]; then
         python3 "$repo_root/scripts/patch-rg280v-quicknes.py" "$checkout"
     fi
+    if [[ "$id" == chimerasnes ]]; then
+        python3 "$repo_root/scripts/patch-rg280v-chimerasnes.py" "$checkout"
+    fi
     case "$id" in
         opera|mednafen_pcfx)
             rthreads="$source_dir/libretro-common/rthreads/rthreads.c" ;;

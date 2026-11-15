@@ -179,7 +179,6 @@
       "launch_profiles": [
         "standalone:pocketsnes",
         "picoarch:snes9x2005",
-        "picoarch:snes9x",
         "picoarch:chimerasnes",
         "picoarch:mednafen_supafaust",
         "picoarch:snes9x2002",
