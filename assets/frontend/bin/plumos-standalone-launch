@@ -8,6 +8,7 @@ fi
 
 root=${PLUMOS_ROOT:-/media/data/plumos}
 case "$1" in
+    pcsx4all) binary="$root/bin/pcsx4all" ;;
     fceux)
         opk="$root/emulators/fceux_gcw0-2.6.6-2023-08-30.opk"
         export LD_PRELOAD="$root/lib/libfceux-menu.so${LD_PRELOAD:+:$LD_PRELOAD}"
@@ -41,10 +42,34 @@ case "$1" in
     *) echo "unsupported emulator: $1" >&2; exit 2 ;;
 esac
 
-[ -r "$opk" ] || { echo "emulator missing: $opk" >&2; exit 1; }
+if [ -n "${binary:-}" ]; then
+    [ -x "$binary" ] || { echo "emulator missing: $binary" >&2; exit 1; }
+else
+    [ -r "$opk" ] || { echo "emulator missing: $opk" >&2; exit 1; }
+fi
 [ -f "$2" ] || { echo "ROM missing: $2" >&2; exit 1; }
 "$root/bin/plumos-prepare-opk-input"
 mkdir -p "$root/home"
 export HOME="$root/home"
 export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+if [ "$1" = pcsx4all ]; then
+    mkdir -p "$HOME/.pcsx4all"
+    if [ ! -e "$HOME/.pcsx4all/bios" ]; then
+        ln -s "$root/bios" "$HOME/.pcsx4all/bios"
+    fi
+    rom=$2
+    case "$rom" in
+        *.m3u|*.M3U)
+            first=$(awk '!/^[[:space:]]*(#|$)/ { sub(/\r$/, ""); print; exit }' "$rom")
+            [ -n "$first" ] || { echo "empty PSX playlist: $rom" >&2; exit 1; }
+            case "$first" in
+                /*) rom=$first ;;
+                *) rom="$(dirname "$rom")/$first" ;;
+            esac
+            [ -f "$rom" ] || { echo "PSX disc missing: $rom" >&2; exit 1; }
+            ;;
+    esac
+    export SDL_VIDEODRIVER=kmsdrm
+    exec "$binary" -iso "$rom"
+fi
 exec /usr/bin/opkrun "$opk" "$2"

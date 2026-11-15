@@ -1,0 +1,65 @@
+diff --git a/src/external_lib/libchdr/src/libchdr_chd.c b/src/external_lib/libchdr/src/libchdr_chd.c
+index 913abaa..1a54f65 100644
+--- a/src/external_lib/libchdr/src/libchdr_chd.c
++++ b/src/external_lib/libchdr/src/libchdr_chd.c
+@@ -2527,7 +2527,7 @@ static chd_error zlib_codec_init(void *codec, uint32_t hunkbytes)
+ 
+ 	/* handle an error */
+ 	if (err != CHDERR_NONE)
+-		free(data);
++		zlib_allocator_free(&data->allocator);
+ 
+ 	return err;
+ }
+diff --git a/src/port/sdl/frontend.cpp b/src/port/sdl/frontend.cpp
+index afbdccb..e877de1 100755
+--- a/src/port/sdl/frontend.cpp
++++ b/src/port/sdl/frontend.cpp
+@@ -1295,7 +1295,7 @@ static int MenuToggleCombo_alter(u32 keys)
+ 
+ static void MenuToggleCombo_hint()
+ {
+-	port_printf(6 * 8, 10 * 6, "POWER button also opens menu");
++	port_printf(6 * 8, 10 * 6, "SELECT+START opens menu");
+ }
+ 
+ static char* MenuToggleCombo_show()
+@@ -1462,7 +1462,7 @@ static int settings_defaults()
+ 	Config.AnalogArrow = 0;
+ 	Config.AnalogMode = 3;
+ 	Config.RumbleGain = 100;
+-	Config.MenuToggleCombo = 0;
++	Config.MenuToggleCombo = 1;
+ 	Config.AsyncCD = 0;
+ 	Config.RCntFix = 0;
+ 	Config.VSyncWA = 0;
+diff --git a/src/port/sdl/port.cpp b/src/port/sdl/port.cpp
+index d1fed5b..8a68b5c 100755
+--- a/src/port/sdl/port.cpp
++++ b/src/port/sdl/port.cpp
+@@ -897,7 +897,6 @@ void pad_update()
+ #if defined(PG2) || defined(PG2V2)
+ 			case SDLK_RCTRL:
+ #else
+-			case SDLK_HOME:
+ 			case SDLK_F10:
+ #endif
+ 				popup_menu = true;
+@@ -1371,7 +1370,7 @@ int trigger_rumble(uint8_t low, uint8_t high)
+ }
+ #else
+ void Rumble_Init() {}
+-void trigger_rumble(uint8_t low, uint8_t high) {}
++int trigger_rumble(uint8_t low, uint8_t high) { return 0; }
+ #endif
+ 
+ void update_window_size(int w, int h, bool ntsc_fix)
+@@ -1473,7 +1472,7 @@ int main (int argc, char **argv)
+ 	 * 0: L3 + R3
+ 	 * 1: SELECT + START
+ 	 * 2: None */
+-	Config.MenuToggleCombo = 0;
++	Config.MenuToggleCombo = 1;
+ 
+ 	Config.SyncAudio=0;	/* 1=emu waits if audio output buffer is full
+ 	                       (happens seldom with new auto frame limit) */

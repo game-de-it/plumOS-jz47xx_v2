@@ -52,6 +52,11 @@ cp /workspace/assets/frontend/S95frontend "$data_root/local/init.d/S95frontend"
 cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/plumos-library-scan \
     /workspace/output/rg280v-fe/plumos-text-ui "$data_root/plumos/bin/"
 cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
+cp /workspace/output/rg280v-emulators/pcsx4all_rg280v "$data_root/plumos/bin/pcsx4all"
+cp /workspace/output/rg280v-emulators/pcsx4all-source/gpl.txt \
+    "$data_root/plumos/licenses/pcsx4all-GPL.txt"
+cp /workspace/output/rg280v-emulators/pcsx4all_rg280v-source.tar.gz \
+    "$data_root/plumos/licenses/pcsx4all-rg280v-source.tar.gz"
 cp /workspace/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules \
     "$data_root/plumos/config/70-plumos-gpio-keys.rules"
 cp /workspace/assets/frontend/default.otf /workspace/assets/frontend/cjk-fallback.ttc "$data_root/plumos/fonts/"
@@ -101,6 +106,7 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /local/init.d/S90status /local/init.d/S95frontend \
             /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \
             /plumos/bin/plumos-text-ui /plumos/bin/plumos-standalone-launch \
+            /plumos/bin/pcsx4all \
             /plumos/bin/plumos-picoarch-launch \
             /plumos/bin/plumos-prepare-opk-input \
             /plumos/bin/plumos-fceux-prepare \
@@ -120,6 +126,8 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /plumos/licenses/picoarch-LICENSE \
             /plumos/licenses/mednafen_pce_fast-COPYING \
             /plumos/licenses/picoarch-rg280v-source.tar.gz \
+            /plumos/licenses/pcsx4all-GPL.txt \
+            /plumos/licenses/pcsx4all-rg280v-source.tar.gz \
             /plumos/licenses/mednafen_pce_fast-rg280v-source.tar.gz \
             /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
             /plumos/provision/seed-v1; do

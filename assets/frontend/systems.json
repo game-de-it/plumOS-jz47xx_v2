@@ -933,9 +933,10 @@
         ]
       },
       "launch_profiles": [
+        "standalone:pcsx4all",
         "picoarch:pcsx_rearmed"
       ],
-      "default_launch_profile": "picoarch:pcsx_rearmed",
+      "default_launch_profile": "standalone:pcsx4all",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": false,
