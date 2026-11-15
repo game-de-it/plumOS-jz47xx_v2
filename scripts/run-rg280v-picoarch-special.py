@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Stage bundled ROMs for PicoArch smoke tests, then remove device copies."""
 
+import argparse
 import importlib.util
 import json
 import os
-import shutil
 import tempfile
 import zipfile
 from pathlib import Path
@@ -15,6 +15,7 @@ ROM2 = Path(os.environ.get("PLUMOS_ROM2_ROOT",
                            "<local-path>"))
 OUT = ROOT / "output/validation/rg280v-picoarch-20261115/smoke"
 REMOTE = "/media/data/plumos/smoke/special"
+WANTED = None
 
 spec = importlib.util.spec_from_file_location(
     "picoarch_smoke", ROOT / "scripts/run-rg280v-picoarch-smoke.py"
@@ -28,6 +29,8 @@ def push(source, destination):
 
 
 def run(core, system, local_files, content):
+    if WANTED is not None and core not in WANTED:
+        return
     base = f"{REMOTE}/{core}"
     smoke.shell(f"mkdir -p {base}")
     try:
@@ -47,6 +50,13 @@ def run(core, system, local_files, content):
 
 
 def main():
+    global OUT, WANTED
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cores", help="comma-separated core IDs")
+    parser.add_argument("--out-dir", type=Path, default=OUT)
+    args = parser.parse_args()
+    OUT = args.out_dir.resolve()
+    WANTED = set(args.cores.split(",")) if args.cores else None
     OUT.mkdir(parents=True, exist_ok=True)
     smoke.shell("/media/data/local/init.d/S95frontend stop", timeout=15)
     try:
@@ -81,11 +91,19 @@ def main():
             neocd = ROM2 / "_etc/neogeocd/Fatal Fury"
             run("neocd", "neogeocd", [neocd], "Fatal Fury/Fatal Fury.cue")
 
+            run("fbalpha2012_neogeo", "neogeo", [
+                ROM2 / "_etc/neogeo/ART OF FIGHTING/aof.zip",
+                ROM2 / "bios/neogeo.zip",
+            ], "aof.zip")
+
+            dino = ROM2 / "_etc/dinothawr/dinothawr"
+            run("dinothawr", "dinothawr", [dino],
+                "dinothawr/dinothawr.game")
+
             outrun_roms = ROM2 / "_etc/cannonball/outrun-roms-master"
-            shutil.copytree(outrun_roms, temp / "roms")
             marker = temp / "outrun.game"
             marker.touch()
-            run("cannonball", "cannonball", [temp / "roms", marker],
+            run("cannonball", "cannonball", [*outrun_roms.iterdir(), marker],
                 marker.name)
     finally:
         print("FRONTEND_RESTORED", smoke.restore_frontend(), flush=True)

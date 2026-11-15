@@ -1,0 +1,21 @@
+# RG280V PicoArch 異常項目の切り分けと対策（2026-11-15）
+
+基準は [同日の74コア起動試験](rg280v-picoarch-smoke-2026-11-15.md)。RG280V実機、996 MHz、USB ADB接続で再試験した。FPSはSDL画面更新の計測窓であり、ゲーム速度・音程の保証ではない。PCMの非ゼロ標本も音質の保証ではない。画面はDRM取得画像を目視確認した。ユーザーのROM/BIOSはGitに含めない。
+
+| 対象 | 変更・原因 | 再試験結果 | 残る確認 |
+| --- | --- | --- | --- |
+| Lutro / Pong | PicoArchへLibretroの単調時刻・性能計測インターフェースを追加 | 起動、Pong画面正常、59.99 FPS | 操作・音声の実機確認 |
+| Cannonball / OutRun | `.game`と必要なROM群を同じディレクトリに配置 | タイトル画面正常、59.01 FPS | プレイ中の音・操作 |
+| Dinothawr | `.game`だけでなくフォント等の付属ファイルを配置 | タイトル画面正常、56.99 FPS | プレイ中の音・操作 |
+| Hatari / Atari ST | ユーザー所持の `tos.img` をBIOS領域に配置 | 起動画面あり、36.63 FPS | ゲーム画面・音・速度 |
+| O2EM / Odyssey² | ユーザー所持の `o2rom.bin` をBIOS領域に配置 | 画面あり、59.74 FPS、PCM信号あり | 色・音質・入力 |
+| Mednafen PC-FX | ユーザー所持の `pcfx.rom` をBIOS領域に配置 | NEC BIOS画面まで進行 | ゲーム起動・FPS・音 |
+| FBA2012 Neo Geo | アーケードZIP名 `aof.zip` を保持し、親 `neogeo.zip` も隣に配置 | 起動するが緑の横線が残る。最終窓47.83 FPS | 描画破損と速度の修正 |
+| NeoCD | BIOSを要求されるサブディレクトリへ配置 | BIOS探索は通るがCUE内のMP3トラックをコアが拒否し終了 | 対応形式のディスクで再試験 |
+| BlueMSX | `Machines` と `Databases` をBIOS領域に配置 | 一部ROMは起動するが取得画面は全黒、約21 FPS | 機種設定とROMの適合性 |
+
+検証用スクリプトはROM2のオリジナルファイル名を保持し、試験後に転送物を削除する。FE起動用ADBシェルを数秒保持して、試験後にFEプロセスが残ることを確認した。`picoarch` 実行ファイルはSHA-256一致を確認してRG280Vへ更新した。SD1上のBIOS複製は検証用であり、イメージへの同梱・配布は行わない。
+
+未解決のNES三コアの色違いと低FPS、通常PCEの黒画面、遅いSFC・Pico-8・Amigaコア、クラッシュしたコアは前回報告のまま。NESは既存の単体FCEUX、PCEはFast、SFCは2002/2005系をFEの実用経路とする。機械試験だけで「色、音、FPSに異常なし」とは判定できない。
+
+詳細な取得画像と計測ログはローカルの `output/validation/rg280v-picoarch-fixes-20261115/` に保存した（ROM等の配布物を含むためGit対象外）。

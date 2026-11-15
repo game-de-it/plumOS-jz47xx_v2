@@ -70,10 +70,10 @@ def run_one(entry, out_dir, seconds):
     remote_rom = entry["path"]
     staged = None
     if source == "rom2":
-        remote_rom = f"{REMOTE}/smoke/roms/{core}{local_path.suffix.lower()}"
-        shell(f"mkdir -p {shlex.quote(REMOTE + '/smoke/roms')}")
+        staged = f"{REMOTE}/smoke/roms/{core}"
+        remote_rom = f"{staged}/{local_path.name}"
+        shell(f"mkdir -p {shlex.quote(staged)}")
         adb(["push", str(local_path), remote_rom], timeout=120)
-        staged = remote_rom
 
     remote_log = f"{REMOTE}/Logs/picoarch/health-{core}.tsv"
     command = (
@@ -119,7 +119,7 @@ def run_one(entry, out_dir, seconds):
     pulled = adb(["pull", remote_log, str(local_log)], check=False)
     health = parse_health(local_log.read_text()) if pulled.returncode == 0 else {}
     if staged:
-        shell(f"rm {shlex.quote(staged)}", check=False)
+        shell(f"rm -r {shlex.quote(staged)}", check=False)
     result = {
         "core": core, "system": system, "source": source,
         "rom_name": local_path.name, "adb_returncode": process.returncode,
@@ -137,15 +137,16 @@ def run_one(entry, out_dir, seconds):
 
 
 def restore_frontend():
-    for _ in range(6):
-        shell("/media/data/local/init.d/S95frontend start", timeout=20, check=False)
-        for _ in range(5):
-            time.sleep(2)
-            running = shell("ps | grep '[p]lumos-controller-ui'", timeout=8, check=False)
-            if "plumos-controller-ui --render" in running.stdout:
-                return True
+    # Keep the ADB shell alive while the frontend detaches. A start in a
+    # short-lived shell repeatedly left no process after that shell exited.
+    for _ in range(3):
+        started = shell("/media/data/local/init.d/S95frontend start; sleep 6; "
+                        "ps | grep '[p]lumos-controller-ui'", timeout=20,
+                        check=False)
+        if "plumos-controller-ui --render" in started.stdout:
+            return True
         shell("/media/data/local/init.d/S95frontend stop", timeout=10, check=False)
-        time.sleep(1)
+        time.sleep(2)
     return False
 
 

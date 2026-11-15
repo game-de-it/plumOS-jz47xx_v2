@@ -168,6 +168,55 @@ if core.count("int resume_slot = -1;") != 1:
     raise SystemExit("pixel format state marker changed")
 core = core.replace("int resume_slot = -1;", "int resume_slot = -1;\n"
                     "enum retro_pixel_format core_pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;", 1)
+perf_support = '''/* Libretro cores such as Lutro use this clock for their game timers. */
+static retro_time_t pa_perf_time_usec(void) {
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0;
+    return (retro_time_t)now.tv_sec * 1000000 + now.tv_nsec / 1000;
+}
+
+static retro_perf_tick_t pa_perf_counter(void) {
+    return (retro_perf_tick_t)pa_perf_time_usec();
+}
+
+static uint64_t pa_cpu_features(void) { return 0; }
+static void pa_perf_register(struct retro_perf_counter *counter) {
+    if (counter) counter->registered = true;
+}
+static void pa_perf_start(struct retro_perf_counter *counter) {
+    if (counter) counter->start = pa_perf_counter();
+}
+static void pa_perf_stop(struct retro_perf_counter *counter) {
+    if (counter) {
+        counter->total += pa_perf_counter() - counter->start;
+        counter->call_cnt++;
+    }
+}
+static void pa_perf_log(void) {}
+
+'''
+perf_marker = "static bool pa_environment(unsigned cmd, void *data) {"
+if core.count(perf_marker) != 1:
+    raise SystemExit("environment marker changed")
+core = core.replace(perf_marker, perf_support + perf_marker, 1)
+perf_case_marker = "\tcase RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: { /* 31 */"
+perf_case = '''\tcase RETRO_ENVIRONMENT_GET_PERF_INTERFACE: { /* 28 */
+        struct retro_perf_callback *cb = (struct retro_perf_callback *)data;
+        if (!cb) return false;
+        cb->get_time_usec = pa_perf_time_usec;
+        cb->get_cpu_features = pa_cpu_features;
+        cb->get_perf_counter = pa_perf_counter;
+        cb->perf_register = pa_perf_register;
+        cb->perf_start = pa_perf_start;
+        cb->perf_stop = pa_perf_stop;
+        cb->perf_log = pa_perf_log;
+        break;
+    }
+'''
+if core.count(perf_case_marker) != 1:
+    raise SystemExit("performance interface insertion marker changed")
+core = core.replace(perf_case_marker, perf_case + perf_case_marker, 1)
+core = core.replace("#include <unistd.h>", "#include <unistd.h>\n#include <time.h>", 1)
 pixel_check = """\t\tif (*format != RETRO_PIXEL_FORMAT_RGB565) {
 \t\t\t/* 565 is only supported format */
 \t\t\treturn false;
