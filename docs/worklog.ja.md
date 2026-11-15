@@ -5,6 +5,7 @@
 - ユーザーがGame GearのFE登録4候補を動作OKと実機報告。PicoArchログでGenesis Plus GX・PicoDrive・GearsystemのSD2 Columns起動・終了を確認。候補構成は維持。
 - PicoArchのAspect・Fullなどが一部コアで効かないように見えるとの報告を受け、全コア共通の`scale()`経路を修正。Nativeの非整数拡大、初回の代替アスペクト比の保持、画面モード変更後の余白残りを解消し、Libretroの実行中ジオメトリ変更も反映する。
 - 実スケーラーの11条件試験を通過。修正版をSHA-256照合してRG280Vへ配置し、GearsystemのGame Gear Columnsで最終窓59.99 FPS・描画・PCM信号・FE復帰を自動確認。物理メニューでの3モード切替と色・音・操作はユーザー回答待ち。詳細は`docs/validation/rg280v-picoarch-screen-size-2026-11-16.md`。
+- ユーザーがGearsystemのGame GearでNative・Aspect・Fullの表示幅の変化を実機確認し、色・音・操作も正常と報告。端末のPicoArch本体ハッシュは最終版と一致。ほかのコアは共通描画経路の寸法試験で確認済みだが、ROMごとの物理表示は再試験していない。
 
 ## 2026-11-16 — マスターシステムFE候補の実機確認
 

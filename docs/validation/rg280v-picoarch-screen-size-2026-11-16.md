@@ -22,4 +22,6 @@ PicoArchの全Libretroコアは`plat_video_process()`から同じ`scale()`へRGB
 
 実際の`scale.c`をホストでコンパイルした`scripts/test-rg280v-picoarch-scaling.c`で11条件を検証し、全件通過。160×144はNative 160×144、Aspect 267×240、Full 320×240。256×192の4:3ではAspectとFullがともに320×240。240×160、320×224、640×480、コア比率0と4:3、未消去の描画先からの余白処理も検証した。
 
-最終PicoArch本体SHA-256は`3fdad0d306ccc8d88eaa69618f9e5048860b5957bdc6fe160a5fb2db72581147`で、端末配置後のハッシュと一致。SD2のGame Gear ColumnsをGearsystemで11秒自動起動し、最終画面更新窓59.99 FPS、取得画像320×240で描画あり、PCM非ゼロ、FE復帰後PID 5021を確認した。自動起動はScreen sizeの物理メニュー操作を代替しないため、3モードの実機操作と色・音・入力の確認はユーザー回答待ち。ほかの全コアのROM別FPS・表示結果は個別には再試験していない。
+最終PicoArch本体SHA-256は`3fdad0d306ccc8d88eaa69618f9e5048860b5957bdc6fe160a5fb2db72581147`で、端末配置後のハッシュと一致。SD2のGame Gear ColumnsをGearsystemで11秒自動起動し、最終画面更新窓59.99 FPS、取得画像320×240で描画あり、PCM非ゼロ、FE復帰後PID 5021を確認した。
+
+ユーザーが同じGearsystemで物理SELECT＋STARTのメニューからNative→Aspect→Fullへ切り替え、3モードとも表示幅が変化し、色・音・操作に異常がないことを確認した。端末ログにはGame Gear Columnsの起動とコア終了が記録され、PicoArch本体のハッシュは最終版と一致。ほかの全コアのROM別FPS・表示結果は個別には再試験していないが、3モードの寸法計算は全コア共通の描画経路に適用される。
