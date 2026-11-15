@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — Mega Drive Genesis Plus GXの場面依存FPS低下
+
+- ユーザーがGenesis Plus GXの全確認ROMで、場面により約60 FPSから約30 FPSへ落ちると報告。ほかのMega Drive候補は正常との報告。
+- 同一Shinobi ROMの無操作約20秒自動起動は、従来44.1 kHzと試験用32 kHzの双方で終盤59.99 FPS。ゲーム中の低下場面を含まないため、改善判定はできない。
+- 32 kHz比較コアを元コアのバックアップとSHA-256照合後に端末へ配置。FE稼働を確認し、同じ場面でのFPSと音の実機比較を依頼。詳細は`docs/validation/rg280v-megadrive-genesis-plus-gx-2026-11-16.md`。
+
 ## 2026-11-16 — GBA mGBAの30 FPS
 
 - ユーザーがGBAのReGBA・gpSPは正常、mGBAだけ約30 FPSと報告。端末のPicoArchログでは同じSD2の`Densetsu no Stafy 3 (Japan).gba`をgpSPとmGBAで起動・終了している。
