@@ -180,8 +180,7 @@
         "standalone:pocketsnes",
         "picoarch:snes9x2005",
         "picoarch:chimerasnes",
-        "picoarch:snes9x2005_plus",
-        "picoarch:snes9x2010"
+        "picoarch:snes9x2005_plus"
       ],
       "default_launch_profile": "standalone:pocketsnes",
       "default_cpu_policy": "ondemand",
