@@ -898,6 +898,51 @@
       }
     },
     {
+      "id": "psx",
+      "display_name": "PlayStation",
+      "short_name": "PSX",
+      "sort_order": 200,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "PS",
+          "source": "miyoo",
+          "priority": 10
+        },
+        {
+          "name": "psx",
+          "source": "rocknix",
+          "priority": 20
+        }
+      ],
+      "extensions": [
+        "cue",
+        "chd",
+        "iso",
+        "pbp",
+        "m3u"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/psx"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "picoarch:pcsx_rearmed"
+      ],
+      "default_launch_profile": "picoarch:pcsx_rearmed",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "cd_media_crc_expensive"
+      }
+    },
+    {
       "id": "ngpc",
       "display_name": "NGPC",
       "short_name": "NGPC",

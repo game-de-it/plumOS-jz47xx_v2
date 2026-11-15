@@ -25,3 +25,5 @@
 Sega CDは提供されたライブラリで利用できる2本を配置した。1本はFatal Fury Specialのデモ版、もう1本はNight Striker。PC Engine CDは4本をCHD化した。両CD機種に必要なBIOSも端末の`plumos/bios`へ配置した。CHDは作成後に`chdman verify`を通過。転送した13本のROMと4本のBIOSはSD2または端末上でSHA-256を照合し、ROMはFE再スキャンの登録名とも照合した。個別ハッシュはGit管理外の`output/rg280v-emulators/fe-rom-samples-20261116.json`に保存した。ROMとBIOSはGitに含めない。
 
 作業後のSD2は読み取り専用マウントで、FEプロセス`plumos-controller-ui --render`の稼働を確認した。全17機種がROMを持つことまで検証済み。追加ROMの映像・色・音・FPS・入力・終了後のFE復帰は、これから実機で確認する。
+
+追記：PSXは当時のFE登録に含まれていなかった。後続作業でPSXを登録し、試験用ROM4件とアイコンを追加した。起動試験のクラッシュは登録除外の理由にしない。詳細は`rg280v-psx-fe-registration-2026-11-16.md`を参照。

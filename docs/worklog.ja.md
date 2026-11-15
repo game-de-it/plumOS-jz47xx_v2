@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — クラッシュを理由に除外せずPSXをFE登録
+
+- ユーザーの方針に従い、クラッシュは検証結果として扱い、PSXをFEの有効機種へ追加した。PCSX ReARMedを起動候補にし、PSXの機種ロゴ、試験用ROM4件、BIOS3種を配置した。ROM・BIOSはGitに含めない。
+- 転送11件のSHA-256とFEのPSX登録4件を確認。SD2は読み取り専用へ戻し、FEの稼働を確認した。
+- 別タイトルのCUE/IMGとBIOSを使った時間制限付き起動でもPCSX ReARMedは`signal 11`で異常終了。FEは復帰した。PSX登録は維持し、原因調査を残す。詳細は`docs/validation/rg280v-psx-fe-registration-2026-11-16.md`。
+
 ## 2026-11-16 — FEの不足機種アイコンを補完
 
 - FEで新たに表示された32X、Sega CD、SuperGrafx、PC Engine CDのロゴ画像が欠けていた。既存15枚と同じplumOS-A30の既定テーマから4枚を追加した。
