@@ -1,5 +1,9 @@
 # 作業ログ
 
+## 2026-11-16 — QuickNESメニューの実機確認
+
+- ユーザーがFEからQuickNESを起動し、物理SELECT＋STARTで開いたメニューの背景と文字を正常と確認。音声・ゲーム操作・メニューからの終了は今回の確認範囲外。検証記録を `docs/validation/rg280v-quicknes-color-2026-11-15.md` に追記した。
+
 ## 2026-11-15 — RG280V QuickNESの色修正
 
 - V90S・TRIMUI-SのGit履歴とRG280Vの画素経路を比較。QuickNESのRGB565バイト順と既定NESパレットの差を特定した。
