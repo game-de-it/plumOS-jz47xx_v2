@@ -3554,6 +3554,10 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
       plumos_fbdev_draw_text_token_row(
           r, items[i], keyboard_selected ? wifi_keyboard_col : -1,
           name_x, y, entry_scale, w - 8, fg);
+    } else if (core_settings_page && w <= 400) {
+      /* One 18-pixel font fits every RG280V core name without animation. */
+      plumos_fbdev_draw_text_clipped(r, name_x, y, items[i], entry_scale,
+                                    1, name_x, right_x, fg);
     } else if (settings_page) {
       char setting_label[160];
       char setting_control[80];
@@ -3564,23 +3568,15 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                                              sizeof(setting_label),
                                              setting_control,
                                              sizeof(setting_control))) {
-        int min_control_x = name_x +
-            plumos_fbdev_text_width(setting_label, entry_scale) + cell_width;
-        int scroll_px = 0;
         control_width = plumos_fbdev_text_width(setting_control, entry_scale);
         control_x = right_x - control_width;
-        if (control_x < min_control_x) {
-          control_x = min_control_x;
-          if (core_settings_page && selected[i] && right_x > control_x) {
-            scroll_px = plumos_fbdev_marquee_offset(
-                r, control_width, right_x - control_x, cell_width / 2);
-          }
+        if (control_x < name_x + 6 * cell_width) {
+          control_x = name_x + 6 * cell_width;
         }
         plumos_fbdev_draw_text(r, name_x, y, setting_label, entry_scale, fg,
                                control_x - cell_width);
-        plumos_fbdev_draw_text_clipped(
-            r, control_x - scroll_px, y, setting_control, entry_scale, 0,
-            control_x, right_x, fg);
+        plumos_fbdev_draw_text(r, control_x, y, setting_control, entry_scale,
+                               fg, right_x);
       } else {
         plumos_fbdev_draw_text(r, name_x, y, items[i], entry_scale, fg, w - 8);
       }
