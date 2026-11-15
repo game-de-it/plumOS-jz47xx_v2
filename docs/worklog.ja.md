@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-15 — RG280V QuickNESの色修正
+
+- V90S・TRIMUI-SのGit履歴とRG280Vの画素経路を比較。QuickNESのRGB565バイト順と既定NESパレットの差を特定した。
+- FCEUXの既定64色をQuickNESビルドへ適用し、PicoArchのバイト順補正をQuickNESだけに追加。実機でMario画面が修正済みFCEUmmと全76,800画素一致し、計測上59.91 FPSでFEへ復帰した。通常の音・操作・終了はユーザー確認待ち。詳細は `docs/validation/rg280v-quicknes-color-2026-11-15.md`。
+
 ## 2026-11-15 — RG280V FEのSELECTコアメニュー
 
 - V90S由来のSELECT画面はFEソース内にあり、NESの候補が単体FCEUXのみだった。FCEUmm・Nestopia・QuickNESをNESの選択肢に追加し、既定のFCEUXは維持した。

@@ -29,6 +29,9 @@ build_one() {
         git -C "$checkout" checkout -q --detach FETCH_HEAD
     fi
     git -C "$checkout" submodule update --init --depth 1 --quiet
+    if [[ "$id" == quicknes ]]; then
+        python3 "$repo_root/scripts/patch-rg280v-quicknes.py" "$checkout"
+    fi
     case "$id" in
         opera|mednafen_pcfx)
             rthreads="$source_dir/libretro-common/rthreads/rthreads.c" ;;

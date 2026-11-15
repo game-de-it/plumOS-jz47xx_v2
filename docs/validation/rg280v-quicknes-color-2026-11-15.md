@@ -1,0 +1,19 @@
+# RG280V QuickNESの色修正（2026-11-15）
+
+## 調査
+
+- V90S版Git履歴の `141af0c` でQuickNESビルド導入を確認。TRIMUI-S版Git履歴の `cfc8a77` にもQuickNESのビルド設定がある。いずれもRG280VのSDL表示色に対する補正は含まない。
+- RG280VのQuickNESはRGB565を出力する。PicoArchはそのままSDLへ渡していたが、DRM取得画像ではMarioの空が `(156, 242, 164)` になった。RGB565画素のバイト順を入れ替える試験では `(148, 145, 255)` となり、表示経路のバイト順とQuickNES既定パレットの二つが原因と分かった。
+- QuickNES既定パレットのNES色番号 `0x22` は `(147, 144, 254)`。単体FCEUXの同番号は `(93, 150, 255)`。RGB565表示後は `(90, 149, 255)` になる。
+
+## 変更
+
+- FCEUX 2.6.6の既定NESパレット64色を `assets/emulators/fceux-default-palette.hex` に記録し、QuickNESビルド時に既定色へ適用する。パレットの再生成手順は `scripts/patch-rg280v-quicknes.py`。
+- PicoArch側はQuickNESのRGB565画面だけSDL反転前に16ビットのバイト順を補正する。既存のXRGB8888変換画面の補正と、色が正常なfake08など他のRGB565画面は維持する。
+
+## 実機確認
+
+- RG280V、CPU 996 MHz、SD2のSuper Mario Bros.、ADBから11秒間の時間制限付き起動。DRM画面を2回取得し、計測上の最終画面更新速度は59.91 FPS。試験後にFEプロセスを確認した。
+- 修正後QuickNESの320×240画像と、以前に取得した修正済みFCEUmmの同じMario画面は76,800画素すべてが一致した。双方のPNG SHA-256は `43c5725544a6b87b791b3dfdcbb2404a7a6ae3abcf49942cccd478415b1c71f7`。ROMと画像はGitに含めない。
+- 配置したPicoArch本体のSHA-256は `c80bc8c848d35d5b4690d2049e67b42fe2d240cae5495b0c882ed6c6de728ca5`、QuickNESコアは `3cecb7f53a71aff25ee33df411dc5af60bedc01ff5f2277e9667d7692a1fb607`。本体と実機側の値が一致した。
+- FEからの通常起動、音、操作、メニュー、FEへの復帰はユーザーの実機確認待ち。上記のFPSは画面更新の計測値であり、体感や音声の判定を代替しない。

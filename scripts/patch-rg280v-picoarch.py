@@ -73,14 +73,15 @@ video_path = source / "plat_sdl.c"
 video = video_path.read_text()
 if video.count("#include <math.h>") != 1:
     raise SystemExit("SDL includes changed")
-video = video.replace("#include <math.h>", "#include <math.h>\n#include <stdint.h>\n#include <stdlib.h>", 1)
+video = video.replace("#include <math.h>", "#include <math.h>\n#include <stdint.h>\n#include <stdlib.h>\n#include <string.h>\n#include \"main.h\"", 1)
 old_flip = "static void *fb_flip(void)\n{\n\tSDL_Flip(screen);"
 new_flip = '''static void *fb_flip(void)
 {
-    /* On RG280V, SDL's 16-bit flip expects the opposite byte order for
-       XRGB8888 frames converted by the host. RGB565 cores such as fake08
-       already display correctly and must keep their existing path. */
-    if (core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888) {
+    /* QuickNES and host-converted XRGB8888 need swapped words at the RG280V
+       SDL handoff. Other RGB565 cores, including fake08, do not. */
+    if (core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888 ||
+        (core_pixel_format == RETRO_PIXEL_FORMAT_RGB565 &&
+         strcmp(core_name, "quicknes") == 0)) {
         for (int y = 0; y < screen->h; y++) {
             uint16_t *line = (uint16_t *)((uint8_t *)screen->pixels + y * screen->pitch);
             for (int x = 0; x < screen->w; x++) {
