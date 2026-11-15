@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-15 — RG280V FEのSELECTコアメニュー
+
+- V90S由来のSELECT画面はFEソース内にあり、NESの候補が単体FCEUXのみだった。FCEUmm・Nestopia・QuickNESをNESの選択肢に追加し、既定のFCEUXは維持した。
+- RG280Vの320×240表示で文字とCPU行が切れていたため、画面倍率・行配置・長いコア名の描画を調整。実機DRM画面でNESと長いSFCコア名の表示を確認した。
+- FEスクリプトでTOP単位の切替とROM単位の画面遷移を確認。試験用の上書きを解除し、FEを復帰させた。物理SELECTボタンの確認はユーザーへ依頼済み。詳細は `docs/validation/rg280v-fe-select-menu-2026-11-15.md`。
+
 ## 2026-11-15 — RG280V PicoArchの色と拡大処理
 
 - 996 MHzのままNES低FPSを再現し、PicoArchの最近傍拡大処理を行単位で高速化した。FCEUmmは19.8から58.8 FPS、Nestopiaは19.8から59.8 FPSになった。既定の走査線効果と文字向け最適化を外した。

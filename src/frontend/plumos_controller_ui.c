@@ -9479,8 +9479,10 @@ static void render_core_select(struct ui_state *ui) {
   size_t i;
   const char *profile = NULL;
   const char *default_label;
-  const char *footer1 = "Launch core/profile used for this target.";
-  const char *footer2 = "TOP saves system; ROM saves ROM override.";
+  const char *footer1 = runtime_device_is_rg280v()
+                            ? "LEFT/RIGHT: change" : "Launch core/profile used for this target.";
+  const char *footer2 = runtime_device_is_rg280v()
+                            ? "TOP: system / ROM: game" : "TOP saves system; ROM saves ROM override.";
 
   ui_printf(ui, "plumOS controller UI - Core Settings\n");
   ui_printf(ui, "settings_screen=1\n");
@@ -9508,6 +9510,9 @@ static void render_core_select(struct ui_state *ui) {
     profile = ui->core_current_profile;
   }
   default_label = ui->core_target_relative_path[0] ? "Inherit TOP" : "plumOS default";
+  if (runtime_device_is_rg280v()) {
+    default_label = ui->core_target_relative_path[0] ? "TOP" : "plumOS";
+  }
 
   ui_printf(ui, "%c   1  Cores < %s >\n",
             ui->core_menu_cursor == CORE_MENU_ROW_PROFILE ? '>' : ' ',
@@ -9516,7 +9521,9 @@ static void render_core_select(struct ui_state *ui) {
             ui->core_menu_cursor == CORE_MENU_ROW_DEFAULT ? '>' : ' ',
             default_label);
   ui_printf(ui, "    3  ------------------------------\n");
-  ui_printf(ui, "%c   4  CPU governor < %s >\n",
+  ui_printf(ui, runtime_device_is_rg280v()
+                    ? "%c   4  CPU < %s >\n"
+                    : "%c   4  CPU governor < %s >\n",
             ui->core_menu_cursor == CORE_MENU_ROW_CPU_FREQ ? '>' : ' ',
             ui->core_cpu_label);
   for (i = 0; i < ui->core_line_count; i++) {

@@ -43,7 +43,10 @@
         ]
       },
       "launch_profiles": [
-        "standalone:fceux"
+        "standalone:fceux",
+        "picoarch:fceumm",
+        "picoarch:nestopia",
+        "picoarch:quicknes"
       ],
       "default_launch_profile": "standalone:fceux",
       "default_cpu_policy": "ondemand",

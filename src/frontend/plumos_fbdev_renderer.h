@@ -3495,8 +3495,9 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                     plumos_fbdev_has_prefixed_line(lines, line_count,
                                                    "menu_screen=1") ||
                     settings_page;
-  entry_scale = core_settings_page ? 3 : 2;
-  line_height = entry_scale * 12;
+  /* RG280V is 320 pixels wide. The 3x font clips the core selector. */
+  entry_scale = core_settings_page && w > 400 ? 3 : 2;
+  line_height = core_settings_page && h <= 240 ? 22 : entry_scale * 12;
   cursor_x = settings_family ? 12 : 18;
   name_x = cursor_x + (settings_family ? 18 : 24);
   right_x = w - 14;
@@ -3533,7 +3534,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   plumos_fbdev_fill_rect(r, 0, 0, 5, h, accent);
   plumos_fbdev_draw_text_font(r, 14, 48, title, 2, wifi_connect_page,
                               p->muted, w - 8);
-  y = settings_family ? 82 : 104;
+  y = core_settings_page && h <= 240 ? 70 : (settings_family ? 82 : 104);
 
   for (i = 0; i < item_count; i++) {
     int keyboard_row = wifi_keyboard_row >= 0;
@@ -3558,19 +3559,26 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
       char setting_control[80];
       int control_width;
       int control_x;
+      int row_scale = entry_scale;
 
       if (plumos_fbdev_split_setting_control(items[i], setting_label,
                                              sizeof(setting_label),
                                              setting_control,
                                              sizeof(setting_control))) {
-        control_width = plumos_fbdev_text_width(setting_control, entry_scale);
-        control_x = right_x - control_width;
-        if (control_x < name_x + 6 * cell_width) {
-          control_x = name_x + 6 * cell_width;
+        if (core_settings_page &&
+            plumos_fbdev_text_width(setting_label, row_scale) +
+                    plumos_fbdev_text_width(setting_control, row_scale) +
+                    2 * cell_width > right_x - name_x) {
+          row_scale = 1;
         }
-        plumos_fbdev_draw_text(r, name_x, y, setting_label, entry_scale, fg,
-                               control_x - cell_width);
-        plumos_fbdev_draw_text(r, control_x, y, setting_control, entry_scale, fg,
+        control_width = plumos_fbdev_text_width(setting_control, row_scale);
+        control_x = right_x - control_width;
+        if (control_x < name_x + 6 * row_scale * 6) {
+          control_x = name_x + 6 * row_scale * 6;
+        }
+        plumos_fbdev_draw_text(r, name_x, y, setting_label, row_scale, fg,
+                               control_x - row_scale * 6);
+        plumos_fbdev_draw_text(r, control_x, y, setting_control, row_scale, fg,
                                right_x);
       } else {
         plumos_fbdev_draw_text(r, name_x, y, items[i], entry_scale, fg, w - 8);
