@@ -1,0 +1,75 @@
+core,system,source,rom,result,fps_window,audio,audio_zero_fraction,colors_2nd_capture,capture_sha256_prefixes,process,note
+a5200,atari5200,rom2,SuperBreakout.a52,描画あり,60.0,PCM無音,100.0,6,"64f67822144defe2,22748c6c1e8124a2",watchdog: timeout,
+atari800,atari800,rom2,FoodFight.rom,全黒,60.0,PCM無音,100.0,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,
+bluemsx,msx,rom2,Ys2-p.dsk,起動直後終了,—,未取得,—,—,,watchdog: exit=255,
+cannonball,cannonball,rom2-bundle,outrun.game,起動直後終了,—,未取得,—,—,,watchdog: exit=255,
+cap32,cpc,rom2,Abyssal (2022)(Cabbage Corp).sna,描画あり,29.9,PCM信号あり,60.2,8,"86a6e774613031b1,86a6e774613031b1",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+chimerasnes,sfc,rom2,Super Mario World - Super Mario Bros. 4.sfc,全黒,60.0,PCM信号あり,57.6,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,同じROMのSnes9x 2002/2005は描画あり
+crocods,cpc,rom2,Abyssal (2022)(Cabbage Corp).sna,異常終了,—,未取得,—,—,,watchdog: signal=10,
+dinothawr,dinothawr,rom2,dinothawr.game,異常終了,—,未取得,—,—,,watchdog: signal=6,
+fake08,pico8,rom2,Celeste.p8,描画あり,23.4,PCM信号あり,54.2,8,"beea378d65f659ef,1ea7cde421c31719",watchdog: timeout,同じCelesteのRetro8は60 FPS; 45 FPS未満（公称fpsとは未照合）
+fbalpha2012,fbneo,sd2,rtypeleo.zip,全黒,12.2,PCM無音,100.0,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+fbalpha2012_neogeo,neogeo,rom2,aof.zip,起動直後終了,—,未取得,—,—,,watchdog: exit=255,
+fbneo,fbneo,sd2,rtypeleo.zip,全黒,25.8,PCM無音,100.0,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+fceumm,nes,sd2,Baseball.nes,描画あり,19.8,PCM信号あり,68.0,13,"733422a6495216fe,733422a6495216fe",watchdog: timeout,FCEUX参照画像とNES枠色が不一致; 45 FPS未満（公称fpsとは未照合）
+freechaf,channelf,rom2,tents_CF.bin,描画あり,60.0,PCM無音,100.0,2,"a14fcf01c27c36cb,a14fcf01c27c36cb",watchdog: timeout,
+freeintv,intellivision,rom2,"Lock 'N' Chase (USA, Europe) (v1.1).bin",描画あり,60.0,PCM無音,100.0,2,"a1903a6b67e9ea7c,a1903a6b67e9ea7c",watchdog: timeout,
+fuse,zxspectrum,rom2,10th Frame (1987)(U.S. Gold).tap,描画あり,50.0,PCM無音,100.0,5,"84a82028fea16564,84a82028fea16564",watchdog: timeout,
+gambatte,gb,sd2,Super Mario Land [V1.1].gb,描画あり,59.7,PCMほぼ無音,98.6,5,"9209c1d4aff2445f,9209c1d4aff2445f",watchdog: timeout,
+gearboy,gb,sd2,Super Mario Land [V1.1].gb,描画あり,59.0,PCMほぼ無音,99.4,5,"7316872a8d0bea04,7316872a8d0bea04",watchdog: timeout,
+gearsystem,mastersystem,sd2,Wonder Boy 3.sms,描画あり,58.8,PCM無音,100.0,19,"3a5b6bb7bab34089,7c2e34c7aeb6b2d7",watchdog: timeout,
+genesis_plus_gx,megadrive,sd2,Bare Knuckle - Ikari no Tekken ~ Streets of Rage (World).md,描画あり,51.5,PCM信号あり,74.0,9,"389a2e3afdfd9a62,cbc1ad71d08a9724",watchdog: timeout,
+gme,music,rom2,blueshadow.nsfe,描画あり,60.0,PCM信号あり,14.0,7,"f0347cff2a58b7c5,8824351f320de3c3",watchdog: timeout,
+gpsp,gba,sd2,Castlevania - Aria of Sorrow (European Version - Restored Audio).gba,描画あり,60.0,PCM無音,100.0,2,"69dab06909a6e2d8,69dab06909a6e2d8",watchdog: timeout,言語選択で待機、プレイ未確認
+gw,gameandwatch,rom2-bundle,Tennis Menace.mgw,描画あり,30.0,PCM無音,100.0,4444,"0c8049d619e7a337,0c8049d619e7a337",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+hatari,atarist,rom2,Lattice C (19xx)(Hisoft).st,起動直後終了,—,未取得,—,—,,watchdog: exit=255,
+lowresnx,lowresnx,rom2,Rubik's cube.nx,描画あり,29.7,PCMほぼ無音,92.9,6,"b4ab2d28f23ad7b3,b4ab2d28f23ad7b3",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+lutro,lutro,rom2,lutro-pong.lutro,起動直後終了,—,未取得,—,—,,watchdog: exit=255,
+mednafen_gba,gba,sd2,Castlevania - Aria of Sorrow (European Version - Restored Audio).gba,描画あり,60.0,PCM無音,100.0,2,"69dab06909a6e2d8,69dab06909a6e2d8",watchdog: timeout,言語選択で待機、プレイ未確認
+mednafen_ngp,ngpc,sd2,"Bakumatsu Rouman Tokubetsu Hen - Gekka no Kenshi - Tsuki ni Saku Hana, Chiri Yuku Hana (Japan).ngc",描画あり,58.5,PCM信号あり,44.4,6,"c65340b347953db9,8977243647f83d0b",watchdog: timeout,
+mednafen_pce,pcengine,sd2,BlazingLazers_U.pce,全黒,—,PCMほぼ無音,96.7,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,同じROMのPCE Fastは描画あり
+mednafen_pce_fast,pcengine,sd2,BlazingLazers_U.pce,描画あり,60.0,PCM信号あり,8.1,13,"6c8db9fcdfe9a44d,2a440c778c0041d4",watchdog: timeout,
+mednafen_pcfx,pcfx,rom2-bundle,simplebattle.cue,起動直後終了,—,未取得,—,—,,watchdog: exit=255,
+mednafen_supafaust,sfc,rom2,Super Mario World - Super Mario Bros. 4.sfc,異常終了,—,未取得,—,—,,watchdog: signal=6,
+mednafen_supergrafx,supergrafx,rom2,AxeBG.pce,描画あり,29.5,PCM無音,100.0,153,"ad7b28650c98022f,0fdbcd215955b530",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+mednafen_wswan,wonderswan,sd2,Puzzle Bobble.ws,描画あり,59.5,PCM信号あり,69.0,5,"a669aa154a800fbe,7e4c463ae4e95f92",watchdog: timeout,
+meteor,gba,sd2,Castlevania - Aria of Sorrow (European Version - Restored Audio).gba,描画あり,58.8,PCM無音,100.0,2,"44d38023bcc37abf,44d38023bcc37abf",watchdog: timeout,言語選択で待機、プレイ未確認
+mgba,gba,sd2,Castlevania - Aria of Sorrow (European Version - Restored Audio).gba,描画あり,60.0,PCM無音,100.0,2,"69dab06909a6e2d8,69dab06909a6e2d8",watchdog: timeout,言語選択で待機、プレイ未確認
+nekop2,pc98,rom2,Can Can Bunny 5 and half Limited.hdi,描画あり,57.4,PCMほぼ無音,97.7,2,"e8cfee46e1ed3910,de0ed49752bc157e",watchdog: timeout,
+neocd,neogeocd,rom2-bundle,Fatal Fury/Fatal Fury.cue,起動直後終了,—,PCM無音,100.0,—,,watchdog: exit=255,
+nestopia,nes,sd2,Baseball.nes,描画あり,19.8,PCM信号あり,66.5,13,"b0479cf40bcb45ef,b0479cf40bcb45ef",watchdog: timeout,FCEUX参照画像とNES枠色が不一致; 45 FPS未満（公称fpsとは未照合）
+np2kai,pc98,rom2,Can Can Bunny 5 and half Limited.hdi,異常終了,—,未取得,—,—,,watchdog: signal=11,
+numero,ti83,rom2,tetris.8xp,描画あり,58.5,PCM無音,100.0,3,"99138fb98cbc5a38,99138fb98cbc5a38",watchdog: timeout,
+nxengine,cavestory,rom2-bundle,doukutsu/Doukutsu.exe,描画あり,60.0,PCM無音,100.0,28,"cb8115fc6593ffbb,6c36858c606c3d46",watchdog: timeout,
+o2em,odyssey2,rom2,Interpol (Europe) (Proto).bin,起動直後終了,—,未取得,—,—,,watchdog: exit=255,
+opera,3do,rom2-bundle,biofury.iso,全黒,19.8,PCM無音,100.0,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+pcsx_rearmed,psx,rom2-bundle,chroQW.img,異常終了,—,未取得,—,—,,watchdog: signal=11,
+picodrive,megadrive,sd2,Bare Knuckle - Ikari no Tekken ~ Streets of Rage (World).md,描画あり,59.8,PCM信号あり,63.3,13,"8675514d9be63d29,09531678be591916",watchdog: timeout,
+pokemini,pokemini,rom2-bundle,Pichu Bros. Mini (Japan).min,描画あり,60.0,PCM信号あり,11.5,3,"3dbc1e784f7f58a5,5606b1ec6d28de51",watchdog: timeout,
+potator,supervision,rom2,assembloids_supervision_2022.bin,描画あり,60.0,PCM信号あり,62.5,4,"b76e1eb0732f3573,c746766ca2a40e05",watchdog: timeout,
+prboom,doom,rom2,freedoom2.wad,全黒,5.5,PCMほぼ無音,91.9,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+prosystem,atari7800,rom2,Asteroids (1987) (Atari).a78,描画あり,59.8,PCM無音,100.0,11,"7216e4c43b3f9a59,900ba0d65a0f975c",watchdog: timeout,
+puae,amiga,rom2,3rd Day - The Ripper (19xx)(Action Force).adf,描画あり,19.6,PCM無音,100.0,2,"cb8115fc6593ffbb,1d00b40431013f00",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+puae2021,amiga,rom2,3rd Day - The Ripper (19xx)(Action Force).adf,描画あり,12.0,PCM無音,100.0,4,"17e56bc672102476,17e56bc672102476",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+quasi88,pc88,rom2,XeGrader100001.d88,描画あり,55.3,PCM無音,100.0,8,"6a3f5ddb5d6a1c4e,6a3f5ddb5d6a1c4e",watchdog: timeout,
+quicknes,nes,sd2,Baseball.nes,描画あり,29.6,PCM信号あり,52.2,13,"e665f9451c87389d,e665f9451c87389d",watchdog: timeout,FCEUX参照画像とNES枠色が不一致; 45 FPS未満（公称fpsとは未照合）
+retro8,pico8,rom2,Celeste.p8,描画あり,60.0,PCM信号あり,46.4,7,"3607545d3384305d,de1b6a80b35eb804",watchdog: timeout,
+scummvm,scummvm,rom2-bundle,sky.scummvm,全黒,59.5,PCM無音,100.0,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,
+snes9x,sfc,rom2,Super Mario World - Super Mario Bros. 4.sfc,描画あり,31.1,PCMほぼ無音,91.2,2,"683deef7fb85eb81,450e9764242a33d5",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+snes9x2002,sfc,rom2,Super Mario World - Super Mario Bros. 4.sfc,描画あり,60.0,PCM信号あり,54.5,17,"3558526d293ae38b,ba68a0e43f8468f3",watchdog: timeout,
+snes9x2005,sfc,rom2,Super Mario World - Super Mario Bros. 4.sfc,描画あり,60.0,PCM信号あり,54.3,26,"3558526d293ae38b,07dd801479de65b1",watchdog: timeout,
+snes9x2005_plus,sfc,rom2,Super Mario World - Super Mario Bros. 4.sfc,描画あり,58.5,PCM信号あり,56.8,26,"3558526d293ae38b,b91529fceb11bbf9",watchdog: timeout,
+snes9x2010,sfc,rom2,Super Mario World - Super Mario Bros. 4.sfc,描画あり,19.5,PCMほぼ無音,96.8,4,"cb8115fc6593ffbb,5374035b420105de",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+squirreljme,j2me,rom2,Cento.jar,描画あり,60.0,PCM無音,100.0,3,"58b98e464ed2f85a,58b98e464ed2f85a",watchdog: timeout,
+stella2014,atari2600,rom2,Asteroids.bin,描画あり,60.0,PCM無音,100.0,3,"bd2b1b627a2a5a8e,116447284cdcd0e8",watchdog: timeout,
+tgbdual,gb,sd2,Super Mario Land [V1.1].gb,描画あり,60.0,PCM無音,100.0,4,"935d39cd0da30916,935d39cd0da30916",watchdog: timeout,
+theodore,thomson,rom2,3d Sub (1985)(Loriciels).k7,描画あり,50.0,PCMほぼ無音,99.3,6,"2b6333ba4956aebe,2b6333ba4956aebe",watchdog: timeout,
+tyrquake,quake,rom2,PAK0.PAK,異常終了,—,未取得,—,—,,watchdog: signal=11,
+uw8,microw8,rom2,tunnel.uw8,描画あり,—,PCM無音,100.0,16,"e0fc60e7c5f6b16d,e0fc60e7c5f6b16d",watchdog: timeout,
+uzem,uzebox,rom2,Arkanoid2.uze,描画あり,14.8,PCM無音,100.0,2,"caefee63dbee7508,caefee63dbee7508",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+vba_next,gba,sd2,Castlevania - Aria of Sorrow (European Version - Restored Audio).gba,描画あり,59.8,PCM無音,100.0,2,"44d38023bcc37abf,44d38023bcc37abf",watchdog: timeout,言語選択で待機、プレイ未確認
+vbam,gba,sd2,Castlevania - Aria of Sorrow (European Version - Restored Audio).gba,描画あり,60.0,PCM無音,100.0,2,"69dab06909a6e2d8,69dab06909a6e2d8",watchdog: timeout,言語選択で待機、プレイ未確認
+vemulator,vmu,—,—,ROMなし,—,未取得,—,—,,—,対応するVMUファイルなし
+vice_x64,c64,rom2,inbread.d64,全黒,—,PCM無音,100.0,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,
+vice_xvic,vic20,rom2,tetwels.prg,描画あり,18.3,PCM無音,100.0,124,"6149046ed1ca1c92,6149046ed1ca1c92",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
+virtualjaguar,jaguar,rom2,ClubDrive.j64,全黒,4.9,PCMほぼ無音,93.1,1,"cb8115fc6593ffbb,cb8115fc6593ffbb",watchdog: timeout,45 FPS未満（公称fpsとは未照合）
