@@ -10618,6 +10618,7 @@ static void cycle_core_profile(struct ui_state *ui, int direction) {
     set_status(ui, "core saved; reload failed");
     return;
   }
+  reset_marquee(ui);
   snprintf(ui->status, sizeof(ui->status), "Cores saved: %.80s", label);
 }
 
@@ -14847,6 +14848,9 @@ static int ui_needs_periodic_refresh(const struct ui_state *ui) {
     return 0;
   }
   if (ui_renderer_fbdev_only(ui)) {
+    if (ui->screen == SCREEN_CORE_SELECT) {
+      return 1;
+    }
     if (ui->top_transition_active) {
       return 1;
     }
@@ -14891,6 +14895,9 @@ static int ui_periodic_refresh_interval_ms(const struct ui_state *ui) {
     return 0;
   }
   if (ui_renderer_fbdev_only(ui)) {
+    if (ui->screen == SCREEN_CORE_SELECT) {
+      return 50;
+    }
     if (ui->top_transition_active) {
       return 16;
     }

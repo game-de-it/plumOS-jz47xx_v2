@@ -3559,27 +3559,28 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
       char setting_control[80];
       int control_width;
       int control_x;
-      int row_scale = entry_scale;
 
       if (plumos_fbdev_split_setting_control(items[i], setting_label,
                                              sizeof(setting_label),
                                              setting_control,
                                              sizeof(setting_control))) {
-        if (core_settings_page &&
-            plumos_fbdev_text_width(setting_label, row_scale) +
-                    plumos_fbdev_text_width(setting_control, row_scale) +
-                    2 * cell_width > right_x - name_x) {
-          row_scale = 1;
-        }
-        control_width = plumos_fbdev_text_width(setting_control, row_scale);
+        int min_control_x = name_x +
+            plumos_fbdev_text_width(setting_label, entry_scale) + cell_width;
+        int scroll_px = 0;
+        control_width = plumos_fbdev_text_width(setting_control, entry_scale);
         control_x = right_x - control_width;
-        if (control_x < name_x + 6 * row_scale * 6) {
-          control_x = name_x + 6 * row_scale * 6;
+        if (control_x < min_control_x) {
+          control_x = min_control_x;
+          if (core_settings_page && selected[i] && right_x > control_x) {
+            scroll_px = plumos_fbdev_marquee_offset(
+                r, control_width, right_x - control_x, cell_width / 2);
+          }
         }
-        plumos_fbdev_draw_text(r, name_x, y, setting_label, row_scale, fg,
-                               control_x - row_scale * 6);
-        plumos_fbdev_draw_text(r, control_x, y, setting_control, row_scale, fg,
-                               right_x);
+        plumos_fbdev_draw_text(r, name_x, y, setting_label, entry_scale, fg,
+                               control_x - cell_width);
+        plumos_fbdev_draw_text_clipped(
+            r, control_x - scroll_px, y, setting_control, entry_scale, 0,
+            control_x, right_x, fg);
       } else {
         plumos_fbdev_draw_text(r, name_x, y, items[i], entry_scale, fg, w - 8);
       }
