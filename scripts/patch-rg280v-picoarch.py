@@ -35,6 +35,38 @@ scale_data = scale_path.read_text()
 for factor in range(1, 7):
     for depth in (16, 32):
         scale_data = scale_data.replace(f"scale{factor}x_n{depth}", f"scale{factor}x_c{depth}")
+nearest_pattern = r"static void scaleNN\(unsigned w, unsigned h, size_t pitch, const void \*src, void \*dst\) \{.*?\n\}\nstatic void scaleNN_scanline"
+nearest_replacement = '''static void scaleNN(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
+    uint16_t row[SCREEN_WIDTH];
+    const uint8_t *src_bytes = (const uint8_t *)src;
+    uint8_t *dst_bytes = (uint8_t *)dst + dst_offs;
+    unsigned previous_src_y = h;
+    if (!dst_w || !dst_h || dst_w > SCREEN_WIDTH || dst_h > SCREEN_HEIGHT) return;
+    for (unsigned y = 0; y < dst_h; y++) {
+        unsigned src_y = (unsigned)(((uint64_t)y * h) / dst_h);
+        if (src_y != previous_src_y) {
+            const uint16_t *src_row = (const uint16_t *)(src_bytes + (size_t)src_y * pitch);
+            unsigned sx = 0;
+            unsigned error = 0;
+            for (unsigned x = 0; x < dst_w; x++) {
+                row[x] = src_row[sx];
+                error += w;
+                while (error >= dst_w) {
+                    sx++;
+                    error -= dst_w;
+                }
+            }
+            previous_src_y = src_y;
+        }
+        memcpy(dst_bytes + (size_t)y * SCREEN_PITCH, row,
+               (size_t)dst_w * sizeof(row[0]));
+    }
+}
+static void scaleNN_scanline'''
+scale_data, count = re.subn(nearest_pattern, nearest_replacement, scale_data,
+                            count=1, flags=re.S)
+if count != 1:
+    raise SystemExit("nearest scaler marker changed")
 scale_path.write_text(scale_data)
 
 video_path = source / "plat_sdl.c"
@@ -42,6 +74,25 @@ video = video_path.read_text()
 if video.count("#include <math.h>") != 1:
     raise SystemExit("SDL includes changed")
 video = video.replace("#include <math.h>", "#include <math.h>\n#include <stdint.h>\n#include <stdlib.h>", 1)
+old_flip = "static void *fb_flip(void)\n{\n\tSDL_Flip(screen);"
+new_flip = '''static void *fb_flip(void)
+{
+    /* On RG280V, SDL's 16-bit flip expects the opposite byte order for
+       XRGB8888 frames converted by the host. RGB565 cores such as fake08
+       already display correctly and must keep their existing path. */
+    if (core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888) {
+        for (int y = 0; y < screen->h; y++) {
+            uint16_t *line = (uint16_t *)((uint8_t *)screen->pixels + y * screen->pitch);
+            for (int x = 0; x < screen->w; x++) {
+                uint16_t pixel = line[x];
+                line[x] = (uint16_t)((pixel << 8) | (pixel >> 8));
+            }
+        }
+    }
+    SDL_Flip(screen);'''
+if video.count(old_flip) != 1:
+    raise SystemExit("SDL flip marker changed")
+video = video.replace(old_flip, new_flip, 1)
 pattern = r"// begin miyoo hardware scaling support.*?// end miyoo hardware scaling support"
 replacement = (
     "/* RG280V uses SDL/KMSDRM's 320x240 RGB565 surface. */\n"
@@ -144,6 +195,9 @@ replace("plat_linux.c", "{ SDLK_ESCAPE,    PBTN_MENU },", "{ SDLK_F1,        PBT
 replace("plat_linux.c", "static const struct mod_keymap in_sdl_mod_keymap[] = {", "static const struct mod_keymap in_sdl_mod_keymap[] = {\n\t{ SDLK_RETURN, SDLK_F1 }, /* SELECT + START opens PicoArch menu */")
 
 replace("main.c", "scale_size = SCALE_SIZE_NONE;", "scale_size = SCALE_SIZE_ASPECT;")
+replace("main.c", "optimize_text = 1;", "optimize_text = 0;")
+replace("options.c", "default_scale_effect = SCALE_EFFECT_SCANLINE;",
+        "default_scale_effect = SCALE_EFFECT_NONE;")
 main_path = source / "main.c"
 main = main_path.read_text()
 tag_pattern = r"static void get_tag_name\(const char\* in_path, char\* out_tag\) \{.*?\n\}\n\nint main"
