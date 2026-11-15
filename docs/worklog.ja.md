@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — RG280VのPSX実行方式を比較
+
+- 現行PCSX ReARMedのLightrecは通常起動でも画面前に`signal 11`。コアダンプではPCがJIT生成コード領域にあり、カスタムマッピングを無効化しても再現した。
+- `DYNAREC=0`の比較ビルドはクラッシュせず55秒でゲームロゴを描画したが、短時間計測では約14.85 FPS。公開RG350 PCSX4ALL OPKはHard float ABIで、現行rootfsのSoft float ABIと合わず起動できなかった。PCSX4ALLのMIPS再コンパイラはソース移植候補として残す。
+- PSXのFE登録・現行候補は維持。映像・音・FPS・操作の実機受け入れは未了。詳細は`docs/validation/rg280v-psx-investigation-2026-11-16.md`。
+
 ## 2026-11-16 — クラッシュを理由に除外せずPSXをFE登録
 
 - ユーザーの方針に従い、クラッシュは検証結果として扱い、PSXをFEの有効機種へ追加した。PCSX ReARMedを起動候補にし、PSXの機種ロゴ、試験用ROM4件、BIOS3種を配置した。ROM・BIOSはGitに含めない。
