@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — 32XのROM配置とFE登録
+
+- 32XがFEに出ない原因は、SD2に該当ROMがなく空システムが非表示になる設定だった。FEの32X登録自体は有効。
+- ユーザーの32X ROMライブラリの7zアーカイブ32個を検査し、対応する`.32x`をSD2へ配置。既存BC Racersはハッシュ一致で再転送せず、新規31本。全転送のサイズとSHA-256を照合し、FEライブラリにも32件が登録された。
+- SD2を読み取り専用へ戻し、FEプロセスを再起動してADBシェル終了後も稼働することを確認。ROM・BIOSはGitに含めない。物理画面と実ゲームの試験は未実施。詳細は`docs/validation/rg280v-sega32x-rom-placement-2026-11-16.md`。
+
 ## 2026-11-16 — Game Gear候補とPicoArch共通表示サイズ
 
 - ユーザーがGame GearのFE登録4候補を動作OKと実機報告。PicoArchログでGenesis Plus GX・PicoDrive・GearsystemのSD2 Columns起動・終了を確認。候補構成は維持。
