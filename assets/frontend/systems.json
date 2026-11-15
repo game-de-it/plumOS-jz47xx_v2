@@ -436,7 +436,6 @@
       },
       "launch_profiles": [
         "standalone:picodrive",
-        "picoarch:genesis_plus_gx",
         "picoarch:picodrive"
       ],
       "default_launch_profile": "standalone:picodrive",
