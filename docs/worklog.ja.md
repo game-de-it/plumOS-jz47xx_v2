@@ -6,6 +6,7 @@
 - FEからSnes9x 2005で起動したDBZ対戦画面はHUDの描画数が2 FPS、内部ループ50〜60/秒、CPU約40%、音は正常。画面も実際にカクつき、時々60 FPSになるとCPU約78%。
 - PicoArchのAuto Frameskip上書きが原因と特定。ユーザーがゲーム中にFrameskipをDisabledにすると60 FPSへ戻った。PicoArchのSnes9x 2005と2002の既定上書きをDisabledへ変更し、ホストで再ビルド。プレイ中なので端末への反映は終了後に行う。詳細は `docs/validation/rg280v-sfc-frameskip-2026-11-16.md`。
 - ユーザーがExitでFEへ戻った後、旧PicoArchを端末内へ控え、修正版をSHA-256一致で配置した。FEプロセスは動作中。新バイナリでのDBZ再試験はユーザーへ依頼済み。
+- ユーザーが修正版Snes9x 2005で複数のSFCゲームを試し、動作に問題なしと報告。recentにはDBZ、DQ I & II、DQ VI、Exhaust Heat II、F-Zeroが残り、FEへ復帰した。ゲーム別のFPS計測値とSnes9x 2002の物理試験は未取得。
 
 ## 2026-11-16 — RG280V単体FCEUXの54 FPS調査
 
