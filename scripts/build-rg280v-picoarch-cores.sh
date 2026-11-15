@@ -95,6 +95,7 @@ PY
             cross=/workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-
             ar_args=(AR="${cross}ar")
             [[ "$3" == lutro ]] && ar_args=()
+            [[ "$3" == scummvm ]] && ar_args=(AR="${cross}ar cru")
             make -f "$1" -j4 CC="${cross}gcc" CXX="${cross}g++" "${ar_args[@]}" \
                 RANLIB="${cross}ranlib" STRIP="${cross}strip" $2
         ' bash "$makefile" "$args" "$id" >"$log" 2>&1; then

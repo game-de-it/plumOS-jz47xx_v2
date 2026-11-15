@@ -27,14 +27,34 @@ copy_checked() {
     echo "$expected  $destination"
 }
 
-copy_checked "$repo_root/assets/frontend/bin/plumos-picoarch-launch" \
-    "$remote/bin/plumos-picoarch-launch" 0755
-copy_checked "$out/picoarch-rg280v" "$remote/picoarch/bin/picoarch" 0755
-while IFS='|' read -r id class repo ref subdir makefile args; do
-    [[ -z "$id" || "$id" == \#* ]] && continue
-    copy_checked "$out/${id}_libretro.so" \
-        "$remote/picoarch/cores/${id}_libretro.so" 0644
-done < "$repo_root/scripts/rg280v-picoarch-cores.tsv"
+deploy_cores() {
+    local recipes=$1 id class repo ref subdir makefile args
+    while IFS='|' read -r id class repo ref subdir makefile args; do
+        [[ -z "$id" || "$id" == \#* ]] && continue
+        copy_checked "$out/${id}_libretro.so" \
+            "$remote/picoarch/cores/${id}_libretro.so" 0644
+    done < "$recipes"
+}
+
+if [[ "${PLUMOS_PICOARCH_ONLY_EXTRA:-0}" != 1 ]]; then
+    copy_checked "$repo_root/assets/frontend/bin/plumos-picoarch-launch" \
+        "$remote/bin/plumos-picoarch-launch" 0755
+    copy_checked "$out/picoarch-rg280v" "$remote/picoarch/bin/picoarch" 0755
+    deploy_cores "$repo_root/scripts/rg280v-picoarch-cores.tsv"
+fi
+
+if [[ "${PLUMOS_PICOARCH_INCLUDE_EXTRA:-0}" == 1 ]]; then
+    while IFS='|' read -r id class repo ref subdir makefile args; do
+        [[ -z "$id" || "$id" == \#* ]] && continue
+        [[ -s "$out/${id}_libretro.so" ]] || continue
+        copy_checked "$out/${id}_libretro.so" \
+            "$remote/picoarch/cores/${id}_libretro.so" 0644
+    done < "$repo_root/scripts/rg280v-picoarch-extra-cores.tsv"
+fi
+
+if [[ "${PLUMOS_PICOARCH_ONLY_EXTRA:-0}" == 1 ]]; then
+    exit 0
+fi
 
 temp_dir=$(mktemp -d)
 trap 'rm -rf "$temp_dir"' EXIT
