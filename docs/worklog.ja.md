@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — SFC Mednafen Supafaustの起動修正と比較
+
+- FE登録順の次の候補Mednafen Supafaustを調査。既定のエミュレーションスレッド固定先がCPU 1 (`0x2`) で、CPU 0しかないRG280Vでは起動時に`MDFN_Error`を投げていた。既定をCPU固定なし (`0x0`) に変更する再現可能なビルドパッチを追加した。
+- 修正版は同じSuper Mario World ROMで12秒間の診断起動を完了し、以前のsignal 6は再現しなかった。画面更新は最後の窓で35.75 FPS。上流が単一CPU向けに推奨する単一スレッドPPUへ変更しても35.63 FPSで、速度改善はなかった。
+- 単一スレッド版を端末へ配置し、FEのSFC選択をMednafen Supafaustへ進めた。実機での映像・音・操作・メニュー復帰はユーザー確認待ち。詳細は`docs/validation/rg280v-sfc-supafaust-2026-11-16.md`。
+
 ## 2026-11-16 — SFCのFE候補とChimeraSNES
 
 - ユーザーの指示で性能不足の標準Snes9xをSFCのFE候補から削除。PocketSNES、Snes9x 2005、ChimeraSNES以降の登録順を維持した。
