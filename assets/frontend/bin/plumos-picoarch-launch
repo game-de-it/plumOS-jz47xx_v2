@@ -6,8 +6,7 @@ root=${PLUMOS_ROOT:-/media/data/plumos}
 core_id=$1
 rom=$2
 case "$core_id" in
-    mednafen_pce_fast) ;;
-    *) echo "unsupported PicoArch core: $core_id" >&2; exit 2 ;;
+    *[!A-Za-z0-9_]*|'') echo "invalid PicoArch core: $core_id" >&2; exit 2 ;;
 esac
 [ -f "$rom" ] || { echo "ROM missing: $rom" >&2; exit 1; }
 binary="$root/picoarch/bin/picoarch"

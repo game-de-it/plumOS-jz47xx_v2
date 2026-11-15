@@ -69,6 +69,69 @@
       }
     },
     {
+      "id": "fds",
+      "display_name": "FDS",
+      "short_name": "FDS",
+      "sort_order": 20,
+      "hardware": "console",
+      "enabled": false,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "FDS",
+          "source": "miyoo",
+          "priority": 10
+        },
+        {
+          "name": "FC",
+          "source": "miyoo",
+          "priority": 20,
+          "shared": true
+        },
+        {
+          "name": "fds",
+          "source": "rocknix",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "fds",
+        "zip",
+        "7z"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/fds"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "picoarch:fceumm"
+      ],
+      "default_launch_profile": "picoarch:fceumm",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": true,
+        "reason": "simple_rom_crc",
+        "extensions": [
+          "fds",
+          "zip"
+        ],
+        "crc_workers": {
+          "default": 8,
+          "bulk": 8,
+          "max": 8
+        },
+        "download_workers": {
+          "default": 6,
+          "bulk": 6,
+          "max": 6
+        }
+      }
+    },
+    {
       "id": "sfc",
       "display_name": "SFC",
       "short_name": "SFC",
@@ -111,7 +174,14 @@
         ]
       },
       "launch_profiles": [
-        "standalone:pocketsnes"
+        "standalone:pocketsnes",
+        "picoarch:snes9x2005",
+        "picoarch:snes9x",
+        "picoarch:chimerasnes",
+        "picoarch:mednafen_supafaust",
+        "picoarch:snes9x2002",
+        "picoarch:snes9x2005_plus",
+        "picoarch:snes9x2010"
       ],
       "default_launch_profile": "standalone:pocketsnes",
       "default_cpu_policy": "ondemand",
@@ -173,7 +243,10 @@
         ]
       },
       "launch_profiles": [
-        "standalone:gambatte"
+        "standalone:gambatte",
+        "picoarch:gambatte",
+        "picoarch:gearboy",
+        "picoarch:vbam"
       ],
       "default_launch_profile": "standalone:gambatte",
       "default_cpu_policy": "ondemand",
@@ -236,7 +309,10 @@
         ]
       },
       "launch_profiles": [
-        "standalone:gambatte"
+        "standalone:gambatte",
+        "picoarch:gambatte",
+        "picoarch:gearboy",
+        "picoarch:vbam"
       ],
       "default_launch_profile": "standalone:gambatte",
       "default_cpu_policy": "ondemand",
@@ -293,7 +369,9 @@
         ]
       },
       "launch_profiles": [
-        "standalone:regba"
+        "standalone:regba",
+        "picoarch:gpsp",
+        "picoarch:mgba"
       ],
       "default_launch_profile": "standalone:regba",
       "default_cpu_policy": "ondemand",
@@ -359,7 +437,9 @@
         ]
       },
       "launch_profiles": [
-        "standalone:picodrive"
+        "standalone:picodrive",
+        "picoarch:genesis_plus_gx",
+        "picoarch:picodrive"
       ],
       "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
@@ -426,7 +506,10 @@
         ]
       },
       "launch_profiles": [
-        "standalone:picodrive"
+        "standalone:picodrive",
+        "picoarch:genesis_plus_gx",
+        "picoarch:picodrive",
+        "picoarch:gearsystem"
       ],
       "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
@@ -495,7 +578,10 @@
         ]
       },
       "launch_profiles": [
-        "standalone:picodrive"
+        "standalone:picodrive",
+        "picoarch:genesis_plus_gx",
+        "picoarch:picodrive",
+        "picoarch:gearsystem"
       ],
       "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
@@ -516,6 +602,122 @@
           "bulk": 6,
           "max": 6
         }
+      }
+    },
+    {
+      "id": "sega32x",
+      "display_name": "32X",
+      "short_name": "32X",
+      "sort_order": 100,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "THIRTYTWOX",
+          "source": "miyoo",
+          "priority": 10
+        },
+        {
+          "name": "MD",
+          "source": "miyoo",
+          "priority": 20,
+          "shared": true
+        },
+        {
+          "name": "sega32x",
+          "source": "rocknix",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "32x",
+        "bin",
+        "zip",
+        "7z"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/sega32x"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "picoarch:picodrive"
+      ],
+      "default_launch_profile": "picoarch:picodrive",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": true,
+        "reason": "simple_rom_crc",
+        "extensions": [
+          "32x",
+          "bin",
+          "zip"
+        ],
+        "crc_workers": {
+          "default": 8,
+          "bulk": 8,
+          "max": 8
+        },
+        "download_workers": {
+          "default": 6,
+          "bulk": 6,
+          "max": 6
+        }
+      }
+    },
+    {
+      "id": "segacd",
+      "display_name": "Sega CD",
+      "short_name": "SCD",
+      "sort_order": 110,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "SEGACD",
+          "source": "miyoo",
+          "priority": 10
+        },
+        {
+          "name": "segacd",
+          "source": "rocknix",
+          "priority": 20
+        },
+        {
+          "name": "megacd",
+          "source": "rocknix",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "cue",
+        "chd",
+        "iso",
+        "m3u",
+        "bin"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/segacd"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "picoarch:genesis_plus_gx",
+        "picoarch:picodrive"
+      ],
+      "default_launch_profile": "picoarch:genesis_plus_gx",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "cd_media_crc_expensive"
       }
     },
     {
@@ -558,7 +760,8 @@
         ]
       },
       "launch_profiles": [
-        "picoarch:mednafen_pce_fast"
+        "picoarch:mednafen_pce_fast",
+        "picoarch:mednafen_supergrafx"
       ],
       "default_launch_profile": "picoarch:mednafen_pce_fast",
       "default_cpu_policy": "ondemand",
@@ -580,6 +783,121 @@
           "bulk": 6,
           "max": 6
         }
+      }
+    },
+    {
+      "id": "supergrafx",
+      "display_name": "SuperGrafx",
+      "short_name": "SGX",
+      "sort_order": 125,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "SGX",
+          "source": "miyoo",
+          "priority": 10
+        },
+        {
+          "name": "PCE",
+          "source": "miyoo",
+          "priority": 20,
+          "shared": true
+        },
+        {
+          "name": "supergrafx",
+          "source": "rocknix",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "sgx",
+        "pce",
+        "zip",
+        "7z"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/supergrafx"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "picoarch:mednafen_supergrafx",
+        "picoarch:mednafen_pce_fast"
+      ],
+      "default_launch_profile": "picoarch:mednafen_supergrafx",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": true,
+        "reason": "simple_rom_crc",
+        "extensions": [
+          "sgx",
+          "pce",
+          "zip"
+        ],
+        "crc_workers": {
+          "default": 8,
+          "bulk": 8,
+          "max": 8
+        },
+        "download_workers": {
+          "default": 6,
+          "bulk": 6,
+          "max": 6
+        }
+      }
+    },
+    {
+      "id": "pcenginecd",
+      "display_name": "PC Engine CD",
+      "short_name": "PCECD",
+      "sort_order": 130,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "PCECD",
+          "source": "miyoo",
+          "priority": 10
+        },
+        {
+          "name": "pcenginecd",
+          "source": "rocknix",
+          "priority": 20
+        },
+        {
+          "name": "tg16cd",
+          "source": "rocknix",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "cue",
+        "chd",
+        "iso",
+        "m3u"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/pcenginecd"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "picoarch:mednafen_pce_fast"
+      ],
+      "default_launch_profile": "picoarch:mednafen_pce_fast",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "cd_media_crc_expensive"
       }
     },
     {

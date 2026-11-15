@@ -9,11 +9,22 @@ from pathlib import Path
 installed_path, defaults_path, output_path = map(Path, sys.argv[1:])
 installed = json.loads(installed_path.read_text())
 defaults = json.loads(defaults_path.read_text())
-supported = {"nes", "gb", "gbc", "sfc", "gba", "megadrive", "mastersystem", "gamegear", "pcengine"}
+supported = {
+    "nes", "fds", "gb", "gbc", "sfc", "gba", "megadrive", "mastersystem",
+    "gamegear", "sega32x", "segacd", "pcengine", "supergrafx", "pcenginecd",
+}
 profiles = {system["id"]: system for system in defaults["systems"] if system["id"] in supported}
+installed_ids = {system["id"] for system in installed["systems"]}
 for system in installed["systems"]:
     if system.get("id") in profiles:
         source = profiles[system["id"]]
         system["launch_profiles"] = source["launch_profiles"]
         system["default_launch_profile"] = source["default_launch_profile"]
+        if system["id"] == "fds":
+            # FCEUmm currently renders incorrect colors and runs below full speed.
+            system["enabled"] = False
+for system in defaults["systems"]:
+    if system["id"] in supported and system["id"] not in installed_ids:
+        installed["systems"].append(system)
+installed["systems"].sort(key=lambda system: system.get("sort_order", 9999))
 output_path.write_text(json.dumps(installed, ensure_ascii=False, indent=2) + "\n")

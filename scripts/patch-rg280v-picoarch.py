@@ -39,6 +39,9 @@ scale_path.write_text(scale_data)
 
 video_path = source / "plat_sdl.c"
 video = video_path.read_text()
+if video.count("#include <math.h>") != 1:
+    raise SystemExit("SDL includes changed")
+video = video.replace("#include <math.h>", "#include <math.h>\n#include <stdint.h>\n#include <stdlib.h>", 1)
 pattern = r"// begin miyoo hardware scaling support.*?// end miyoo hardware scaling support"
 replacement = (
     "/* RG280V uses SDL/KMSDRM's 320x240 RGB565 surface. */\n"
@@ -55,6 +58,76 @@ new_mode = "SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, SDL_HW
 if video.count(old_mode) != 1:
     raise SystemExit("SDL video mode changed")
 video = video.replace(old_mode, new_mode, 1)
+conversion = '''static uint16_t *converted_frame;
+static size_t converted_frame_pixels;
+
+static const void *prepare_rgb565_frame(const void *data, unsigned width,
+                                        unsigned height, size_t pitch,
+                                        size_t *output_pitch)
+{
+    size_t pixel_count;
+    unsigned y;
+    if (!data || !width || !height || !output_pitch)
+        return NULL;
+    if (core_pixel_format == RETRO_PIXEL_FORMAT_RGB565) {
+        *output_pitch = pitch;
+        return data;
+    }
+    pixel_count = (size_t)width * height;
+    if (pixel_count > converted_frame_pixels) {
+        uint16_t *next = realloc(converted_frame, pixel_count * sizeof(*next));
+        if (!next) return NULL;
+        converted_frame = next;
+        converted_frame_pixels = pixel_count;
+    }
+    for (y = 0; y < height; y++) {
+        uint16_t *dst = converted_frame + (size_t)y * width;
+        unsigned x;
+        if (core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888) {
+            const uint32_t *src = (const uint32_t *)((const uint8_t *)data + (size_t)y * pitch);
+            for (x = 0; x < width; x++) {
+                uint32_t pixel = src[x];
+                dst[x] = (uint16_t)(((pixel & 0x00f80000) >> 8) |
+                                  ((pixel & 0x0000fc00) >> 5) |
+                                  ((pixel & 0x000000f8) >> 3));
+            }
+        } else {
+            const uint16_t *src = (const uint16_t *)((const uint8_t *)data + (size_t)y * pitch);
+            for (x = 0; x < width; x++) {
+                uint16_t pixel = src[x];
+                uint16_t green = (pixel >> 5) & 0x1f;
+                dst[x] = (uint16_t)(((pixel & 0x7c00) << 1) |
+                                  (((green << 1) | (green >> 4)) << 5) |
+                                  (pixel & 0x001f));
+            }
+        }
+    }
+    *output_pitch = (size_t)width * sizeof(*converted_frame);
+    return converted_frame;
+}
+'''
+if video.count('static const void* framebuffer; // NOTE: we don\'t own this') != 1:
+    raise SystemExit("framebuffer marker changed")
+video = video.replace(
+    "static const void* framebuffer; // NOTE: we don't own this",
+    "static const void* framebuffer; // NOTE: we don't own this\n" + conversion,
+    1,
+)
+if video.count("\tframebuffer = data;") != 1:
+    raise SystemExit("video conversion marker changed")
+video = video.replace(
+    "\tframebuffer = data;",
+    "\tconst void *rgb565 = prepare_rgb565_frame(data, width, height, pitch, &pitch);\n"
+    "\tif (!rgb565) return;\n\tframebuffer = rgb565;",
+    1,
+)
+video = video.replace("scale(width, height, pitch, data, screen->pixels);",
+                      "scale(width, height, pitch, rgb565, screen->pixels);", 1)
+video = video.replace("buffer_scale(width, height, pitch, data);",
+                      "buffer_scale(width, height, pitch, rgb565);", 1)
+video = video.replace("\tSDL_FreeSurface(screen);\n", "\tSDL_FreeSurface(screen);\n"
+                      "\tfree(converted_frame);\n\tconverted_frame = NULL;\n"
+                      "\tconverted_frame_pixels = 0;\n", 1)
 video_path.write_text(video)
 
 replace("plat_linux.c", "{ SDLK_LCTRL,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_B },", "{ SDLK_LCTRL,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_A },")
@@ -91,6 +164,34 @@ main_path.write_text(main)
 
 core_path = source / "core.c"
 core = core_path.read_text()
+if core.count("int resume_slot = -1;") != 1:
+    raise SystemExit("pixel format state marker changed")
+core = core.replace("int resume_slot = -1;", "int resume_slot = -1;\n"
+                    "enum retro_pixel_format core_pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;", 1)
+pixel_check = """\t\tif (*format != RETRO_PIXEL_FORMAT_RGB565) {
+\t\t\t/* 565 is only supported format */
+\t\t\treturn false;
+\t\t}"""
+pixel_accept = """\t\tif (!format) return false;
+\t\tswitch (*format) {
+\t\tcase RETRO_PIXEL_FORMAT_0RGB1555:
+\t\tcase RETRO_PIXEL_FORMAT_XRGB8888:
+\t\tcase RETRO_PIXEL_FORMAT_RGB565:
+\t\t\tcore_pixel_format = *format;
+\t\t\tbreak;
+\t\tdefault:
+\t\t\treturn false;
+\t\t}"""
+if core.count(pixel_check) != 1:
+    raise SystemExit("pixel format environment marker changed")
+core = core.replace(pixel_check, pixel_accept, 1)
+if core.count("\tset_environment(pa_environment);") != 1:
+    raise SystemExit("core initialization marker changed")
+core = core.replace("\tset_environment(pa_environment);",
+                    "\tcore_pixel_format = RETRO_PIXEL_FORMAT_0RGB1555;\n"
+                    "\tset_environment(pa_environment);", 1)
+core = core.replace("options_init(*(const struct retro_core_option_definition **)data);",
+                    "options_init((const struct retro_core_option_definition *)data);", 1)
 directory_pattern = r"static void set_directories\(const char \*core_name, const char \*tag_name\) \{.*?\n\}\n\n// based on eggs"
 directory_replacement = (
     "static void set_directories(const char *core_name, const char *tag_name) {\n"
@@ -120,3 +221,4 @@ core = core.replace(
     1,
 )
 core_path.write_text(core)
+replace("core.h", "extern int resume_slot;", "extern int resume_slot;\nextern enum retro_pixel_format core_pixel_format;")

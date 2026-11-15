@@ -12,6 +12,8 @@ static uint64_t min_ns = UINT64_MAX;
 static uint64_t max_ns;
 static unsigned waits_8ms;
 static uint32_t flags;
+static uint64_t first_flip_ns;
+static uint64_t last_flip_ns;
 
 static uint64_t now_ns(void)
 {
@@ -26,8 +28,10 @@ static void report(void)
     if (!count) return;
     out = fopen("/media/data/plumos/Logs/picoarch/vsync-probe.log", "a");
     if (!out) return;
-    fprintf(out, "flips=%u flags=0x%08x doublebuf=%d avg_ms=%.3f min_ms=%.3f max_ms=%.3f waits_ge_8ms=%u\n",
-            count, flags, !!(flags & SDL_DOUBLEBUF), (double)total_ns / count / 1e6,
+    fprintf(out, "flips=%u flags=0x%08x doublebuf=%d fps=%.2f avg_ms=%.3f min_ms=%.3f max_ms=%.3f waits_ge_8ms=%u\n",
+            count, flags, !!(flags & SDL_DOUBLEBUF),
+            count > 1 ? (double)(count - 1) * 1e9 / (last_flip_ns - first_flip_ns) : 0.0,
+            (double)total_ns / count / 1e6,
             (double)min_ns / 1e6, (double)max_ns / 1e6, waits_8ms);
     fclose(out);
 }
@@ -40,6 +44,8 @@ int SDL_Flip(SDL_Surface *surface)
     if (!real_flip) real_flip = dlsym(RTLD_NEXT, "SDL_Flip");
     if (!real_flip) return -1;
     start = now_ns();
+    if (!count) first_flip_ns = start;
+    last_flip_ns = start;
     result = real_flip(surface);
     elapsed = now_ns() - start;
     flags = surface->flags;

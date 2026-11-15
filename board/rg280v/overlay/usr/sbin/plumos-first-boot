@@ -13,7 +13,6 @@ screen() {
     echo 0 >/sys/class/vtconsole/vtcon1/bind 2>/dev/null || true
     /media/data/local/bin/rg280v-fbshow "/media/data/local/share/$1.ppm" || true
 }
-screen first-boot
 
 fail() {
     echo "plumOS first boot: ERROR $*" >/dev/console
@@ -39,6 +38,14 @@ disk=${boot%p1}
 [ -d /media/user ] || fail 'user mountpoint missing'
 p3=${disk}p3
 name=${disk#/dev/}
+
+# A completed card is mounted by rcS before this script runs. Do not redraw
+# the setup screen or rewrite the completion markers on every normal boot.
+if [ -f "$state/complete" ] && [ -f /media/user/.plumos-ready ] &&
+   awk -v device="$p3" '$1 == device && $2 == "/media/user" { found = 1 } END { exit !found }' /proc/mounts; then
+    exit 0
+fi
+screen first-boot
 
 for spec in "${disk}p1:8192:1048576:PLUMOSBOOT" \
             "${disk}p2:1056768:2097152:PLUMOSDATA"; do
