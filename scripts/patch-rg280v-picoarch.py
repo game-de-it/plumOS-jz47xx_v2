@@ -80,7 +80,130 @@ scale_data, count = re.subn(nearest_pattern, nearest_replacement, scale_data,
                             count=1, flags=re.S)
 if count != 1:
     raise SystemExit("nearest scaler marker changed")
+geometry_pattern = r"static void scale_select_scaler\(unsigned w, unsigned h, size_t pitch\) \{.*?\n\}\n\nvoid scale_update_scaler"
+geometry_replacement = '''static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
+    double ratio;
+    unsigned integer_scale = 0;
+    scaler = scale_null;
+    dst_w = dst_h = dst_offs = 0;
+    if (!w || !h || !pitch) return;
+
+    /* Libretro permits aspect_ratio=0. Do not store the fallback globally:
+       a core can change its geometry after the first video frame. */
+    ratio = (aspect_ratio > 0.0 && isfinite(aspect_ratio))
+        ? aspect_ratio : (double)w / h;
+
+    if (scale_size == SCALE_SIZE_FULL) {
+        dst_w = SCREEN_WIDTH;
+        dst_h = SCREEN_HEIGHT;
+    } else if (scale_size == SCALE_SIZE_ASPECT || w > SCREEN_WIDTH || h > SCREEN_HEIGHT) {
+        dst_w = (unsigned)lround(SCREEN_HEIGHT * ratio);
+        dst_h = SCREEN_HEIGHT;
+        if (dst_w > SCREEN_WIDTH) {
+            dst_w = SCREEN_WIDTH;
+            dst_h = (unsigned)lround(SCREEN_WIDTH / ratio);
+        }
+    } else {
+        /* Native keeps square source pixels and uses only integer scaling. */
+        unsigned sx = SCREEN_WIDTH / w;
+        unsigned sy = SCREEN_HEIGHT / h;
+        integer_scale = sx < sy ? sx : sy;
+        if (!integer_scale) integer_scale = 1;
+        dst_w = w * integer_scale;
+        dst_h = h * integer_scale;
+    }
+    if (!dst_w) dst_w = 1;
+    if (!dst_h) dst_h = 1;
+    if (dst_w > SCREEN_WIDTH) dst_w = SCREEN_WIDTH;
+    if (dst_h > SCREEN_HEIGHT) dst_h = SCREEN_HEIGHT;
+    dst_offs = ((SCREEN_HEIGHT - dst_h) / 2) * SCREEN_PITCH
+             + ((SCREEN_WIDTH - dst_w) / 2) * SCREEN_BPP;
+
+    if (scale_size != SCALE_SIZE_NONE || !integer_scale) {
+        scaler = optimize_text ? scaleNN_text : scaleNN;
+    } else if (integer_scale == 1) {
+        scaler = scale1x;
+    } else if (integer_scale == 2) {
+        if (scale_effect == SCALE_EFFECT_LCD) scaler = scale2x_lcd;
+        else if (scale_effect == SCALE_EFFECT_SCANLINE) scaler = scale2x_scanline;
+        else scaler = scale2x;
+    } else if (integer_scale == 3) {
+        if (scale_effect == SCALE_EFFECT_LCD) scaler = scale3x_lcd;
+        else if (scale_effect == SCALE_EFFECT_DMG) scaler = scale3x_dmg;
+        else if (scale_effect == SCALE_EFFECT_SCANLINE) scaler = scale3x_scanline;
+        else scaler = scale3x;
+    } else if (integer_scale == 6 && scale_effect == SCALE_EFFECT_DMG) {
+        scaler = scale6x_dmg;
+    } else {
+        scaler = optimize_text ? scaleNN_text : scaleNN;
+    }
+}
+
+void scale_update_scaler'''
+scale_data, count = re.subn(geometry_pattern, geometry_replacement, scale_data,
+                            count=1, flags=re.S)
+if count != 1:
+    raise SystemExit("scaler geometry marker changed")
+old_frame = '''\t\tscale_select_scaler(w, h, pitch);
+\t\tmemset(dst, 0, SCREEN_HEIGHT * SCREEN_PITCH);
+\t\tprev.w = w; prev.h = h; prev.pitch = pitch;
+\t}
+
+\tscaler(w, h, pitch, src, dst);'''
+new_frame = '''\t\tscale_select_scaler(w, h, pitch);
+\t\tprev.w = w; prev.h = h; prev.pitch = pitch;
+\t}
+
+    /* KMSDRM double buffers can retain pixels from the previous mode.
+       Clear only the letterbox margins on every frame. */
+    if (dst_w && dst_h && (dst_w != SCREEN_WIDTH || dst_h != SCREEN_HEIGHT)) {
+        unsigned left = (SCREEN_WIDTH - dst_w) / 2;
+        unsigned top = (SCREEN_HEIGHT - dst_h) / 2;
+        unsigned right = SCREEN_WIDTH - left - dst_w;
+        uint8_t *pixels = (uint8_t *)dst;
+        memset(pixels, 0, (size_t)top * SCREEN_PITCH);
+        memset(pixels + (size_t)(top + dst_h) * SCREEN_PITCH, 0,
+               (size_t)(SCREEN_HEIGHT - top - dst_h) * SCREEN_PITCH);
+        for (unsigned y = top; y < top + dst_h; y++) {
+            uint8_t *row = pixels + (size_t)y * SCREEN_PITCH;
+            memset(row, 0, (size_t)left * SCREEN_BPP);
+            memset(row + (size_t)(left + dst_w) * SCREEN_BPP, 0,
+                   (size_t)right * SCREEN_BPP);
+        }
+    }
+\tscaler(w, h, pitch, src, dst);'''
+if scale_data.count(old_frame) != 1:
+    raise SystemExit("scaler frame marker changed")
+scale_data = scale_data.replace(old_frame, new_frame, 1)
 scale_path.write_text(scale_data)
+
+replace("core.c", '#include "plat.h"\n', '#include "plat.h"\n#include "scale.h"\n')
+core_path = source / "core.c"
+core_data = core_path.read_text()
+geometry_case = '''\tcase RETRO_ENVIRONMENT_SET_GEOMETRY: {
+        const struct retro_game_geometry *geometry = data;
+        if (!geometry || !geometry->base_width || !geometry->base_height)
+            return false;
+        aspect_ratio = geometry->aspect_ratio;
+        scale_update_scaler();
+        break;
+    }
+    case RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO: {
+        const struct retro_system_av_info *av = data;
+        if (!av || !av->geometry.base_width || !av->geometry.base_height ||
+            av->timing.fps <= 0 || av->timing.sample_rate <= 0)
+            return false;
+        aspect_ratio = av->geometry.aspect_ratio;
+        frame_rate = av->timing.fps;
+        sample_rate = av->timing.sample_rate;
+        plat_reinit();
+        break;
+    }
+'''
+marker = '\tcase RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY: { /* 31 */'
+if core_data.count(marker) != 1:
+    raise SystemExit("Libretro geometry marker changed")
+core_path.write_text(core_data.replace(marker, geometry_case + marker, 1))
 
 video_path = source / "plat_sdl.c"
 video = video_path.read_text()
