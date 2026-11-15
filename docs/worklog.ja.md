@@ -6,6 +6,7 @@
 - 同一Shinobi ROMの無操作約20秒自動起動は、従来44.1 kHzと試験用32 kHzの双方で終盤59.99 FPS。ゲーム中の低下場面を含まないため、改善判定はできない。
 - 32 kHz比較コアを元コアのバックアップとSHA-256照合後に端末へ配置。FE稼働を確認し、同じ場面でのFPSと音の実機比較を依頼。詳細は`docs/validation/rg280v-megadrive-genesis-plus-gx-2026-11-16.md`。
 - ユーザーが32 kHz版でも約30 FPSへの低下を確認。表示中のCastlevania BloodlinesではCPU周波数996 MHz、プロセスのCPU時間差分は約52～57%相当で、DRMのVBlank待ちも観測。Mega Drive FE候補からGenesis Plus GXを外し、単体・PicoArchのPicoDriveを残す準備をした。ゲーム終了後に元コアとFE設定を端末へ反映する。
+- ユーザーがFEへ戻った後、元のGenesis Plus GXコアを端末・ホスト出力・ソースへ復元。端末のコア・FE設定・選択上書きのSHA-256一致を確認し、FEを再起動した。Mega Driveの選択上書きは単体PicoDriveへ戻した。物理FE画面の確認は未取得。
 
 ## 2026-11-16 — GBA mGBAの30 FPS
 
