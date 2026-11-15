@@ -6,6 +6,7 @@
 - Snes9x 2002はユーザーから速度・音は正常だが背景が黒いと報告された。タイトル画面のDRM取得では中央の黒い背景を確認。ゲーム中の描画を確認してコア固有の欠落か判定する。
 - 同じSD2のSuper Mario World ROMをChimeraSNESでも起動してDRM画面を比較。ChimeraSNESには山・雲・木の背景が表示され、Snes9x 2002では同じ背景領域が黒い。Snes9x 2002のTransparency既定値は有効で、端末に個別上書きもなかった。描画欠落を確認したため、ユーザーの条件に従いSnes9x 2002もSFCのFE候補から削除。
 - FE設定を端末へ配置してSHA-256一致を確認し、ChimeraSNES終了後にFEを再起動。FEプロセスは稼働し、SFC候補はPocketSNES、Snes9x 2005、ChimeraSNES、Snes9x 2005 Plus、Snes9x 2010の順。詳細は`docs/validation/rg280v-sfc-snes9x2002-background-2026-11-16.md`。
+- 登録順に沿ってSFCの選択をSnes9x 2005 Plusへ進め、FEを再起動して上書き状態を照合。物理画面の背景・音・FPS・操作・復帰は確認待ち。
 
 ## 2026-11-16 — SFC Mednafen Supafaustの起動修正と比較
 
