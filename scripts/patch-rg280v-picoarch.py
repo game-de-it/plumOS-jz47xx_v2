@@ -25,6 +25,14 @@ replace("libpicofe/menu.c", "text_out16(x, y, name);",
 replace("libpicofe/menu.c",
         "text_out16(5, g_menuscreen_h - me_mfont_h - 4, menu_error_msg);",
         'text_out16(5, g_menuscreen_h - me_mfont_h - 4, "%s", menu_error_msg);')
+# The upstream PicoArch overrides enable audio-driven frameskip by default.
+# On RG280V this can suppress nearly every Snes9x 2005 video frame while
+# emulation and audio continue at normal speed. Keep the cores' disabled
+# defaults, as the 2005 Plus override already does.
+replace("overrides/snes9x2005.h", '.default_value = "auto"\n',
+        '.default_value = "disabled"\n')
+replace("overrides/snes9x2002.h", '.default_value = "auto",\n',
+        '.default_value = "disabled",\n')
 
 scaler_source = (source / "scaler_neon.c").read_text()
 marker = "void scale1x_c16("

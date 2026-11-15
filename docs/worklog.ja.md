@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — SFC Snes9x 2005の2 FPS表示と描画停止
+
+- ユーザーがNESの他のコアも問題なしと報告。個別のROM・設定・計測値は未取得のため、この報告を確認範囲として記録。
+- FEからSnes9x 2005で起動したDBZ対戦画面はHUDの描画数が2 FPS、内部ループ50〜60/秒、CPU約40%、音は正常。画面も実際にカクつき、時々60 FPSになるとCPU約78%。
+- PicoArchのAuto Frameskip上書きが原因と特定。ユーザーがゲーム中にFrameskipをDisabledにすると60 FPSへ戻った。PicoArchのSnes9x 2005と2002の既定上書きをDisabledへ変更し、ホストで再ビルド。プレイ中なので端末への反映は終了後に行う。詳細は `docs/validation/rg280v-sfc-frameskip-2026-11-16.md`。
+
 ## 2026-11-16 — RG280V単体FCEUXの54 FPS調査
 
 - ユーザーの悪魔城伝説で60 FPSに届かない報告を受け、実機のFCEUXを計測。48 kHz音声では後半約54.1 FPSで、主スレッドがほぼCPU 1コアを使い切っていた。`SDL_Flip`は約0.5～0.6 ms/回。
