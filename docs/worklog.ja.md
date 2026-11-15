@@ -5,6 +5,7 @@
 - ユーザーの指示で性能不足の標準Snes9xをSFCのFE候補から削除。PocketSNES、Snes9x 2005、ChimeraSNES以降の登録順を維持した。
 - ユーザーがChimeraSNESのFrameskip OFFで正常動作を確認。コア初期値がAutoだったため、再現可能なビルドパッチでDisabledへ変更。ヘッダー変更をMakefileが追跡しない点も対処し、旧バイナリと異なる修正版を生成した。
 - 旧コア・FE定義を端末内へ控え、修正版のハッシュ一致を確認して配置。ライブラリ再走査とFE復帰、候補順序を確認。修正版の物理動作は確認待ち。詳細は `docs/validation/rg280v-sfc-chimerasnes-2026-11-16.md`。
+- 修正版ChimeraSNESをユーザーがFEから手動設定なしで試し、約60 FPS、映像・音・操作・メニューからFE復帰まで正常と確認した。次は登録順のMednafen Supafaust。
 
 ## 2026-11-16 — SFC標準Snes9xの30 FPS調査
 
