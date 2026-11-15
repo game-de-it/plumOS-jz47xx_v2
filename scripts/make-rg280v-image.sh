@@ -5,6 +5,8 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 "$repo_root/scripts/fetch-rg280v-emulators.sh"
 "$repo_root/scripts/repack-rg280v-regba.sh"
 "$repo_root/scripts/repack-rg280v-gambatte.sh"
+"$repo_root/scripts/build-rg280v-picodrive.sh"
+"$repo_root/scripts/build-rg280v-picoarch.sh"
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 "$repo_root/scripts/build-rg280v-emulator-libs.sh"

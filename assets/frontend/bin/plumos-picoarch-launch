@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+[ "$#" -eq 2 ] || { echo 'usage: plumos-picoarch-launch CORE ROM' >&2; exit 2; }
+root=${PLUMOS_ROOT:-/media/data/plumos}
+core_id=$1
+rom=$2
+case "$core_id" in
+    mednafen_pce_fast) ;;
+    *) echo "unsupported PicoArch core: $core_id" >&2; exit 2 ;;
+esac
+[ -f "$rom" ] || { echo "ROM missing: $rom" >&2; exit 1; }
+binary="$root/picoarch/bin/picoarch"
+core="$root/picoarch/cores/${core_id}_libretro.so"
+[ -x "$binary" ] || { echo "PicoArch missing: $binary" >&2; exit 1; }
+[ -r "$core" ] || { echo "core missing: $core" >&2; exit 1; }
+
+system=${PLUMOS_PICOARCH_SYSTEM:-pcengine}
+case "$system" in
+    *[!A-Za-z0-9._-]*|'') echo "invalid system: $system" >&2; exit 2 ;;
+esac
+home="$root/home/picoarch/$system"
+save="$root/Saves"
+bios="$root/bios"
+mkdir -p "$home" "$save/$system" "$bios" "$root/Logs/picoarch"
+export HOME="$home" PLUMOS_PICOARCH_SYSTEM="$system"
+export PLUMOS_PICOARCH_SAVE_ROOT="$save" PLUMOS_PICOARCH_BIOS_DIR="$bios"
+export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-kmsdrm}"
+export SDL_AUDIODRIVER="${SDL_AUDIODRIVER:-alsa}"
+export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+"$root/bin/plumos-prepare-opk-input"
+exec "$binary" "$core" "$rom" >>"$root/Logs/picoarch/$system.log" 2>&1

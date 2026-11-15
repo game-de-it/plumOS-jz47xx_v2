@@ -12,6 +12,7 @@ local_emulators="$repo_root/output/rg280v-emulators"
 "$repo_root/scripts/repack-rg280v-regba.sh"
 "$repo_root/scripts/repack-rg280v-gambatte.sh"
 "$repo_root/scripts/build-rg280v-picodrive.sh"
+"$repo_root/scripts/build-rg280v-picoarch.sh"
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 if [[ ! -f "$local_emulators/lib/libSDL_image-1.2.so.0" ||
@@ -23,7 +24,7 @@ fi
 
 adb -P "$port" connect "$serial" >/dev/null
 "${adb[@]}" get-state >/dev/null
-"${adb[@]}" shell "mkdir -p $remote/emulators $remote/lib $remote/bin $remote/config/frontend"
+"${adb[@]}" shell "mkdir -p $remote/emulators $remote/lib $remote/bin $remote/config/frontend $remote/picoarch/bin $remote/picoarch/cores $remote/licenses"
 
 copy_checked() {
     local source=$1 destination=$2 mode=$3 expected actual
@@ -39,6 +40,18 @@ copy_checked "$repo_root/output/rg280v-fe/plumos-text-ui" "$remote/bin/plumos-te
 copy_checked "$repo_root/assets/frontend/bin/plumos-prepare-opk-input" "$remote/bin/plumos-prepare-opk-input" 0755
 copy_checked "$repo_root/assets/frontend/bin/plumos-fceux-prepare" "$remote/bin/plumos-fceux-prepare" 0755
 copy_checked "$repo_root/assets/frontend/bin/plumos-standalone-launch" "$remote/bin/plumos-standalone-launch" 0755
+copy_checked "$repo_root/assets/frontend/bin/plumos-picoarch-launch" "$remote/bin/plumos-picoarch-launch" 0755
+copy_checked "$local_emulators/picoarch-rg280v" "$remote/picoarch/bin/picoarch" 0755
+copy_checked "$local_emulators/mednafen_pce_fast_libretro.so" \
+    "$remote/picoarch/cores/mednafen_pce_fast_libretro.so" 0644
+copy_checked "$local_emulators/picoarch-rg280v-source.tar.gz" \
+    "$remote/licenses/picoarch-rg280v-source.tar.gz" 0644
+copy_checked "$local_emulators/mednafen_pce_fast-rg280v-source.tar.gz" \
+    "$remote/licenses/mednafen_pce_fast-rg280v-source.tar.gz" 0644
+copy_checked "$local_emulators/picoarch-source/LICENSE" \
+    "$remote/licenses/picoarch-LICENSE" 0644
+copy_checked "$local_emulators/beetle-pce-fast-source/COPYING" \
+    "$remote/licenses/mednafen_pce_fast-COPYING" 0644
 copy_checked "$repo_root/assets/frontend/regba-global-config.cfg" "$remote/config/regba-global-config.cfg" 0644
 copy_checked "$repo_root/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules" \
     "$remote/config/70-plumos-gpio-keys.rules" 0644

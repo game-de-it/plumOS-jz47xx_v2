@@ -558,13 +558,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:mednafen_pce_fast",
-        "retroarch:mednafen_pce",
-        "retroarch:mednafen_supergrafx",
-        "picoarch:mednafen_pce_fast",
-        "picoarch:mednafen_supergrafx"
+        "picoarch:mednafen_pce_fast"
       ],
-      "default_launch_profile": "retroarch:mednafen_pce_fast",
+      "default_launch_profile": "picoarch:mednafen_pce_fast",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,

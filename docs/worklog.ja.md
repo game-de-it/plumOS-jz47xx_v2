@@ -2,6 +2,7 @@
 
 ## 2026-11-15 — RG280VへGCW Zero系エミュレータを導入
 
+- V90S版のPicoArch起動経路を参照し、RG280V用のMIPS/soft-float PicoArchとBeetle PCE Fastを固定リビジョンからビルドした。FEのPC Engine起動設定だけを `picoarch:mednafen_pce_fast` に変更し、既存設定の他項目が不変であることをJSON比較で確認。SD1へバイナリと起動スクリプトをハッシュ照合して配置し、FEからBomberman ’93を起動した。DRM取得でゲーム画面とPicoArchメニューを確認し、ユーザーが映像と音声を正常と報告。最初のメニューは640×480向けの2倍文字で横にはみ出したため、1倍文字版 `c583ed2f15cea892ef77c5a5ba87a6416feedbcb0614cde4d47cfc6b2e347937` に更新した。メニューの再確認と入力の試験は継続中。ソースとライセンスの同梱手順も追加し、SDイメージは生成していない。
 - PicoDriveがMaster SystemとGame Gearにも対応するため、FEの両機種の起動設定を `standalone:picodrive` に変更。インストール済み設定の他項目は維持し、変更が両機種だけであることをJSON差分で確認した。設定をSD1へSHA-256照合して配置し、RG280V再起動後にFEの自動起動と起動設定の保持を確認。ROMの映像・音声・操作は実機試験中。
 - Master Systemの実機試験で映像・音声は正常と報告されたが、物理Xを押すと早送りになり解除できなかった。Wonder Boy 3でA/Bを入れ替える比較版を試したところAがキャンセル、Bが決定になったため、元のA/B配置へ戻した。Master System/Game Gear起動時だけXの早送りを無効にするPicoDriveパッチを追加し、OPKを再ビルドしてSD1へSHA-256 `fc59832a5522b9e49da4b606e5faf5781b527c06db6008fb8dc11b00f1acb579` で照合して配置した。ユーザーがWonder Boy 3でA/Bの正常動作とXで早送りにならないことを確認した。新しいSDイメージは生成していない。
 - FEのGame Gear一覧からPuyo Puyoを起動。ユーザーが映像・音声・A/B操作・Xの早送り無効・SELECT＋STARTのメニューからFEへの復帰をすべて正常と確認した。ADBでもPicoDrive終了後にFEプロセスが残っていることを確認した。

@@ -40,7 +40,8 @@ mkdir -p "$data_root/local/bin" "$data_root/local/share" "$data_root/local/init.
     "$data_root/plumos/themes/default/images" "$data_root/plumos/config/frontend" \
     "$data_root/plumos/config/system" "$data_root/plumos/state/frontend" \
     "$data_root/plumos/Logs" "$data_root/plumos/emulators" \
-    "$data_root/plumos/lib" "$data_root/plumos/home"
+    "$data_root/plumos/lib" "$data_root/plumos/home" \
+    "$data_root/plumos/picoarch/bin" "$data_root/plumos/picoarch/cores"
 printf 'RG280V first-boot seed v1\n' > "$data_root/plumos/provision/seed-v1"
 cp /workspace/output/rg280v-status/rg280v-fbshow "$data_root/local/bin/rg280v-fbshow"
 cp /workspace/output/rg280v-status/adb-ready.ppm "$data_root/local/share/adb-ready.ppm"
@@ -61,6 +62,17 @@ tar -xOf /workspace/output/rg280v-emulators/PicoDrive_rg280v-source.tar.gz \
     picodrive-source/COPYING > "$data_root/plumos/licenses/PicoDrive-COPYING"
 cp /workspace/output/rg280v-emulators/PicoDrive_rg280v-source.tar.gz \
     "$data_root/plumos/licenses/PicoDrive_rg280v-source.tar.gz"
+cp /workspace/output/rg280v-emulators/picoarch-source/LICENSE \
+    "$data_root/plumos/licenses/picoarch-LICENSE"
+cp /workspace/output/rg280v-emulators/beetle-pce-fast-source/COPYING \
+    "$data_root/plumos/licenses/mednafen_pce_fast-COPYING"
+cp /workspace/output/rg280v-emulators/picoarch-rg280v-source.tar.gz \
+    /workspace/output/rg280v-emulators/mednafen_pce_fast-rg280v-source.tar.gz \
+    "$data_root/plumos/licenses/"
+cp /workspace/output/rg280v-emulators/picoarch-rg280v \
+    "$data_root/plumos/picoarch/bin/picoarch"
+cp /workspace/output/rg280v-emulators/mednafen_pce_fast_libretro.so \
+    "$data_root/plumos/picoarch/cores/mednafen_pce_fast_libretro.so"
 for name in libSDL_image-1.2.so.0 libSDL_mixer-1.2.so.0 libpng14.so.14 \
     libregba-doublebuf.so libfceux-menu.so libgambatte-menu.so; do
     cp "/workspace/output/rg280v-emulators/lib/$name" "$data_root/plumos/lib/$name"
@@ -79,7 +91,8 @@ cp /workspace/assets/frontend/system-settings.json "$data_root/plumos/config/sys
 cp /workspace/assets/frontend/regba-global-config.cfg "$data_root/plumos/config/"
 cp /workspace/assets/frontend/VERSION "$data_root/plumos/VERSION"
 chmod 0755 "$data_root/local/bin/rg280v-fbshow" "$data_root/local/init.d/S90status" \
-    "$data_root/local/init.d/S95frontend" "$data_root/plumos/bin/"*
+    "$data_root/local/init.d/S95frontend" "$data_root/plumos/bin/"* \
+    "$data_root/plumos/picoarch/bin/picoarch"
 truncate -s 0 "$stage/data.ext4"
 truncate -s $((data_sectors * 512)) "$stage/data.ext4"
 mkfs.ext4 -F -q -d "$data_root" -L PLUMOSDATA "$stage/data.ext4"
@@ -88,6 +101,7 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /local/init.d/S90status /local/init.d/S95frontend \
             /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \
             /plumos/bin/plumos-text-ui /plumos/bin/plumos-standalone-launch \
+            /plumos/bin/plumos-picoarch-launch \
             /plumos/bin/plumos-prepare-opk-input \
             /plumos/bin/plumos-fceux-prepare \
             /plumos/config/70-plumos-gpio-keys.rules \
@@ -99,8 +113,14 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /plumos/lib/libfceux-menu.so \
             /plumos/lib/libgambatte-menu.so \
             /plumos/emulators/PicoDrive_rg280v.opk \
+            /plumos/picoarch/bin/picoarch \
+            /plumos/picoarch/cores/mednafen_pce_fast_libretro.so \
             /plumos/licenses/PicoDrive-COPYING \
             /plumos/licenses/PicoDrive_rg280v-source.tar.gz \
+            /plumos/licenses/picoarch-LICENSE \
+            /plumos/licenses/mednafen_pce_fast-COPYING \
+            /plumos/licenses/picoarch-rg280v-source.tar.gz \
+            /plumos/licenses/mednafen_pce_fast-rg280v-source.tar.gz \
             /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
             /plumos/provision/seed-v1; do
     debugfs -R "stat $path" "$stage/data.ext4" 2>/dev/null | grep -q 'Inode:' || {
