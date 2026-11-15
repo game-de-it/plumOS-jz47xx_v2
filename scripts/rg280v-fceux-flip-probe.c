@@ -30,7 +30,9 @@ int SDL_Flip(SDL_Surface *surface)
     if (!real_flip)
         return -1;
     before = nanoseconds();
-    result = real_flip(surface);
+    /* Diagnostic only: measure the emulator ceiling without DRM pacing. */
+    path = getenv("PLUMOS_PROBE_SKIP_FLIP");
+    result = (path && *path == '1') ? 0 : real_flip(surface);
     after = nanoseconds();
     duration = after - before;
     if (!window_start)
