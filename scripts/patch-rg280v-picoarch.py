@@ -50,6 +50,11 @@ replacement = (
 video, count = re.subn(pattern, replacement, video, count=1, flags=re.S)
 if count != 1:
     raise SystemExit("Miyoo video block changed")
+old_mode = "SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, SDL_SWSURFACE)"
+new_mode = "SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, SDL_HWSURFACE | SDL_DOUBLEBUF)"
+if video.count(old_mode) != 1:
+    raise SystemExit("SDL video mode changed")
+video = video.replace(old_mode, new_mode, 1)
 video_path.write_text(video)
 
 replace("plat_linux.c", "{ SDLK_LCTRL,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_B },", "{ SDLK_LCTRL,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_A },")
