@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — GBのFE登録候補
+
+- ユーザーがGBの登録候補を確認し「すべて動作OK」と報告。FE候補は単体Gambatte、PicoArch Gambatte、Gearboy、VBA-Mの順。
+- 端末のGBログでPicoArchの3候補がSD2の`Zelda no Densetsu - Yume o Miru Shima (Japan).gb`を起動・終了したことを確認。FEのrecentには単体Gambatteで`Super Mario Land [V1.1].gb`の記録がある。候補別のFPS数値・音声波形・セーブ永続性は今回取得していない。次はGBC。
+
 ## 2026-11-16 — SFC Snes9x 2010の最終確認
 
 - 登録順最後のSnes9x 2010をSD2のSuper Mario Worldで短時間・長時間の診断起動。14秒試験では終盤48.01 FPS、26秒試験では終盤30.18 FPS。18秒時点のDRM画面にはタイトルの色崩れがあり、先頭2枚の取得画像は黒かった。
