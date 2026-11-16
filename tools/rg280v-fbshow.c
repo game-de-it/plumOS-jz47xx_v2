@@ -61,6 +61,15 @@ int main(int argc, char **argv) {
     if (ioctl(fd, FBIOGET_VSCREENINFO, &var) || ioctl(fd, FBIOGET_FSCREENINFO, &fix)) {
         perror("framebuffer info"); return 1;
     }
+    /* Without fbcon, DRM's fbdev buffer exists before its scanout is active.
+     * Reapply the current mode so the boot splash is visible before FE starts. */
+    var.activate = FB_ACTIVATE_NOW | FB_ACTIVATE_FORCE;
+    if (ioctl(fd, FBIOPUT_VSCREENINFO, &var)) {
+        perror("activate framebuffer"); return 1;
+    }
+    if (ioctl(fd, FBIOGET_VSCREENINFO, &var) || ioctl(fd, FBIOGET_FSCREENINFO, &fix)) {
+        perror("active framebuffer info"); return 1;
+    }
     if (var.bits_per_pixel != 16 && var.bits_per_pixel != 32) {
         fprintf(stderr, "unsupported bpp: %u\n", var.bits_per_pixel); return 1;
     }
