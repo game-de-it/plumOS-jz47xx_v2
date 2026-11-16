@@ -9,7 +9,10 @@ elif [ "$#" -gt 0 ] && [ -f "$1" ]; then
     media=$1
 else
     media=$(/opk/ffplay-picker) || exit 0
+    # KMSDRM releases the picker's display asynchronously.
+    sleep 1
 fi
 
 mkdir -p "$HOME/.config/ffplay/file_settings"
-exec /opk/ffplay -x 320 -y 480 -fs -autoexit "$media"
+exec /opk/ffplay -x 320 -y 480 -fs -sync video -autoexit "$media" \
+    2>"$HOME/.config/ffplay/last.log"
