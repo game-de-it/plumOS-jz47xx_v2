@@ -1,9 +1,14 @@
 # 作業ログ
 
+## 2026-11-16 — RG280VのSTARTメニューを他シリーズと照合
+
+- Bubble、RK2020、pixel2のSTARTメニュー定義と実機のRG280V設定を比較。RG280Vは5項目で、UI Settings、System Settings、HELP、Reboot、Shutdownを表示。実機の320×240論理画面で全項目の文字切れがなく、前3項目への遷移とBでの復帰を確認した。
+- Wi-Fiを前提とするNetwork Settingsは不要。一方、Performance Settingsは共通FE内に実装があるがRG280VのSTARTから開けず、Appsもカタログが空で未移植。Reboot/Shutdownの `confirm: true` は共通START処理で参照されていない。詳細は `docs/validation/rg280v-start-menu-audit-2026-11-16.md`。
+
 ## 2026-11-16 — RG280VのHELP画面とFEヘッダー
 
-- HELPの長文を既存の18px比例フォントで描画し、USBの説明も短縮。最長行は画面内の264pxに対して247px。FEヘッダーは既存plumOSの機種名・時刻・バッテリー構成と角張ったフォントを参照し、RG280Vの320px画面では2段に配置した。
-- 実機にRTCがあることを確認。バッテリードライバーには残量値がなく電圧値だけのため、電圧からの概算値を `~` 付きで表示。実機取得画像でヘッダー文字の重なりがないことを確認し、旧FEをSD1へ退避して更新。HELPの実機目視結果は確認中。詳細は `docs/validation/rg280v-help-header-2026-11-16.md`。
+- HELPの長文を既存の18px比例フォントで描画し、USBの説明も短縮。最長行は画面内の264pxに対して247px。FEヘッダーは機種名を残した1段構成とし、右側に時刻と `CHG/BAT`、数値を既存plumOSのピクセル書体と色で表示した。
+- 実機にRTCがあることを確認。バッテリードライバーには残量値がなく電圧値だけのため、数値は概算。実機取得画像で文字の重なりがないことを確認し、旧FEをSD1へ退避して更新。ユーザーがヘッダーのデザインとHELPの読みやすさを実機で確認した。詳細は `docs/validation/rg280v-help-header-2026-11-16.md`。
 
 ## 2026-11-16 — RG280Vのシステム情報画面の文字幅
 

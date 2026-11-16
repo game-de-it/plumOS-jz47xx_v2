@@ -2067,7 +2067,8 @@ static void plumos_fbdev_rg280v_status_label(char *out, size_t out_size) {
   long voltage;
   long low;
   long high;
-  long percent;
+  long percent = -1;
+  const char *prefix = "BAT";
   time_t now = time(NULL);
 
   if (!out || out_size == 0) {
@@ -2077,13 +2078,12 @@ static void plumos_fbdev_rg280v_status_label(char *out, size_t out_size) {
     plumos_fbdev_copy_text(out, out_size, cached);
     return;
   }
-  plumos_fbdev_copy_text(cached, sizeof(cached), "BAT --");
   if (plumos_fbdev_read_first_line(
           "/sys/class/power_supply/jz-battery/capacity", value,
           sizeof(value))) {
     percent = strtol(value, &end, 10);
-    if (end != value && *end == '\0' && percent >= 0 && percent <= 100) {
-      snprintf(cached, sizeof(cached), "BAT %ld", percent);
+    if (end == value || *end != '\0' || percent < 0 || percent > 100) {
+      percent = -1;
     }
   } else if (plumos_fbdev_read_first_line(
                  "/sys/class/power_supply/jz-battery/voltage_now", value,
@@ -2103,10 +2103,23 @@ static void plumos_fbdev_rg280v_status_label(char *out, size_t out_size) {
           percent = (voltage - low) * 100 / (high - low);
           if (percent < 0) percent = 0;
           if (percent > 100) percent = 100;
-          snprintf(cached, sizeof(cached), "BAT ~%ld", percent);
         }
       }
     }
+  }
+  if ((plumos_fbdev_read_first_line(
+           "/sys/class/power_supply/jz-battery/status", value,
+           sizeof(value)) &&
+       (strcmp(value, "Charging") == 0 || strcmp(value, "Full") == 0)) ||
+      (plumos_fbdev_read_first_line(
+           "/sys/class/power_supply/usb-charger/online", value,
+           sizeof(value)) && strcmp(value, "1") == 0)) {
+    prefix = "CHG";
+  }
+  if (percent >= 0) {
+    snprintf(cached, sizeof(cached), "%s %ld", prefix, percent);
+  } else {
+    snprintf(cached, sizeof(cached), "%s --", prefix);
   }
   if (plumos_fbdev_read_first_line("/sys/class/rtc/rtc0/since_epoch",
                                    rtc_epoch, sizeof(rtc_epoch)) &&
@@ -2125,16 +2138,27 @@ static void plumos_fbdev_draw_rg280v_header_text(
     struct plumos_fbdev_renderer *r, const char *title, const char *status,
     int y, uint32_t title_color, uint32_t status_color) {
   const char *left = title && title[0] ? title : "plumOS RG280V";
-  int right_width;
+  const char *p;
   int width = (int)r->var.xres;
+  int right_x;
+  int x;
 
   if (strcmp(left, "plumOS") == 0) {
     left = "plumOS RG280V";
   }
-  right_width = plumos_fbdev_text_width(status, 2);
-  plumos_fbdev_draw_text(r, 14, y - 10, left, 2, title_color, width - 12);
-  plumos_fbdev_draw_text(r, width - 14 - right_width, y + 8, status, 2,
-                         status_color, width - 12);
+  /* Keep the original 5x7 pixel glyphs, with one pixel between letters.
+   * The 320-pixel layout needs narrower margins than the 640-pixel version. */
+  right_x = width - 8 - (int)strlen(status) * 11;
+  x = 8;
+  for (p = left; *p && x < right_x - 4; p++, x += 11) {
+    plumos_fbdev_draw_char_clipped(r, x, y, *p, 2, 8, right_x - 4,
+                                   title_color);
+  }
+  x = right_x;
+  for (p = status; *p && x < width - 6; p++, x += 11) {
+    plumos_fbdev_draw_char_clipped(r, x, y, *p, 2, right_x, width - 6,
+                                   status_color);
+  }
 }
 
 static void plumos_fbdev_draw_graphic_top_bar_overlay(
