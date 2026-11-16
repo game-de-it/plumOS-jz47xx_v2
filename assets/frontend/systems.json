@@ -642,9 +642,10 @@
         ]
       },
       "launch_profiles": [
+        "standalone:picodrive",
         "picoarch:picodrive"
       ],
-      "default_launch_profile": "picoarch:picodrive",
+      "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
