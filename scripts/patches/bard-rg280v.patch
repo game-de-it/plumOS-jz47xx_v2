@@ -1,0 +1,246 @@
+diff --git a/config/config.in b/config/config.in
+index f1f3bbe..4befc4d 100644
+--- a/config/config.in
++++ b/config/config.in
+@@ -32,7 +32,7 @@ EPUBDEFS = @EPUBDEFS@
+ HBINCS = @HBINCS@
+ HBLIBS = @HBLIBS@
+ HBDEFS = @HBDEFS@
+-SDLINCLUDES = -I/usr/include/SDL ${EPUBDEFS} ${HBINCS} ${HBDEFS}
++SDLINCLUDES = -I${FLITEDIR}/include/SDL ${EPUBDEFS} ${HBINCS} ${HBDEFS}
+ SDLLIBS = @SDLLIBS@ ${EPUBLIBS} ${HBLIBS}
+ 
+ DEFAULTFONT = @DEFAULTFONT@
+diff --git a/configure.in b/configure.in
+index 7c33a46..b9f55a2 100644
+--- a/configure.in
++++ b/configure.in
+@@ -176,9 +176,11 @@ dnl         ;;
+                 LDFLAGS="$LDFLAGS -Wl,-elf2flt"
+         ;;
+         linux-uclibc*)
+-                CC="${GCW0TOOLCHAIN}/usr/bin/mipsel-gcw0-linux-uclibc-gcc"
+-                AR="${GCW0TOOLCHAIN}/usr/bin/mipsel-gcw0-linux-uclibc-ar"
+-                RANLIB="${GCW0TOOLCHAIN}/usr/bin/mipsel-gcw0-linux-uclibc-ranlib"
++                if test "x$GCW0TOOLCHAIN" != x; then
++                    CC="${GCW0TOOLCHAIN}/usr/bin/mipsel-gcw0-linux-uclibc-gcc"
++                    AR="${GCW0TOOLCHAIN}/usr/bin/mipsel-gcw0-linux-uclibc-ar"
++                    RANLIB="${GCW0TOOLCHAIN}/usr/bin/mipsel-gcw0-linux-uclibc-ranlib"
++                fi
+                 OTHERLIBS="-lz"
+         ;;
+ 	darwin*)
+@@ -461,30 +463,32 @@ AC_CHECK_HEADER(harfbuzz/hb.h,
+                  HBINCS="-I/usr/include/freetype2"
+                  HBLIBS="-lfreetype -lcairo"])
+ dnl Some versions don't have harfbuzz-icu
+-AC_CHECK_LIB(harfbuzz,
+-                hb_icu_get_unicode_funcs,
+-                [HBLIBS+=" -lharfbuzz"],
+-                [HBLIBS+=" -lharfbuzz -lharfbuzz-icu"])
++if test "x$HBDEFS" != x; then
++    AC_CHECK_LIB(harfbuzz,
++                 hb_icu_get_unicode_funcs,
++                 [HBLIBS+=" -lharfbuzz"],
++                 [HBLIBS+=" -lharfbuzz -lharfbuzz-icu"])
++fi
+ 
+ dnl
+ dnl SDL support
+ dnl
+ dnl AC_CHECK_HEADER(SDL/SDL.h,,[AC_MSG_ERROR([Cannot locate SDL/SDL.h])])
+-if ! test -f /usr/include/SDL/SDL.h; then
+-    AC_MSG_ERROR("Cannot locate /usr/include/SDL/SDL.h.")
++if ! test -f "$FLITEDIR/include/SDL/SDL.h"; then
++    AC_MSG_ERROR("Cannot locate SDL/SDL.h in $FLITEDIR/include.")
+ fi
+ 
+ SDLLIBS="-lSDL_mixer -lSDL"
+ 
+ dnl Fix this ....
+-if ! test -f /usr/include/SDL/SDL_ttf.h; then
+-    AC_MSG_ERROR("Cannot locate /usr/include/SDL/SDL_ttf.h.")
++if ! test -f "$FLITEDIR/include/SDL/SDL_ttf.h"; then
++    AC_MSG_ERROR("Cannot locate SDL/SDL_ttf.h in $FLITEDIR/include.")
+ fi
+ SDLLIBS="-lSDL_ttf $SDLLIBS"
+ 
+ dnl AC_CHECK_HEADER(SDL/SDL_ttf.h,,[AC_MSG_ERROR([Cannot locate SDL/SDL_ttf.h])])
+ if ! test "x$EPUBDEFS" = x; then
+-   if test -f /usr/include/SDL/SDL_image.h -a -f /usr/include/SDL/SDL_rotozoom.h
++   if test -f "$FLITEDIR/include/SDL/SDL_image.h" -a -f "$FLITEDIR/include/SDL/SDL_rotozoom.h"
+    then
+        echo "EPUB (with SDL images) support found"
+        SDLLIBS="-lSDL_gfx -lSDL_image $SDLLIBS"
+diff --git a/include/bard_display.h b/include/bard_display.h
+index 2719454..168501a 100644
+--- a/include/bard_display.h
++++ b/include/bard_display.h
+@@ -50,6 +50,9 @@ struct bard_display_struct {
+ 
+     int screen_width, screen_height, screen_depth;
+     SDL_Surface *screen;
++#ifdef PLUMOS_RG280V
++    SDL_Surface *video_screen;
++#endif
+     struct bard_window_struct *current;
+ 
+     const SDL_Color *background_color;
+diff --git a/main/Makefile b/main/Makefile
+index 125d692..eab931a 100644
+--- a/main/Makefile
++++ b/main/Makefile
+@@ -52,10 +52,10 @@ ALL = $(BINDIR)/bard
+ 
+ include $(TOP)/config/common_make_rules
+ 
+-FLITELIBDIR=$(FLITEDIR)/build/$(TARGET_PLATFORM)/lib
++FLITELIBDIR=$(FLITEDIR)/lib
+ FLITE_LANG=usenglish
+ FLITE_LEX=cmulex
+-LOCAL_INCLUDES += -I$(FLITEDIR)/include
++LOCAL_INCLUDES += -I$(FLITEDIR)/include/flite
+ 
+ LOCAL_LANGLEX_LIBS = -lflite_$(FLITE_LANG) -lflite_$(FLITE_LEX) -lflite_cmu_indic_lang -lflite_cmu_indic_lex
+ LOCAL_VOICE_LIBS = -lflite_cmu_us_kal
+diff --git a/src/Makefile b/src/Makefile
+index 9972f87..ab18ef4 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -46,7 +46,7 @@ SRCS = bard.c display.c window.c input.c color.c \
+        font_select.c lang.c render.c
+ FILES = Makefile $(SRCS)
+ LIBNAME = bard
+-LOCAL_INCLUDES = -I$(FLITEDIR)/include
++LOCAL_INCLUDES = -I$(FLITEDIR)/include/flite
+ 
+ OBJS = $(SRCS:.c=.o)
+ 
+diff --git a/src/display.c b/src/display.c
+index ed3c17d..693a023 100644
+--- a/src/display.c
++++ b/src/display.c
+@@ -82,10 +82,25 @@ bard_display *bard_display_open(cst_features *config)
+         display->screen_height = display->hardware_height;
+ 
+     display->screen_depth = BARD_DISPLAY_SCREEN_DEPTH;
++#ifdef PLUMOS_RG280V
++    display->video_screen = SDL_SetVideoMode(display->screen_width,
++                                             display->screen_height * 2,
++                                             display->screen_depth,
++                                             SDL_SWSURFACE);
++    if (display->video_screen != NULL)
++        display->screen = SDL_CreateRGBSurface(SDL_SWSURFACE,
++            display->screen_width, display->screen_height,
++            display->video_screen->format->BitsPerPixel,
++            display->video_screen->format->Rmask,
++            display->video_screen->format->Gmask,
++            display->video_screen->format->Bmask,
++            display->video_screen->format->Amask);
++#else
+     display->screen = SDL_SetVideoMode(display->screen_width,
+                                        display->screen_height,
+                                        display->screen_depth,
+                                        SDL_SWSURFACE);
++#endif
+     if (display->screen == NULL)
+     {
+         bard_display_close(display);
+@@ -129,6 +144,10 @@ void bard_display_close(bard_display *display)
+ 
+     if (display->screen)
+         SDL_FreeSurface(display->screen);
++#ifdef PLUMOS_RG280V
++    if (display->video_screen)
++        SDL_FreeSurface(display->video_screen);
++#endif
+     if (display->font)
+         bard_font_delete(display->font);
+ 
+@@ -187,6 +206,11 @@ void bard_display_update(bard_display *d)
+ 
+     SDL_BlitSurface(d->current->surface,&offset2,d->screen,&offset);
+ 
++#ifdef PLUMOS_RG280V
++    SDL_SoftStretch(d->screen, NULL, d->video_screen, NULL);
++    SDL_Flip(d->video_screen);
++#else
+     SDL_Flip(d->screen);
++#endif
+     return;
+ }
+diff --git a/src/input.c b/src/input.c
+index 4cf0678..a8cded2 100644
+--- a/src/input.c
++++ b/src/input.c
+@@ -120,7 +120,11 @@ int input_process_events(bard_reader *br)
+                 br->pause ^= 1;          /* flip pause state */
+                 break;
+ #ifdef GCW0
++#ifdef PLUMOS_RG280V
++            case SDLK_SPACE:             /* physical X on RG280V */
++#else
+             case SDLK_LSHIFT:            /* A on GCW0 */
++#endif
+ #else
+             case SDLK_TAB:
+             case SDLK_HOME:              /* SQUARE on Pandora */
+@@ -332,7 +336,11 @@ int input_process_events(bard_reader *br)
+                    bard_window_display_from_pos(cw,0);
+                 break;
+ #ifdef GCW0
++#ifdef PLUMOS_RG280V
++            case SDLK_LSHIFT:        /* physical Y on RG280V */
++#else
+             case SDLK_SPACE:         /* Y on GCW0 */
++#endif
+ #else
+             case SDLK_PAGEUP:        /* X on Pandora */
+ #endif
+diff --git a/src/menu.c b/src/menu.c
+index a848f52..01d27f3 100644
+--- a/src/menu.c
++++ b/src/menu.c
+@@ -74,6 +74,14 @@ bard_window *bard_make_menu_window(bard_reader *br)
+     const char *font_name;
+     int font_size;
+ 
++#ifdef PLUMOS_RG280V
++    mw = bard_window_new("Menu",
++                         br->display->screen_width-(2*indent),
++                         br->display->screen_height-(2*indent),
++                         br->display->screen->format);
++    mw->x_offset = indent;
++    mw->y_offset = indent;
++#else
+     mw = bard_window_new("Menu",
+                          br->display->screen_width-(10*indent),
+                          br->display->screen_height-(10*indent),
+@@ -81,19 +89,26 @@ bard_window *bard_make_menu_window(bard_reader *br)
+     /* Menu window is deliberately (more) smaller than the other windows */
+     mw->x_offset = 5*indent;
+     mw->y_offset = 5*indent;
++#endif
+     font_name = get_param_string(br->config,"-font",BARD_DEFAULT_FONT);
+     /* Its quite important for the menu font size to be small enough to */
+     /* display all the main options, especially the first time you see it */
+     /* so we allow for device specific setting here */
+     font_size = 
+         get_param_int(br->config,"-menu_font_size",
+-#ifdef GCW0
++#ifdef PLUMOS_RG280V
++                      12
++#elif defined(GCW0)
+                       BARD_DEFAULT_MENU_FONT_SIZE
+ #else
+                       get_param_int(br->config,"-font_size", 
+                                     BARD_DEFAULT_MENU_FONT_SIZE)
+ #endif                                    
+                                     );
++#ifdef PLUMOS_RG280V
++    if (font_size > 12)
++        font_size = 12;
++#endif
+     bard_font_set(&mw->font,font_name,font_size,BARD_FONT_STYLE_NORMAL);
+ 
+     mw->background_color = 
