@@ -1,0 +1,10 @@
+diff --git a/sdl.c b/sdl.c
+index d379c2b..17aa419 100755
+--- a/sdl.c
++++ b/sdl.c
+@@ -76,4 +76,4 @@ SDLKey KeysHavingElements[] = {
+ 	SDLK_LALT,
+-	SDLK_LSHIFT,
+ 	SDLK_SPACE,
++	SDLK_LSHIFT,
+ 	SDLK_TAB,

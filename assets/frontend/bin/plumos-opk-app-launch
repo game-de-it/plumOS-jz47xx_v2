@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ]; then
+    echo 'usage: plumos-opk-app-launch APP.opk' >&2
+    exit 2
+fi
+case "$1" in
+    ''|.*|*/*|*'..'*|*[!A-Za-z0-9_.-]*|*.OPK) echo 'invalid OPK name' >&2; exit 2 ;;
+    *.opk) ;;
+    *) echo 'expected an OPK file' >&2; exit 2 ;;
+esac
+
+root=${PLUMOS_ROOT:-/media/data/plumos}
+opk="/media/data/apps/$1"
+[ -f "$opk" ] && [ ! -L "$opk" ] || { echo "OPK missing: $opk" >&2; exit 1; }
+
+"$root/bin/plumos-prepare-opk-input"
+mkdir -p "$root/home"
+export HOME="$root/home"
+export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export SDL_VIDEODRIVER=kmsdrm
+exec /usr/bin/opkrun "$opk"

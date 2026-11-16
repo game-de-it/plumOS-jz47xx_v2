@@ -3651,7 +3651,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   /* RG280V is 320 pixels wide. The 3x font clips the core selector. */
   entry_scale = core_settings_page && w > 400 ? 3 : 2;
   line_height = rg280v_settings_page ? 30 :
-                menu_page && r->vertical_scale == 2 ? 28 :
+                menu_page && r->vertical_scale == 2 ? 24 :
                 help_page && r->vertical_scale == 2 ? 23 :
                 core_settings_page && h <= 240 ? 22 : entry_scale * 12;
   cursor_x = settings_family ? 12 : 18;
@@ -3693,13 +3693,15 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                                   (menu_page && r->vertical_scale == 2) ||
                                   (settings_page && w <= 400),
                               p->muted, w - 8);
-  y = core_settings_page && h <= 240 ? 70 : (settings_family ? 82 : 104);
+  y = core_settings_page && h <= 240 ? 70 :
+      menu_page && r->vertical_scale == 2 ? 90 : settings_family ? 82 : 104;
 
   for (i = 0; i < item_count; i++) {
     int keyboard_row = wifi_keyboard_row >= 0;
     int keyboard_selected = keyboard_row && (int)i == wifi_keyboard_row;
     uint32_t fg = selected[i] ? p->selection_foreground : p->foreground;
     if (y > h - ((rg280v_settings_page ||
+                  (menu_page && r->vertical_scale == 2) ||
                   (help_page && r->vertical_scale == 2)) ? 18 : 34)) {
       break;
     }

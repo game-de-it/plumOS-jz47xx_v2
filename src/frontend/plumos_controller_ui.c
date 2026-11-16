@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
@@ -6435,6 +6436,102 @@ static int load_start_menu_entries(struct ui_state *ui) {
   return 1;
 }
 
+static int rg280v_opk_app_name(const char *path, char *name, size_t name_size) {
+  char command[PATH_MAX + 64];
+  char line[512];
+  size_t pos = 0;
+  FILE *pipe;
+  int rc;
+
+  name[0] = '\0';
+  if (!append_string(command, sizeof(command), &pos, "/usr/bin/opkinfo ") ||
+      !append_shell_quoted(command, sizeof(command), &pos, path) ||
+      !append_string(command, sizeof(command), &pos, " 2>/dev/null")) {
+    return 0;
+  }
+  pipe = popen(command, "r");
+  if (!pipe) {
+    return 0;
+  }
+  while (fgets(line, sizeof(line), pipe)) {
+    if (strncmp(line, "Name: ", 6) == 0 && !name[0]) {
+      char *value = line + 6;
+      size_t len = strcspn(value, "\r\n");
+      size_t i;
+      value[len] = '\0';
+      for (i = 0; i < len; i++) {
+        if ((unsigned char)value[i] < 32) {
+          break;
+        }
+      }
+      if (i == len && len > 0) {
+        copy_string(name, name_size, value);
+      }
+    }
+  }
+  rc = pclose(pipe);
+  return name[0] && system_command_succeeded(rc);
+}
+
+static int rg280v_opk_app_compare(const void *a, const void *b) {
+  const struct menu_entry *left = (const struct menu_entry *)a;
+  const struct menu_entry *right = (const struct menu_entry *)b;
+  return strcasecmp(left->display_name, right->display_name);
+}
+
+static void append_rg280v_opk_apps(struct ui_state *ui) {
+  DIR *dir;
+  struct dirent *item;
+  size_t first = ui->menu_count;
+
+  if (!runtime_device_is_rg280v()) {
+    return;
+  }
+  dir = opendir("/media/data/apps");
+  if (!dir) {
+    return;
+  }
+  while (ui->menu_count < UI_MAX_MENU && (item = readdir(dir)) != NULL) {
+    struct menu_entry entry;
+    char path[PATH_MAX];
+    struct stat st;
+    size_t len = strlen(item->d_name);
+    size_t i;
+
+    if (len < 5 || len > 96 || strcmp(item->d_name + len - 4, ".opk") != 0) {
+      continue;
+    }
+    for (i = 0; i < len; i++) {
+      unsigned char c = (unsigned char)item->d_name[i];
+      if (!(isalnum(c) || c == '_' || c == '-' || c == '.')) {
+        break;
+      }
+    }
+    if (i != len || item->d_name[0] == '.' || strstr(item->d_name, "..") ||
+        snprintf(path, sizeof(path), "/media/data/apps/%s", item->d_name) >=
+            (int)sizeof(path) ||
+        lstat(path, &st) != 0 || !S_ISREG(st.st_mode)) {
+      continue;
+    }
+    memset(&entry, 0, sizeof(entry));
+    if (!rg280v_opk_app_name(path, entry.display_name,
+                             sizeof(entry.display_name))) {
+      continue;
+    }
+    snprintf(entry.id, sizeof(entry.id), "opk-%zu", ui->menu_count - first + 1);
+    copy_string(entry.kind, sizeof(entry.kind), "opk");
+    if (snprintf(entry.action, sizeof(entry.action),
+                 "shell:$PLUMOS_ROOT/bin/plumos-opk-app-launch %s",
+                 item->d_name) >= (int)sizeof(entry.action)) {
+      continue;
+    }
+    ui->menu_entries[ui->menu_count++] = entry;
+  }
+  closedir(dir);
+  qsort(ui->menu_entries + first, ui->menu_count - first,
+        sizeof(ui->menu_entries[0]), rg280v_opk_app_compare);
+}
+
 static int load_apps_menu_entries(struct ui_state *ui) {
   char *json;
   size_t json_size;
@@ -6493,6 +6590,7 @@ static int load_apps_menu_entries(struct ui_state *ui) {
     ui->menu_entries[ui->menu_count++] = entry;
   }
   free(json);
+  append_rg280v_opk_apps(ui);
   return 1;
 }
 
@@ -8033,9 +8131,10 @@ static size_t ui_fbdev_text_window_size(const struct ui_state *ui) {
                       ui->screen == SCREEN_START_MENU;
   entry_scale = 2;
   line_height = rg280v_settings ? 30 :
-                rg280v_start_menu ? 28 : entry_scale * 12;
-  first_entry_y = settings_family ? 82 : 104;
-  bottom_y = h - (rg280v_settings ? 18 : footer_reserved ? 76 : 34);
+                rg280v_start_menu ? 24 : entry_scale * 12;
+  first_entry_y = rg280v_start_menu ? 90 : settings_family ? 82 : 104;
+  bottom_y = h - ((rg280v_settings || rg280v_start_menu) ? 18 :
+                  footer_reserved ? 76 : 34);
   if (line_height <= 0 || bottom_y < first_entry_y) {
     return 1;
   }

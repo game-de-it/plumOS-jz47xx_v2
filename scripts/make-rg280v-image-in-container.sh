@@ -34,6 +34,7 @@ mdir -i "$stage/boot.vfat" ::/dev ::/root >/dev/null
 data_root="$stage/data-root"
 rm -rf "$data_root"
 mkdir -p "$data_root/local/bin" "$data_root/local/share" "$data_root/local/init.d" \
+    "$data_root/apps" \
     "$data_root/plumos/provision" "$data_root/plumos/bin" \
     "$data_root/plumos/fonts" "$data_root/plumos/licenses" \
     "$data_root/plumos/share/frontend/lang" \
@@ -54,6 +55,9 @@ cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/
     /workspace/output/rg280v-fe/plumos-text-ui /workspace/output/rg280v-fe/plumos-rg280v-hotkeys \
     /workspace/output/rg280v-fe/plumos-rg280v-power-menu "$data_root/plumos/bin/"
 cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
+cp /workspace/output/rg280v-apps/input-test-rg280v.opk "$data_root/apps/"
+cp /workspace/output/rg280v-apps/input-test-rg280v-source.tar.gz \
+    "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/pcsx4all_rg280v "$data_root/plumos/bin/pcsx4all"
 cp /workspace/output/rg280v-emulators/pcsx4all-source/gpl.txt \
     "$data_root/plumos/licenses/pcsx4all-GPL.txt"
@@ -131,6 +135,9 @@ for path in /local/bin/rg280v-fbshow \
             /plumos/bin/pcsx4all \
             /plumos/bin/plumos-picoarch-launch \
             /plumos/bin/plumos-prepare-opk-input \
+            /plumos/bin/plumos-opk-app-launch \
+            /apps/input-test-rg280v.opk \
+            /plumos/licenses/input-test-rg280v-source.tar.gz \
             /plumos/bin/plumos-fceux-prepare \
             /plumos/config/70-plumos-gpio-keys.rules \
             /plumos/emulators/fceux_gcw0-2.6.6-2023-08-30.opk \

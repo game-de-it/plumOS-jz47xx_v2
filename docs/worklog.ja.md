@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — GCW Zero系OPKアプリをFEへ統合
+
+- STARTにAppsを追加し、SD1の `/media/data/apps` に置いたOPKを `opkinfo` の名前で自動表示するようにした。既存FEのアプリ起動・復帰経路に、RG280Vの入力準備、HOME、補助ライブラリを設定するOPK起動ラッパーを追加。6項目になったSTARTは1画面に収まるよう行間を調整した。
+- 公開アプリのCalculatorとCommanderを試したが、それぞれSDL2ライブラリ不足とHard float ABI不一致で動かなかった。GPLv2以降のGCW Zero Input testerを固定コミットからSoft floatで再ビルドし、RG280VのX/Y割り当てと振動機能なしの構成でOPK化した。実機でFE→Apps→起動、十字キー・ABXYの表示、物理START＋SELECTでの終了、FE復帰を確認。OPKと変更済みソースは新規SDイメージ作成時にも収録する。詳細は `docs/validation/rg280v-opk-apps-2026-11-16.md`。
+
 ## 2026-11-16 — RG280VのFE文字サイズを統一して縮小
 
 - FEヘッダーは機種名・時刻・充電/残量を残した1段構成のまま、既存ピクセル書体を320px幅に合わせて縮小。RG280Vの比例フォントを18pxから15pxにし、START、UI、システム、テーマ、HELP、情報、時刻設定の行間と表示件数を調整した。
