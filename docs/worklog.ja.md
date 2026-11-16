@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — RG280VのPCSX ReARMedとPCSX4ALLを同一ゲームで比較
+
+- PCSX ReARMedはLightrec有効で起動・操作できる。RUNABOUT-2のFrameskip OFFでは約25～30 FPS。GPUをP.E.Op.S.からUnaiへ変えてもゲーム中は約30 FPSだった。
+- 同じRUNABOUT-2の走行中、PCSX4ALLはDRM取得画面で59/60 FPS。PicoArch診断版でReARMedのFrameskip OFF時を計測すると、`retro_run()`約27 msと画面切替約9～14 msで、60 FPSの16.7 ms予算をコア実行だけで超えていた。詳細は`docs/validation/rg280v-psx-investigation-2026-11-16.md`。
+- 計測用PicoArchは通常版へ戻す。FEのPSX既定候補はPCSX4ALLを維持する。
+
 ## 2026-11-16 — RG280VのPCSX4ALLをDigital入力で起動
 
 - RG280Vに物理アナログスティックがないため、PCSX4ALLの起動時と設定初期化時の `Analog Mode` を `Digital`（0）に変更した。既存SD1の共通設定もデプロイ時に `Analog_Mode 0` へ更新する。

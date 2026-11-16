@@ -37,3 +37,15 @@ PCSX4ALLは独自のMIPS→MIPS再コンパイラを使用し、Lightrecは使�
 ユーザーの実機試験で、PCSX ReARMedは操作できたが画面が点滅した。PicoArchの `pa_video_refresh()` はlibretroの `data == NULL`（前フレーム再利用）を描画しない一方、メインループは毎回 `SDL_Flip()` を呼んでいた。RG280VのSDL二重バッファでは、未描画の裏バッファを表示して点滅する。`scripts/patch-rg280v-picoarch.py` に、最後のゲーム画面を保持し、再利用フレーム時に裏バッファへコピーしてからHUDを描画・flipする処理を追加した。メニューから戻る際も保持画面を使用する。
 
 PCSX ReARMedだけHUDを `FPS: <エミュレーション回数/秒> DRAW: <新規描画回数/秒>` と表示する。静止画を多く使う画面ではDRAWが低くてもエミュレーション速度を別に読める。RG280VのRUNABOUT-2タイトル画面取得では `FPS: 53 DRAW: 7`、CPU `51.1%`。これはタイトル画面の一時値であり、ゲーム中の性能値ではない。修正版PicoArchのSHA-256は `b8979b59a01ccd38f3a6935741ba28c0c58160c9d37b59dc1754b0711c2370ff`。ユーザーは同タイトル画面で点滅が止まり、両数値を読めることを確認した。
+
+## 30 FPSの調査
+
+ユーザーがRUNABOUT-2をプレイした際、FrameskipをOFFにするとHUDが約30 FPSになった。これはLightrecが無効になった証拠ではない。現行コアは `DYNAREC=lightrec` でビルドされ、終了時に `Lightrec RAM usage` を記録した。
+
+描画器の差を調べるため、現行のP.E.Op.S.版を残し、同じPCSX ReARMedソースとLightrec修正からGPU Unai版を別名でビルドした。GPU Unai版SHA-256は `a0f08da628e8b30ae0cb4bd1576bfce16229f209b5138abd200c949ec71b7dc8`。別ファイルとしてRG280Vに配置し、元コアは上書きしていない。RUNABOUT-2をそれぞれ38秒のwatchdog起動で測定した結果、起動後のタイトル画面の直近ウィンドウはP.E.Op.S. 54.34画面更新/秒、GPU Unai 51.64画面更新/秒。両者に大きな差はなかった。ユーザーの同一ゲーム中の目視でもGPU Unai版は約30 FPSで、描画器変更だけでは改善しなかった。
+
+同じRUNABOUT-2をPCSX4ALLで起動し、走行中のDRM画面を取得した。性能表示は **59/60 FPS** で、同時点のCPU表示は約50～60%。PCSX4ALLの表示は `pl_frame_limit()` がPSX VSyncごとに更新する計数、PicoArchの `FPS` は `retro_run()` 呼び出し数であり、どちらもゲーム固有の新規描画枚数そのものではない。両者が目標60回/秒に対して実行できた量の比較として扱う。
+
+`scripts/instrument-rg280v-picoarch-timing.py` で計測用のPicoArchを別途ビルドした。走行中にFrameskipをOFFへ切り替えた後、120フレーム平均では `retro_run()` が約27.1～27.4 ms、`plat_video_flip()` が約9.3～14.1 ms、全体が約36.5～41.5 ms/フレームだった。取得画面の例は `FPS: 25 DRAW: 12`、CPU約68%で、ユーザーが報告した約30 FPSの症状を再現している。60回/秒の予算16.7 msを `retro_run()` 単体で超えるため、画面同期待ちだけが原因ではない。Frameskip Autoでは同じ走行画面の計測が約44 FPSで、DRAWが6まで減った。Autoは速度を上げる代わりに表示フレームを大きく減らす。音声品質はこの比較では判定していない。
+
+Lightrecは実行ログに `Lightrec RAM usage` が出ており、有効に動作している。ただしLinux上のメモリ配置はLightrecの「sub-par」経路で、PCSX4ALLのMIPS再コンパイラとも異なる。今回の数値からは、ReARMedの `retro_run()` 内のCPUエミュレーション・GPU・動画変換それぞれの寄与までは分離できない。GPU Unaiへの変更だけで60 FPSには届かなかったため、現時点では既定PSX候補をPCSX4ALLのままとする。計測後はPicoArch通常版 SHA-256 `b8979b59a01ccd38f3a6935741ba28c0c58160c9d37b59dc1754b0711c2370ff` に戻し、端末上のハッシュ一致とFEプロセスの稼働を確認した。
