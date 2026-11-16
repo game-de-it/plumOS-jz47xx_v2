@@ -6,6 +6,8 @@
 
 監査スクリプトはFE環境を既定に変更し、生の環境を再現するときだけ `--raw-env` を指定する。古いOPKの一部が計測フックの状態を壊していたため、0または240を超える画面提示率はFPS集計から除外する。これにより測定不能な値を「0 FPS」や性能不足と誤認しない。
 
+追試で、同じ番号を再実行すると `/tmp/rg350-audit-XX.tsv` の前回値が混ざる監査スクリプトの欠陥も見つかった。実行前にリモートの計測・標準出力ファイルを消し、結果JSONを毎回新規作成するよう修正した。**修正前の再試験ログのFPSとPCM値は最終判定に使わない。** 下記の追加試験は修正後の新しいログによる。
+
 ## 共通ライブラリの対策と実機再試験
 
 Buildrootと[libShake v0.3.0](https://github.com/zear/libShake)からMIPS/uClibc向けに10種類の共有ライブラリを構築した。`libSDL_sound-1.0.so.1`、`libSDL_net-1.2.so.0`、`libvorbisidec.so.1`、`libFLAC.so.12`、`libbz2.so.1.0`、`libtheoradec.so.1`、`libintl.so.8`、`libjpeg.so.8`、`libsndfile.so.1`、`libshake.so.1`。SD1の `/media/data/plumos/lib/` へ転送し、転送後のSHA-256を照合した。ビルド、ADB配布、OSイメージ生成の各スクリプトにも同じ依存を組み込んだ。OPK本体やROMは新たにFEへ登録していない。
@@ -36,6 +38,17 @@ Buildrootと[libShake v0.3.0](https://github.com/zear/libShake)からMIPS/uClibc
 - ROM/BIOSを指定できない候補とインストーラ画面のみの候補は、ゲーム実行の合否を出せない。起動ロゴ、タイトル、メニューのFPSはゲーム中のFPSではない。
 
 既存FEで動いているコアや修正版の評価を、配布原版OPKの未合格判定で取り消さない。FEへの追加はゲーム中の色・音・速度、入力、終了後のFE復帰を揃えてから判断する。
+
+## 追加追試: 旧ライブラリとROMの実行（同日）
+
+診断用の隔離ディレクトリに、GNU ncurses 5.9の通常／wide版、Buildrootのlibao 1.2.0・libmad 0.15.1b、FluidSynth 1.1.11を加えた。ncurses 5.9は現代のGCCでソース生成が失敗するため、[Buildrootの修正](https://lists.busybox.net/pipermail/buildroot/2015-May/117116.html)に従い、生成時のプリプロセッサへ `-P` を追加した。これらはすべて実機へハッシュ照合して転送し、**製品領域には配布していない**。
+
+- **Atari800 #03/#04**: 旧readlineとncursesの不足は解消。ROM未指定では両方とも終了コード10。#04へ`CavernsOfMars.rom`を指定すると15秒存続したが、取得画面は白帯で、ゲーム表示・音は不合格。OPKにはAtari BIOSが同梱されている。試験用ROMとBIOSの端末コピーは削除済み。
+- **FBA44 #34**: 旧OpenSSLとlibaoの不足は解消。配布OPKのdesktop `Exec`には`%f`がなく、ROMパスが渡らないため、診断用コピーだけ`Exec=fbasdl.dge %f`に変更した。`kungfum.zip`はプログラム・グラフィック読込に成功し、計測ファイルを初期化した18秒実行ではSDL画面提示が最後の窓で約60回/秒。しかしDRM取得画面は色・文字が崩れ、音声コールバックは全ゼロ。`bmaster.zip`では最後の窓約9回/秒・黒画面。**FEへ追加しない。** SDLモードは320×240、RGB565、pitch 640で、フレーム間にsurfaceの画素ポインタ変化はなかった。`fbcon`経路はSDL初期化に失敗した。旧OpenSSLを製品へ置いていない。
+- **ScummVM #56**: SDL_net→旧FLAC→libmad→FluidSynth 1.1.11の順に依存不足を解消。10秒存続し、旧ライブラリ不足では停止しなくなった。ただしOPK内`libmad.so`をプラグインと誤認する警告があり、画面取得はFEのままで、音声・入力・ゲーム起動は未確認。FE登録は保留。
+- **VICE #31**: 旧ungif導入後も画面は黒で、ALSA underrunを連続記録。ROMデータ未指定であり、起動存続のみ確認。
+
+診断中にAtari800終了後のFE再起動が一度失敗した。手動の`S95frontend restart`で復旧し、後続試験ではFE復帰を確認した。監査スクリプトはFE復帰を最大10秒再確認するよう修正。旧ライブラリ10ファイル、試験用ROM・BIOS、診断プローブは試験終了後に端末から撤去し、FEが稼働していることを確認した。
 
 ## 実行と記録
 
