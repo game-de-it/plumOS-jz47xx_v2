@@ -23,6 +23,11 @@ The replacement keeps the game's DRM master, mode, plane geometry and pixel form
 - Transfer: checked SHA-256 of the uploaded power-menu binary before replacing the device copy.
 - Syntax: `sh -n` on shell services and `bash -n` on deployment/image scripts completed.
 
-Power actions (Sleep, Reboot and Shutdown) were not physically selected during this test. Their scripts support a dry-run path; action execution and resume after Sleep require a separate physical check.
+## Power action trial
+
+- Reboot: selected from the game menu. The device restarted into FE. The kernel boot ID changed from `9bb999fb-600e-46e3-8bb1-c84dc0e032dd` to `7883f112-f019-4dfb-88db-0338b1b6fa02`.
+- Shutdown: selected from the game menu. The device powered off, then started normally with the physical power button and displayed FE. The subsequent boot ID was `92d1ce11-6dfe-4963-9b10-a1e66ddb8911`.
+- Sleep: `mem` with the default `deep` mode turned off the screen but did not respond to a short power-button press. A trial with `freeze` had the same result. Ping and ADB were unavailable while suspended, and RESET restored FE in both cases. Repeating `mem` with the USB cable unplugged still failed to resume, so USB power alone does not explain it. `gpio-keys/power/wakeup` was `enabled`, and the device tree's power key has `wakeup-source`.
+- A screen-off-only fallback was considered but rejected because it would keep the system running. No such fallback was installed. The temporary `freeze` script was removed and the original `mem` script restored. Sleep remains a failed physical gate; avoid selecting it until the kernel wake path is corrected.
 
 PicoArch FCEUmm showed green color artifacts in Akumajou Densetsu before opening the power menu. This is a separate emulator display issue. It was not used as evidence for power-menu rendering; SuperGrafx was the PicoArch control.
