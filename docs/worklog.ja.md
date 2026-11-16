@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — FBNeoを性能不足でFEから除外
+
+- ユーザーがPicoArch FBNeoの実機動作を約12 FPSと報告し、FEからの廃止を指定。`assets/frontend/systems.json` の `fbneo.enabled` を `false` にし、今後のプロファイル更新でも再有効化されないようマージ処理に反映した。
+- 実機の設定差分はFBNeoの有効フラグのみ。SHA-256 `d5d09e9cc29bc10e2be4a171e70c56edba8bca627759391d1dc6a88c402cd79e` で照合後、FEを再起動した。ライブラリ再スキャンでFBNeoの18本が一覧から外れ、総数は702本から684本になった。FEプロセスは稼働し、SD2は読み取り専用。ROMとコアは残す。詳細は `docs/validation/rg280v-fbneo-pico-fe-2026-11-16.md`。
+
 ## 2026-11-16 — FBNeoのRA候補をFEから外す
 
 - FEのFBNeo候補と既定を `retroarch:fbneo` から `picoarch:fbneo` に変更し、プロファイルのマージ対象にもFBNeoを加えた。実機へ反映した設定のSHA-256は `cbf2a5a8cc4be502e9029f878a2cba10fa314d48e468442a3021bbb740141934`。実機の設定差分はFBNeoのみで、SD2は読み取り専用のまま。

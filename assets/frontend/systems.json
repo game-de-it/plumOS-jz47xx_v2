@@ -1074,7 +1074,7 @@
       "short_name": "FBNeo",
       "sort_order": 250,
       "hardware": "arcade",
-      "enabled": true,
+      "enabled": false,
       "pinned": false,
       "directory_aliases": [
         {
