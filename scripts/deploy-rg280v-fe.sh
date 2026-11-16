@@ -40,6 +40,8 @@ copy_if_missing() {
 copy_checked "$repo_root/output/rg280v-fe/plumos-controller-ui" "$remote/bin/plumos-controller-ui" 0755
 copy_checked "$repo_root/output/rg280v-fe/plumos-library-scan" "$remote/bin/plumos-library-scan" 0755
 copy_checked "$repo_root/output/rg280v-fe/plumos-text-ui" "$remote/bin/plumos-text-ui" 0755
+copy_checked "$repo_root/output/rg280v-fe/plumos-rg280v-hotkeys" "$remote/bin/plumos-rg280v-hotkeys" 0755
+copy_checked "$repo_root/output/rg280v-fe/plumos-rg280v-power-menu" "$remote/bin/plumos-rg280v-power-menu" 0755
 for name in plumos-fe-launch plumos-volume-control plumos-display-control plumos-safe-shutdown plumos-standalone-launch plumos-prepare-opk-input; do
     copy_checked "$repo_root/assets/frontend/bin/$name" "$remote/bin/$name" 0755
 done
@@ -67,3 +69,5 @@ if [[ "${PLUMOS_FE_INSTALL_SERVICE:-0}" == 1 ]]; then
     copy_checked "$repo_root/assets/frontend/S95frontend" \
         /media/data/local/init.d/S95frontend 0755
 fi
+copy_checked "$repo_root/assets/frontend/S94hotkeys" \
+    /media/data/local/init.d/S94hotkeys 0755

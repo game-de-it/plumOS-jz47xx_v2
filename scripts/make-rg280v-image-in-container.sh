@@ -48,9 +48,11 @@ cp /workspace/output/rg280v-status/adb-ready.ppm "$data_root/local/share/adb-rea
 cp /workspace/output/rg280v-status/first-boot.ppm "$data_root/local/share/first-boot.ppm"
 cp /workspace/output/rg280v-status/first-boot-error.ppm "$data_root/local/share/first-boot-error.ppm"
 cp /workspace/board/rg280v/adb/S90status "$data_root/local/init.d/S90status"
+cp /workspace/assets/frontend/S94hotkeys "$data_root/local/init.d/S94hotkeys"
 cp /workspace/assets/frontend/S95frontend "$data_root/local/init.d/S95frontend"
 cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/plumos-library-scan \
-    /workspace/output/rg280v-fe/plumos-text-ui "$data_root/plumos/bin/"
+    /workspace/output/rg280v-fe/plumos-text-ui /workspace/output/rg280v-fe/plumos-rg280v-hotkeys \
+    /workspace/output/rg280v-fe/plumos-rg280v-power-menu "$data_root/plumos/bin/"
 cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
 cp /workspace/output/rg280v-emulators/pcsx4all_rg280v "$data_root/plumos/bin/pcsx4all"
 cp /workspace/output/rg280v-emulators/pcsx4all-source/gpl.txt \
@@ -113,6 +115,7 @@ cp /workspace/assets/frontend/system-settings.json "$data_root/plumos/config/sys
 cp /workspace/assets/frontend/regba-global-config.cfg "$data_root/plumos/config/"
 cp /workspace/assets/frontend/VERSION "$data_root/plumos/VERSION"
 chmod 0755 "$data_root/local/bin/rg280v-fbshow" "$data_root/local/init.d/S90status" \
+    "$data_root/local/init.d/S94hotkeys" \
     "$data_root/local/init.d/S95frontend" "$data_root/plumos/bin/"* \
     "$data_root/plumos/picoarch/bin/picoarch"
 truncate -s 0 "$stage/data.ext4"
@@ -120,7 +123,7 @@ truncate -s $((data_sectors * 512)) "$stage/data.ext4"
 mkfs.ext4 -F -q -d "$data_root" -L PLUMOSDATA "$stage/data.ext4"
 for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /local/share/first-boot.ppm /local/share/first-boot-error.ppm \
-            /local/init.d/S90status /local/init.d/S95frontend \
+            /local/init.d/S90status /local/init.d/S94hotkeys /local/init.d/S95frontend \
             /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \
             /plumos/bin/plumos-text-ui /plumos/bin/plumos-standalone-launch \
             /plumos/bin/pcsx4all \

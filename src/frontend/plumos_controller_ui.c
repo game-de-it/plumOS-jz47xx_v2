@@ -602,6 +602,8 @@ struct ui_state {
   int no_clear;
   int once;
   int power_overlay;
+  int rg280v_start_held;
+  int rg280v_brightness_chord;
   int exit_requested;
   int renderer_mali;
   int renderer_fbdev;
@@ -9438,8 +9440,8 @@ static void render_power_menu(struct ui_state *ui) {
   ui_printf(ui, "\n");
   for (i = 0; i < POWER_ENTRY_COUNT; i++) {
     const struct power_entry *entry = &POWER_ENTRIES[i];
-    ui_printf(ui, "%c %3zu  %-12s %s\n",
-              i == ui->power_cursor ? '>' : ' ', i + 1, entry->display_name, entry->detail);
+    ui_printf(ui, "%c %3zu  %s\n",
+              i == ui->power_cursor ? '>' : ' ', i + 1, entry->display_name);
   }
   if (ui->status[0]) {
     ui_printf(ui, "\nstatus: %s\n", ui->status);
@@ -10345,6 +10347,8 @@ static void open_recent_screen(struct ui_state *ui) {
 static void open_settings_screen(struct ui_state *ui, enum settings_category category) {
   const char *title;
 
+  /* Hardware hotkeys may update these values while an emulator owns the UI. */
+  if (runtime_device_is_rg280v()) load_device_settings(ui);
   ui->settings_category = category;
   ui->screen = SCREEN_SETTINGS;
   ui->factory_reset_pending_target[0] = '\0';
@@ -14720,6 +14724,24 @@ static void read_input_actions(struct ui_state *ui, int fd, int power_only,
       enum ui_action event_action;
       if (power_only && ev.code != KEY_POWER) {
         continue;
+      }
+      if (!power_only && runtime_device_is_rg280v()) {
+        if (ev.code == KEY_ENTER) {
+          if (ev.value == 1) {
+            ui->rg280v_start_held = 1;
+            ui->rg280v_brightness_chord = 0;
+          } else if (ev.value == 0) {
+            if (ui->rg280v_start_held && !ui->rg280v_brightness_chord)
+              *action = ACTION_START;
+            ui->rg280v_start_held = 0;
+            ui->rg280v_brightness_chord = 0;
+          }
+          continue;
+        }
+        if (ui->rg280v_start_held && (ev.code == KEY_LEFT || ev.code == KEY_RIGHT)) {
+          if (ev.value != 0) ui->rg280v_brightness_chord = 1;
+          continue;
+        }
       }
       event_action = action_from_key_code(ev.code);
       if (ev.value == 0) {

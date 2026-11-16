@@ -6,10 +6,11 @@ dry_run=0
 for arg in "$@"; do
     [ "$arg" = --dry-run ] && dry_run=1
 done
-case "$action" in --reboot|--shutdown) ;; *) exit 2 ;; esac
+case "$action" in --reboot|--shutdown|--sleep) ;; *) exit 2 ;; esac
 [ "$dry_run" -eq 0 ] || exit 0
 sync
 case "$action" in
     --reboot) reboot ;;
     --shutdown) poweroff ;;
+    --sleep) printf 'mem\n' >/sys/power/state ;;
 esac

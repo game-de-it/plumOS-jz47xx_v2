@@ -1,0 +1,24 @@
+#!/bin/sh
+root=/media/data/plumos
+pidfile=/var/run/plumos-hotkeys.pid
+case "${1:-}" in
+    start)
+        [ -x "$root/bin/plumos-rg280v-hotkeys" ] || exit 0
+        if [ -r "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+            exit 0
+        fi
+        nohup setsid "$root/bin/plumos-rg280v-hotkeys" /dev/input/event2 </dev/null >>"$root/Logs/hotkeys.log" 2>&1 &
+        echo "$!" >"$pidfile"
+        ;;
+    stop)
+        if [ -r "$pidfile" ]; then
+            kill "$(cat "$pidfile")" 2>/dev/null || true
+            rm -f "$pidfile"
+        fi
+        ;;
+    restart)
+        "$0" stop
+        "$0" start
+        ;;
+    *) exit 2 ;;
+esac

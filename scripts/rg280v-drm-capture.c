@@ -41,6 +41,10 @@ int main(int argc, char **argv) {
                                     strcmp(prop->name, "CRTC_Y") == 0 ||
                                     strcmp(prop->name, "CRTC_W") == 0 ||
                                     strcmp(prop->name, "CRTC_H") == 0 ||
+                                    strcmp(prop->name, "SRC_X") == 0 ||
+                                    strcmp(prop->name, "SRC_Y") == 0 ||
+                                    strcmp(prop->name, "SRC_W") == 0 ||
+                                    strcmp(prop->name, "SRC_H") == 0 ||
                                     strcmp(prop->name, "sharpness") == 0)
                                     fprintf(stderr, "%s=%llu\n", prop->name,
                                             (unsigned long long)properties->prop_values[j]);
