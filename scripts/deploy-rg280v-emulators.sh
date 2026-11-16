@@ -20,6 +20,16 @@ PLUMOS_PICOARCH_RECIPES="$repo_root/scripts/rg280v-picoarch-extra-cores.tsv" \
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 if [[ ! -f "$local_emulators/lib/libSDL_image-1.2.so.0" ||
       ! -f "$local_emulators/lib/libSDL_mixer-1.2.so.0" ||
+      ! -f "$local_emulators/lib/libSDL_sound-1.0.so.1" ||
+      ! -f "$local_emulators/lib/libSDL_net-1.2.so.0" ||
+      ! -f "$local_emulators/lib/libvorbisidec.so.1" ||
+      ! -f "$local_emulators/lib/libFLAC.so.12" ||
+      ! -f "$local_emulators/lib/libbz2.so.1.0" ||
+      ! -f "$local_emulators/lib/libtheoradec.so.1" ||
+      ! -f "$local_emulators/lib/libshake.so.1" ||
+      ! -f "$local_emulators/lib/libintl.so.8" ||
+      ! -f "$local_emulators/lib/libjpeg.so.8" ||
+      ! -f "$local_emulators/lib/libsndfile.so.1" ||
       ! -f "$local_emulators/lib/libpng14.so.14" ]]; then
     "$repo_root/scripts/build-rg280v-emulator-libs.sh"
 fi
@@ -69,6 +79,8 @@ copy_checked "$local_emulators/mednafen_pce_fast-rg280v-source.tar.gz" \
     "$remote/licenses/mednafen_pce_fast-rg280v-source.tar.gz" 0644
 copy_checked "$local_emulators/picoarch-source/LICENSE" \
     "$remote/licenses/picoarch-LICENSE" 0644
+copy_checked "$local_emulators/libshake-v0.3.0-source/LICENSE.txt" \
+    "$remote/licenses/libshake-LICENSE.txt" 0644
 copy_checked "$local_emulators/beetle-pce-fast-source/COPYING" \
     "$remote/licenses/mednafen_pce_fast-COPYING" 0644
 copy_checked "$repo_root/assets/frontend/regba-global-config.cfg" "$remote/config/regba-global-config.cfg" 0644
@@ -79,6 +91,9 @@ for name in fceux_gcw0-2.6.6-2023-08-30.opk gambatte-dms-rg280v.opk \
     copy_checked "$local_emulators/$name" "$remote/emulators/$name" 0644
 done
 for name in libSDL_image-1.2.so.0 libSDL_mixer-1.2.so.0 libpng14.so.14 \
+    libSDL_sound-1.0.so.1 libSDL_net-1.2.so.0 libvorbisidec.so.1 \
+    libFLAC.so.12 libbz2.so.1.0 libtheoradec.so.1 libshake.so.1 \
+    libintl.so.8 libjpeg.so.8 libsndfile.so.1 \
     libregba-doublebuf.so libfceux-menu.so libgambatte-menu.so; do
     copy_checked "$local_emulators/lib/$name" "$remote/lib/$name" 0644
 done

@@ -80,6 +80,8 @@ cp /workspace/assets/frontend/lang/*.lang "$data_root/plumos/share/frontend/lang
 cp /workspace/assets/frontend/licenses/* "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/libpng14-build/libpng-1.4.22/LICENSE \
     "$data_root/plumos/licenses/libpng14-LICENSE"
+cp /workspace/output/rg280v-emulators/libshake-v0.3.0-source/LICENSE.txt \
+    "$data_root/plumos/licenses/libshake-LICENSE.txt"
 tar -xOf /workspace/output/rg280v-emulators/PicoDrive_rg280v-source.tar.gz \
     picodrive-source/COPYING > "$data_root/plumos/licenses/PicoDrive-COPYING"
 cp /workspace/output/rg280v-emulators/PicoDrive_rg280v-source.tar.gz \
@@ -113,6 +115,9 @@ for msx_core in fmsx bluemsx; do
         "$data_root/plumos/picoarch/cores/${msx_core}_libretro.so"
 done
 for name in libSDL_image-1.2.so.0 libSDL_mixer-1.2.so.0 libpng14.so.14 \
+    libSDL_sound-1.0.so.1 libSDL_net-1.2.so.0 libvorbisidec.so.1 \
+    libFLAC.so.12 libbz2.so.1.0 libtheoradec.so.1 libshake.so.1 \
+    libintl.so.8 libjpeg.so.8 libsndfile.so.1 \
     libregba-doublebuf.so libfceux-menu.so libgambatte-menu.so; do
     cp "/workspace/output/rg280v-emulators/lib/$name" "$data_root/plumos/lib/$name"
 done
@@ -164,6 +169,16 @@ for path in /local/bin/rg280v-fbshow \
             /plumos/lib/libSDL2-2.0.so.0 \
             /plumos/lib/libSDL2_image-2.0.so.0 \
             /plumos/lib/libSDL2_ttf-2.0.so.0 \
+            /plumos/lib/libSDL_sound-1.0.so.1 \
+            /plumos/lib/libSDL_net-1.2.so.0 \
+            /plumos/lib/libvorbisidec.so.1 \
+            /plumos/lib/libFLAC.so.12 \
+            /plumos/lib/libbz2.so.1.0 \
+            /plumos/lib/libtheoradec.so.1 \
+            /plumos/lib/libshake.so.1 \
+            /plumos/lib/libintl.so.8 \
+            /plumos/lib/libjpeg.so.8 \
+            /plumos/lib/libsndfile.so.1 \
             /plumos/bin/plumos-fceux-prepare \
             /plumos/config/70-plumos-gpio-keys.rules \
             /plumos/emulators/fceux_gcw0-2.6.6-2023-08-30.opk \
