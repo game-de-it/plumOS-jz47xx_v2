@@ -23,6 +23,8 @@ static uint64_t flip_report_time;
 static uint64_t input_first;
 static unsigned autostart_ms;
 static unsigned autostart_count;
+static unsigned autostart_pulses;
+static SDLKey autostart_key;
 static int autostart_init, autostart_down;
 
 static uint64_t now_ns(void)
@@ -144,11 +146,82 @@ int SDL_DisplayYUVOverlay(SDL_Overlay *overlay, SDL_Rect *dstrect)
     return rc;
 }
 
+static void init_autostart(void)
+{
+    const char *value, *key, *pulses;
+    if (autostart_init) return;
+    value = getenv("PLUMOS_STANDALONE_AUTOSTART_MS");
+    key = getenv("PLUMOS_STANDALONE_AUTOSTART_KEY");
+    pulses = getenv("PLUMOS_STANDALONE_AUTOSTART_PULSES");
+    autostart_ms = value ? (unsigned)strtoul(value, NULL, 10) : 0;
+    autostart_key = key ? (SDLKey)strtoul(key, NULL, 10) : SDLK_RETURN;
+    autostart_pulses = pulses ? (unsigned)strtoul(pulses, NULL, 10) : 5;
+    if (autostart_pulses > 20) autostart_pulses = 20;
+    input_first = now_ns();
+    autostart_init = 1;
+}
+
+static int synthetic_key(SDL_Event *event)
+{
+    uint64_t elapsed_ms;
+    init_autostart();
+    if (!autostart_ms) return 0;
+    elapsed_ms = (now_ns() - input_first) / 1000000ULL;
+    if (!autostart_down && autostart_count < autostart_pulses &&
+        elapsed_ms >= autostart_ms + autostart_count * 4000U) {
+        const char *path = getenv("PLUMOS_STANDALONE_HEALTH_LOG");
+        FILE *out = path ? fopen(path, "a") : NULL;
+        if (out) { fprintf(out, "input\tstart_down_ms=%llu\tpulse=%u\n",
+                            (unsigned long long)elapsed_ms, autostart_count + 1); fclose(out); }
+        memset(event, 0, sizeof(*event));
+        event->type = SDL_KEYDOWN;
+        event->key.state = SDL_PRESSED;
+        event->key.keysym.sym = autostart_key;
+        autostart_down = 1;
+        return 1;
+    } else if (autostart_down &&
+               elapsed_ms >= autostart_ms + autostart_count * 4000U + 250) {
+        const char *path = getenv("PLUMOS_STANDALONE_HEALTH_LOG");
+        FILE *out = path ? fopen(path, "a") : NULL;
+        if (out) { fprintf(out, "input\tstart_up_ms=%llu\tpulse=%u\n",
+                            (unsigned long long)elapsed_ms, autostart_count + 1); fclose(out); }
+        memset(event, 0, sizeof(*event));
+        event->type = SDL_KEYUP;
+        event->key.state = SDL_RELEASED;
+        event->key.keysym.sym = autostart_key;
+        autostart_count++;
+        autostart_down = 0;
+        return 1;
+    }
+    return 0;
+}
+
+Uint8 *SDL_GetKeyState(int *numkeys)
+{
+    static Uint8 *(*real_get)(int *);
+    Uint8 *state;
+    int count = 0;
+    uint64_t elapsed_ms;
+    if (!real_get) real_get = dlsym(RTLD_NEXT, "SDL_GetKeyState");
+    if (!real_get) return NULL;
+    state = real_get(&count);
+    if (numkeys) *numkeys = count;
+    init_autostart();
+    if (!state || !autostart_ms || autostart_key < 0 || (int)autostart_key >= count)
+        return state;
+    elapsed_ms = (now_ns() - input_first) / 1000000ULL;
+    if (elapsed_ms >= autostart_ms &&
+        elapsed_ms < autostart_ms + autostart_pulses * 4000U)
+        state[autostart_key] = ((elapsed_ms - autostart_ms) % 4000U) < 500;
+    else if (elapsed_ms >= autostart_ms + autostart_pulses * 4000U)
+        state[autostart_key] = 0;
+    return state;
+}
+
 int SDL_PeepEvents(SDL_Event *events, int numevents, SDL_eventaction action,
                    Uint32 mask)
 {
     static int (*real_peep)(SDL_Event *, int, SDL_eventaction, Uint32);
-    uint64_t elapsed_ms;
     int count;
     if (!real_peep) real_peep = dlsym(RTLD_NEXT, "SDL_PeepEvents");
     if (!real_peep) return -1;
@@ -156,39 +229,17 @@ int SDL_PeepEvents(SDL_Event *events, int numevents, SDL_eventaction action,
     if (count < 0 || action != SDL_PEEKEVENT || numevents < 1 ||
         count >= numevents || !events)
         return count;
-    if (!autostart_init) {
-        const char *value = getenv("PLUMOS_STANDALONE_AUTOSTART_MS");
-        autostart_ms = value ? (unsigned)strtoul(value, NULL, 10) : 0;
-        input_first = now_ns();
-        autostart_init = 1;
-    }
-    if (!autostart_ms) return count;
-    elapsed_ms = (now_ns() - input_first) / 1000000ULL;
-    if (!autostart_down && autostart_count < 5 &&
-        elapsed_ms >= autostart_ms + autostart_count * 4000U) {
-        const char *path = getenv("PLUMOS_STANDALONE_HEALTH_LOG");
-        FILE *out = path ? fopen(path, "a") : NULL;
-        if (out) { fprintf(out, "input\tstart_down_ms=%llu\tpulse=%u\n",
-                            (unsigned long long)elapsed_ms, autostart_count + 1); fclose(out); }
-        memset(&events[count], 0, sizeof(*events));
-        events[count].type = SDL_KEYDOWN;
-        events[count].key.state = SDL_PRESSED;
-        events[count].key.keysym.sym = SDLK_RETURN;
-        autostart_down = 1;
-        return count + 1;
-    } else if (autostart_down &&
-               elapsed_ms >= autostart_ms + autostart_count * 4000U + 250) {
-        const char *path = getenv("PLUMOS_STANDALONE_HEALTH_LOG");
-        FILE *out = path ? fopen(path, "a") : NULL;
-        if (out) { fprintf(out, "input\tstart_up_ms=%llu\tpulse=%u\n",
-                            (unsigned long long)elapsed_ms, autostart_count + 1); fclose(out); }
-        memset(&events[count], 0, sizeof(*events));
-        events[count].type = SDL_KEYUP;
-        events[count].key.state = SDL_RELEASED;
-        events[count].key.keysym.sym = SDLK_RETURN;
-        autostart_count++;
-        autostart_down = 0;
-        return count + 1;
-    }
+    if (synthetic_key(&events[count])) return count + 1;
     return count;
+}
+
+int SDL_PollEvent(SDL_Event *event)
+{
+    static int (*real_poll)(SDL_Event *);
+    int count;
+    if (!real_poll) real_poll = dlsym(RTLD_NEXT, "SDL_PollEvent");
+    if (!real_poll) return 0;
+    count = real_poll(event);
+    if (count || !event) return count;
+    return synthetic_key(event);
 }

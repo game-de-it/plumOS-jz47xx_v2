@@ -481,3 +481,6 @@
 - RG350 APPREPOSITORYのEmulators一覧から32X、Neo Geo Pocket、WonderSwan、ArcadeのOPKを取得してELF ABIと共有ライブラリ依存を確認。既存Soft float環境へ直接追加できるかを切り分けた。
 - 既存の単体PicoDriveで32X ROMの起動とSH2 DRC初期化を確認。実プレイFPSは未測定。32XをFEに再表示せず、単体PicoDrive経路を無効機種の候補として追加した。配布版32X OPKはSDLマウス初期化に失敗し、試験後に端末から削除。FE復旧を確認した。詳細は`docs/validation/rg280v-rg350-standalone-audit-2026-11-17.md`。
 - 追試で計測用SDLフックからSTARTを複数回送り、After Burnerの本編へ進めた。画面の異なる2時点をDRMで取得し、後半のFPS窓は25.64〜56.81で不安定。44.1 kHzステレオPCMの非ゼロ信号と実時間のコールバック、クリップ率0%を記録した。音の聴感と物理入力・通常メニュー終了は未確認。32Xは性能条件を満たさないためFE表示を無効のままとした。
+- ユーザーの指定に従い、Emulatorsの配布OPK全62本を登録順に静的監査・実機起動した。26本にはSD2のROMを指定し、8秒ずつDRM画面、SDL画面提示、PCMコールバックを記録。16本で画面提示、13本で音声コールバックを取得したが、非ゼロPCMは2本のみ。25本は旧共有ライブラリ不足を報告。タイトル・メニュー値をゲーム中の性能値とは扱わない。
+- Neo Geo PocketのRace ExplorerはROMを読み込みチーム・メンバー選択まで進み、後半は約60 FPSと非ゼロPCM。NES FCEUXはBaseballのチーム選択まで約60 FPSだがPCM無音、Mega Drive Genesis Plus GXはBare Knuckleのオープニングで約60 FPS・非ゼロPCM、GB Gambatte原版はSuper Mario Landのゲーム画面で約60 FPSだがPCMほぼ無音。配布原版と既存FE改修版は別判定とした。全62件の個別理由と測定範囲は`docs/validation/rg280v-rg350-standalone-audit-2026-11-17.md`。
+- 試験用OPKは各回で削除、FEを最終復旧して実行プロセスを確認。ROM、OPK、スクリーンショットはGitに入れていない。実機での音質・操作・ゲーム終了経路は、候補別の追加確認が必要。
