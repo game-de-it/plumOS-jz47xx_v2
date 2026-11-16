@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize RG280V MIPS PC samples using a process map and unstripped core."""
+"""Summarize RG280V MIPS PC samples using process maps and unstripped symbols."""
 
 import argparse
 from bisect import bisect_right
@@ -41,6 +41,7 @@ def main():
     parser.add_argument("core", type=Path)
     parser.add_argument("--skip-bytes", type=int, default=0)
     parser.add_argument("--limit-bytes", type=int)
+    parser.add_argument("--absolute", action="store_true", help="map PCs from a fixed-address executable")
     args = parser.parse_args()
     data = args.samples.read_bytes()[args.skip_bytes:args.limit_bytes]
     if len(data) % 4:
@@ -57,9 +58,9 @@ def main():
         else:
             start, _, offset, path = region
             if path.endswith("/" + args.core.name):
-                address = pc - start + offset
+                address = pc if args.absolute else pc - start + offset
                 index = bisect_right(addresses, address) - 1
-                category = "PCSX ReARMed core"
+                category = "PCSX4ALL executable" if args.absolute else "PCSX ReARMed core"
                 label = names[index] if index >= 0 else f"core+{address:x}"
             elif 0x10800000 <= pc < 0x11000000:
                 category = "Lightrec generated MIPS code"
