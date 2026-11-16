@@ -1,5 +1,12 @@
 # 作業ログ
 
+## 2026-11-16 — RG280V PSXの重複画面切替を削減
+
+- RUNABOUT-2の同じ走行ステートを自動ロードして比較。ReARMedの前フレーム再利用時にSDL画面切替を省くと、Unai版は約33 msから約25 ms/回、P.E.Op.S.版は約38～40 msから約33 ms/回へ短縮。Unai版で約40 FPS相当だが60 FPSには届かない。
+- 連続8枚のDRM取得画像に全黒画面なし。色変換のMIPS向け2画素実装は全32,768色の値が一致し、コア処理は約1 ms短縮したがFPSは変わらず、採用しなかった。
+- Unaiのホットスポットに限った `-funroll-loops` 比較でも走行中は約25 ms/回で改善せず、コアを元へ戻した。
+- 画面切替の変更を `scripts/patch-rg280v-picoarch.py` に反映して通常ビルド。端末のPicoArch SHA-256 `aeacea598b60e6287c65b77f0f37fb313e6ceee699315cb13cb9ea1ee58a5be4` を確認し、通常版でPSXタイトル画面とFE復帰を確認。走行中の実機目視と音声は未確認。詳細は `docs/validation/rg280v-psx-investigation-2026-11-16.md`。
+
 ## 2026-11-16 — RUNABOUT-2走行中のReARMed処理内訳を採取
 
 - ユーザーが保存した走行中ステートを両GPUコアで自動ロードし、Frameskip OFF・996 MHzの同一条件で計測。P.E.Op.S.は `retro_run()` 27.2～27.5 ms、画面更新10.4～12.5 ms。Unaiはそれぞれ19.0～19.5 ms、13.8～14.3 msで、合計は約33.3 ms/回だった。

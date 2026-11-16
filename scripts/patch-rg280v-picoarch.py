@@ -373,6 +373,11 @@ if video.count(marker) != 1:
     raise SystemExit("video flip marker changed")
 video = video.replace(marker, marker +
                       "\tif (!fresh_game_frame) {\n"
+                      "\t\t/* PSX repeats keep the displayed front buffer; avoid a needless vblank. */\n"
+                      "\t\tif (last_game_frame_valid &&\n"
+                      "\t\t    (!strcmp(core_name, \"pcsx_rearmed\") ||\n"
+                      "\t\t     !strcmp(core_name, \"pcsx_rearmed_unai\")))\n"
+                      "\t\t\treturn;\n"
                       "\t\tif (!last_game_frame_valid) return;\n"
                       "\t\tSDL_LockSurface(screen);\n"
                       "\t\tmemcpy(screen->pixels, last_game_frame, sizeof(last_game_frame));\n"
