@@ -3663,7 +3663,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   plumos_fbdev_draw_tty_top_bar(r);
   plumos_fbdev_fill_rect(r, 0, 0, 5, h, accent);
   plumos_fbdev_draw_text_font(r, 14, 48, title, 2,
-                              wifi_connect_page || system_info_page || help_page,
+                              wifi_connect_page || system_info_page || help_page ||
+                                  (settings_page && w <= 400),
                               p->muted, w - 8);
   y = core_settings_page && h <= 240 ? 70 : (settings_family ? 82 : 104);
 
@@ -3702,18 +3703,27 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                                              sizeof(setting_label),
                                              setting_control,
                                              sizeof(setting_control))) {
-        control_width = plumos_fbdev_text_width(setting_control, entry_scale);
+        control_width = w <= 400
+            ? plumos_fbdev_text_width_font(r, setting_control, entry_scale, 1)
+            : plumos_fbdev_text_width(setting_control, entry_scale);
         control_x = right_x - control_width;
         if (control_x < name_x + 6 * cell_width) {
           control_x = name_x + 6 * cell_width;
         }
-        plumos_fbdev_draw_text(r, name_x, y, setting_label, entry_scale, fg,
-                               control_x - cell_width);
-        plumos_fbdev_draw_text(r, control_x, y, setting_control, entry_scale,
-                               fg, right_x);
+        if (w <= 400) {
+          plumos_fbdev_draw_text_font(r, name_x, y, setting_label, entry_scale,
+                                      1, fg, control_x - 4);
+          plumos_fbdev_draw_text_font(r, control_x, y, setting_control,
+                                      entry_scale, 1, fg, right_x);
+        } else {
+          plumos_fbdev_draw_text(r, name_x, y, setting_label, entry_scale, fg,
+                                 control_x - cell_width);
+          plumos_fbdev_draw_text(r, control_x, y, setting_control, entry_scale,
+                                 fg, right_x);
+        }
       } else {
         plumos_fbdev_draw_text_font(r, name_x, y, items[i], entry_scale,
-                                    system_info_page, fg, right_x);
+                                    system_info_page || w <= 400, fg, right_x);
       }
     } else {
       int scroll_px = 0;
@@ -3747,11 +3757,13 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                                   p->selection_foreground, w - 8);
     } else if (footer1 && footer1[0]) {
       plumos_fbdev_draw_text_font(r, 14, h - 56, footer1, 2,
-                                  wifi_connect_page, p->muted, w - 8);
+                                  wifi_connect_page || (settings_page && w <= 400),
+                                  p->muted, w - 8);
     }
     if (footer2 && footer2[0]) {
       plumos_fbdev_draw_text_font(r, 14, h - 34, footer2, 2,
-                                  wifi_connect_page, p->muted, w - 8);
+                                  wifi_connect_page || (settings_page && w <= 400),
+                                  p->muted, w - 8);
     }
   }
   return 1;

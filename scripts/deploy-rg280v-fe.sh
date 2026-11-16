@@ -8,7 +8,7 @@ adb=(adb -P "$port" -s "$serial")
 remote=/media/data/plumos
 
 "${adb[@]}" get-state >/dev/null
-"${adb[@]}" shell "mkdir -p $remote/bin $remote/fonts $remote/themes/default/logos/systems $remote/themes/default/images $remote/config/frontend $remote/config/system $remote/state/frontend $remote/Logs $remote/licenses"
+"${adb[@]}" shell "mkdir -p $remote/bin $remote/fonts $remote/share/frontend/lang $remote/themes/default/logos/systems $remote/themes/default/images $remote/config/frontend $remote/config/system $remote/state/frontend $remote/Logs $remote/licenses"
 
 copy_checked() {
     local source=$1 destination=$2 mode=$3 expected actual
@@ -49,6 +49,9 @@ copy_checked "$repo_root/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-ke
     "$remote/config/70-plumos-gpio-keys.rules" 0644
 copy_checked "$repo_root/assets/frontend/default.otf" "$remote/fonts/default.otf" 0644
 copy_checked "$repo_root/assets/frontend/cjk-fallback.ttc" "$remote/fonts/cjk-fallback.ttc" 0644
+for source in "$repo_root"/assets/frontend/lang/*.lang; do
+    copy_checked "$source" "$remote/share/frontend/lang/$(basename "$source")" 0644
+done
 copy_checked "$repo_root/assets/frontend/licenses/NotoSansJP-OFL.txt" "$remote/licenses/NotoSansJP-OFL.txt" 0644
 copy_checked "$repo_root/assets/frontend/licenses/WQYMicroHei-Apache-2.0.txt" "$remote/licenses/WQYMicroHei-Apache-2.0.txt" 0644
 copy_checked "$repo_root/assets/frontend/theme.json" "$remote/themes/default/theme.json" 0644

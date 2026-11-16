@@ -1,5 +1,9 @@
 # RG280V START menu comparison (2026-11-16)
 
+This audit covered only the top-level START entries. Its earlier visual conclusion
+does not apply to the nested UI/System Settings pages; those were compared with
+the V90S source and corrected in `rg280v-v90s-fe-settings-audit-2026-11-16.md`.
+
 ## Reference and deployed state
 
 Compared the checked-in and device-installed `menus.json` with Bubble's

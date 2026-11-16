@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include <linux/fb.h>
+#include <linux/rtc.h>
 
 #ifdef PLUMOS_ENABLE_MALI_RENDERER
 #include "plumos_mali_renderer.h"
@@ -4205,7 +4206,9 @@ static int write_os_timezone_file(struct ui_state *ui, const char *timezone) {
     return 0;
   }
   ensure_os_timezone_backup(ui);
-  return write_text_file("/etc/TZ", value);
+  return runtime_device_is_rg280v()
+             ? write_text_file_create("/etc/TZ", value)
+             : write_text_file("/etc/TZ", value);
 }
 
 static int apply_system_timezone_runtime(struct ui_state *ui, const char *timezone,
@@ -5450,18 +5453,6 @@ static const char *settings_category_title(const struct ui_state *ui,
 
 static void add_ui_settings_entries(struct ui_state *ui,
                                     const struct frontend_settings *settings) {
-  if (runtime_device_is_rg280v()) {
-    add_setting_entry(ui, "refresh_top", "Refresh ROM List", "");
-    add_setting_entry(ui, "ui_mode", "UI Mode",
-                      setting_choice_display_value("ui_mode", settings->ui_mode));
-    add_bool_setting_entry(ui, "show_empty_systems", "Show Empty Systems",
-                           settings->show_empty_systems);
-    add_setting_entry(ui, "sort_roms", "Sort ROMs",
-                      setting_choice_display_value("sort_roms", settings->sort_roms));
-    add_bool_setting_entry(ui, "rom_scan_policy", "Scan On Enter",
-                           rom_scan_policy_is_on_enter(settings->rom_scan_policy));
-    return;
-  }
   add_setting_entry(ui, "refresh_top", "Refresh TOP", "");
   add_setting_entry(ui, "ui_mode", "UI Mode",
                     setting_choice_display_value("ui_mode", settings->ui_mode));
@@ -5597,9 +5588,11 @@ static void add_system_time_entries(struct ui_state *ui) {
 
   format_current_time_local(value, sizeof(value));
   add_setting_entry(ui, "system_current_time", "Current Time", value);
-  add_bool_setting_entry(ui, "system_automatic_time", "Automatic Time",
-                         device->automatic_time_enabled);
-  add_setting_entry(ui, "system_sync_now", "Sync Now", "");
+  if (!runtime_device_is_rg280v()) {
+    add_bool_setting_entry(ui, "system_automatic_time", "Automatic Time",
+                           device->automatic_time_enabled);
+    add_setting_entry(ui, "system_sync_now", "Sync Now", "");
+  }
   value[0] = '\0';
   if (read_first_line_file("/sys/class/rtc/rtc0/since_epoch",
                            rtc_epoch_text, sizeof(rtc_epoch_text))) {
@@ -5689,6 +5682,10 @@ static void add_system_settings_entries(struct ui_state *ui) {
     format_runtime_number_setting_value("system_brightness", device->brightness,
                                         value, sizeof(value));
     add_setting_entry(ui, "system_brightness", "Brightness", value);
+    add_setting_entry(ui, "system_time_settings", "Time Settings",
+                      setting_choice_display_value("system_timezone", device->timezone));
+    add_setting_entry(ui, "system_language", "Language",
+                      setting_choice_display_value("system_language", device->language));
     add_setting_entry(ui, "system_information", "INFORMATION", "");
     return;
   }
@@ -9200,8 +9197,9 @@ static void setting_help_lines(const struct ui_state *ui,
       copy_string(line2, line2_size, "Applies to the validated device mixer backend.");
     } else if (strcmp(id, "system_brightness") == 0) {
       copy_string(line1, line1_size, "Screen brightness setting.");
-      copy_string(line2, line2_size,
-                  "Uses the V90S StockOS sunxi backlight in six steps.");
+      copy_string(line2, line2_size, runtime_device_is_rg280v()
+                  ? "Uses the RG280V display backlight."
+                  : "Uses the V90S StockOS sunxi backlight in six steps.");
     } else if (strcmp(id, "system_lumination") == 0) {
       copy_string(line1, line1_size, "Display lumination setting.");
       copy_string(line2, line2_size, "Applies to V90S display enhance brightness when available.");
@@ -9212,8 +9210,12 @@ static void setting_help_lines(const struct ui_state *ui,
       copy_string(line1, line1_size, "Open OS time and timezone settings.");
       copy_string(line2, line2_size, "Timezone is saved for plumOS processes.");
     } else if (strcmp(id, "system_current_time") == 0) {
-      copy_string(line1, line1_size, "Current OS time in the selected timezone.");
-      copy_string(line2, line2_size, "Automatic Time synchronizes it after Wi-Fi connects.");
+      copy_string(line1, line1_size, runtime_device_is_rg280v()
+                  ? "Current OS time."
+                  : "Current OS time in the selected timezone.");
+      copy_string(line2, line2_size, runtime_device_is_rg280v()
+                  ? "Manual Time saves RTC."
+                  : "Automatic Time synchronizes it after Wi-Fi connects.");
     } else if (strcmp(id, "system_automatic_time") == 0) {
       copy_string(line1, line1_size, "Synchronize time when Wi-Fi connects.");
       copy_string(line2, line2_size, "A toggles it; enabling also updates RTC now.");
@@ -9232,8 +9234,9 @@ static void setting_help_lines(const struct ui_state *ui,
       copy_string(line2, line2_size, "Values are interpreted in the selected timezone.");
     } else if (strcmp(id, "system_manual_time_apply") == 0) {
       copy_string(line1, line1_size, "Apply the manual OS time.");
-      copy_string(line2, line2_size,
-                  "A disables Automatic Time and saves system time to RTC.");
+      copy_string(line2, line2_size, runtime_device_is_rg280v()
+                  ? "A saves time to RTC."
+                  : "A disables Automatic Time and saves system time to RTC.");
     } else if (strncmp(id, "system_manual_time_", 19) == 0) {
       copy_string(line1, line1_size, "Manual time field.");
       copy_string(line2, line2_size, "LEFT/RIGHT changes the value; A applies at bottom.");
@@ -9289,11 +9292,16 @@ static void setting_help_lines(const struct ui_state *ui,
   }
 
   if (id[0]) {
-    if (line1 && line1_size > 0) {
+    if (line1 && line1_size > 0 &&
+        !(runtime_device_is_rg280v() && strcmp(id, "system_current_time") == 0)) {
       snprintf(key, sizeof(key), "settings.item.%s.help1", id);
       copy_string(line1, line1_size, tr(ui, key, line1));
     }
-    if (line2 && line2_size > 0) {
+    if (line2 && line2_size > 0 &&
+        !(runtime_device_is_rg280v() &&
+          (strcmp(id, "system_brightness") == 0 ||
+           strcmp(id, "system_current_time") == 0 ||
+           strcmp(id, "system_manual_time_apply") == 0))) {
       snprintf(key, sizeof(key), "settings.item.%s.help2", id);
       copy_string(line2, line2_size, tr(ui, key, line2));
     }
@@ -11225,6 +11233,32 @@ static int sync_time_now(struct ui_state *ui) {
   return ok;
 }
 
+static int save_rg280v_rtc(time_t epoch) {
+  struct tm utc;
+  struct rtc_time rtc;
+  int fd;
+  int ok;
+
+  if (!gmtime_r(&epoch, &utc)) {
+    return 0;
+  }
+  memset(&rtc, 0, sizeof(rtc));
+  rtc.tm_sec = utc.tm_sec;
+  rtc.tm_min = utc.tm_min;
+  rtc.tm_hour = utc.tm_hour;
+  rtc.tm_mday = utc.tm_mday;
+  rtc.tm_mon = utc.tm_mon;
+  rtc.tm_year = utc.tm_year;
+  rtc.tm_wday = utc.tm_wday;
+  fd = open("/dev/rtc0", O_RDWR | O_CLOEXEC);
+  if (fd < 0) {
+    return 0;
+  }
+  ok = ioctl(fd, RTC_SET_TIME, &rtc) == 0;
+  close(fd);
+  return ok;
+}
+
 static int apply_manual_system_time(struct ui_state *ui) {
   struct tm local_tm;
   struct tm check_tm;
@@ -11274,7 +11308,8 @@ static int apply_manual_system_time(struct ui_state *ui) {
     return 0;
   }
   apply_system_timezone_runtime(ui, ui->device.timezone, NULL, 0);
-  if (!run_time_sync_helper(ui, "store-rtc")) {
+  if (!(runtime_device_is_rg280v() ? save_rg280v_rtc(epoch)
+                                  : run_time_sync_helper(ui, "store-rtc"))) {
     set_status(ui, "system time set; RTC update failed");
     return 0;
   }

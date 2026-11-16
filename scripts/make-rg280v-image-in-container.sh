@@ -36,6 +36,7 @@ rm -rf "$data_root"
 mkdir -p "$data_root/local/bin" "$data_root/local/share" "$data_root/local/init.d" \
     "$data_root/plumos/provision" "$data_root/plumos/bin" \
     "$data_root/plumos/fonts" "$data_root/plumos/licenses" \
+    "$data_root/plumos/share/frontend/lang" \
     "$data_root/plumos/themes/default/logos/systems" \
     "$data_root/plumos/themes/default/images" "$data_root/plumos/config/frontend" \
     "$data_root/plumos/config/system" "$data_root/plumos/state/frontend" \
@@ -61,6 +62,7 @@ cp /workspace/output/rg280v-emulators/pcsx4all_rg280v-source.tar.gz \
 cp /workspace/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules \
     "$data_root/plumos/config/70-plumos-gpio-keys.rules"
 cp /workspace/assets/frontend/default.otf /workspace/assets/frontend/cjk-fallback.ttc "$data_root/plumos/fonts/"
+cp /workspace/assets/frontend/lang/*.lang "$data_root/plumos/share/frontend/lang/"
 cp /workspace/assets/frontend/licenses/* "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/libpng14-build/libpng-1.4.22/LICENSE \
     "$data_root/plumos/licenses/libpng14-LICENSE"
@@ -159,6 +161,7 @@ for path in /local/bin/rg280v-fbshow \
             /plumos/licenses/pcsx4all-rg280v-source.tar.gz \
             /plumos/licenses/mednafen_pce_fast-rg280v-source.tar.gz \
             /plumos/config/frontend/menus.json /plumos/config/frontend/systems.json \
+            /plumos/share/frontend/lang/en.lang /plumos/share/frontend/lang/ja.lang \
             /plumos/provision/seed-v1; do
     debugfs -R "stat $path" "$stage/data.ext4" 2>/dev/null | grep -q 'Inode:' || {
         echo "Missing data file in ext4: $path" >&2
