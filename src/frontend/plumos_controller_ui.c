@@ -8010,6 +8010,7 @@ static size_t ui_fbdev_text_window_size(const struct ui_state *ui) {
   int settings_family;
   int footer_reserved;
   int rg280v_settings;
+  int rg280v_start_menu;
   int entry_scale;
   int line_height;
   int first_entry_y;
@@ -8028,8 +8029,11 @@ static size_t ui_fbdev_text_window_size(const struct ui_state *ui) {
   rg280v_settings = runtime_device_is_rg280v() &&
                     ui->screen == SCREEN_SETTINGS &&
                     ui->settings_category != SETTINGS_CATEGORY_SYSTEM_BRIGHTNESS_TEST;
+  rg280v_start_menu = runtime_device_is_rg280v() &&
+                      ui->screen == SCREEN_START_MENU;
   entry_scale = 2;
-  line_height = rg280v_settings ? 34 : entry_scale * 12;
+  line_height = rg280v_settings ? 30 :
+                rg280v_start_menu ? 28 : entry_scale * 12;
   first_entry_y = settings_family ? 82 : 104;
   bottom_y = h - (rg280v_settings ? 18 : footer_reserved ? 76 : 34);
   if (line_height <= 0 || bottom_y < first_entry_y) {
@@ -9475,8 +9479,8 @@ static void render_help(struct ui_state *ui) {
   if (runtime_device_is_rg280v()) {
     ui_printf(ui, "plumOS RG280V - HELP\n");
     ui_printf(ui, "help_screen=1\n");
-    ui_printf(ui, "UP/DOWN/LEFT/RIGHT: Move\n");
-    ui_printf(ui, "A: Open  B: Back\n");
+    ui_printf(ui, "D-Pad: Move\n");
+    ui_printf(ui, "A / B: Open / Back\n");
     ui_printf(ui, "START: Settings and power\n");
     ui_printf(ui, "SELECT: Core choice\n");
     ui_printf(ui, "USB: ADB connection\n");

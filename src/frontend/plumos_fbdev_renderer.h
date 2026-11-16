@@ -1134,14 +1134,16 @@ static int plumos_fbdev_renderer_load_fallback_font(
   return 1;
 }
 
-static int plumos_fbdev_ft_set_face_size(FT_Face face, int *pixel_size_state,
+static int plumos_fbdev_ft_set_face_size(struct plumos_fbdev_renderer *r,
+                                         FT_Face face, int *pixel_size_state,
                                          int scale) {
   int pixel_size;
 
   if (!face || !pixel_size_state) {
     return 0;
   }
-  pixel_size = scale > 0 ? 9 * scale : 9;
+  pixel_size = r && r->vertical_scale == 2 && scale == 2
+                   ? 15 : scale > 0 ? 9 * scale : 9;
   if (pixel_size < 12) {
     pixel_size = 12;
   }
@@ -1206,7 +1208,7 @@ static int plumos_fbdev_ft_advance(struct plumos_fbdev_renderer *r,
   }
   face = plumos_fbdev_ft_select_face(r, codepoint, &pixel_size_state);
   if (!face || !pixel_size_state ||
-      !plumos_fbdev_ft_set_face_size(face, pixel_size_state, scale)) {
+      !plumos_fbdev_ft_set_face_size(r, face, pixel_size_state, scale)) {
     return fallback;
   }
   if (FT_Load_Char(face, (FT_ULong)codepoint, FT_LOAD_DEFAULT) != 0) {
@@ -1240,7 +1242,7 @@ plumos_fbdev_ft_glyph_cache_get(struct plumos_fbdev_renderer *r,
 
   face = plumos_fbdev_ft_select_face(r, codepoint, &pixel_size_state);
   if (!face || !pixel_size_state ||
-      !plumos_fbdev_ft_set_face_size(face, pixel_size_state, scale)) {
+      !plumos_fbdev_ft_set_face_size(r, face, pixel_size_state, scale)) {
     return NULL;
   }
   face_slot = (face == r->ft_fallback_face) ? 1 : 0;
@@ -2134,6 +2136,26 @@ static void plumos_fbdev_rg280v_status_label(char *out, size_t out_size) {
   plumos_fbdev_copy_text(out, out_size, cached);
 }
 
+static void plumos_fbdev_draw_rg280v_header_glyph(
+    struct plumos_fbdev_renderer *r, int x, int y, char c,
+    int min_x, int max_x, uint32_t color) {
+  const uint8_t *glyph = plumos_fbdev_glyph_for(c);
+  int dy;
+  int dx;
+
+  for (dy = 0; dy < 11; dy++) {
+    int source_row = dy * 7 / 11;
+    for (dx = 0; dx < 8; dx++) {
+      int source_col = dx * 5 / 8;
+      int target_x = x + dx;
+      if (target_x >= min_x && target_x < max_x &&
+          (glyph[source_row] & (1U << (4 - source_col)))) {
+        plumos_fbdev_put_pixel(r, target_x, y + dy, color);
+      }
+    }
+  }
+}
+
 static void plumos_fbdev_draw_rg280v_header_text(
     struct plumos_fbdev_renderer *r, const char *title, const char *status,
     int y, uint32_t title_color, uint32_t status_color) {
@@ -2146,18 +2168,17 @@ static void plumos_fbdev_draw_rg280v_header_text(
   if (strcmp(left, "plumOS") == 0) {
     left = "plumOS RG280V";
   }
-  /* Keep the original 5x7 pixel glyphs, with one pixel between letters.
-   * The 320-pixel layout needs narrower margins than the 640-pixel version. */
-  right_x = width - 8 - (int)strlen(status) * 11;
+  /* Keep the original 5x7 glyphs, scaled to 8x11 for the 320px screen. */
+  right_x = width - 8 - (int)strlen(status) * 9;
   x = 8;
-  for (p = left; *p && x < right_x - 4; p++, x += 11) {
-    plumos_fbdev_draw_char_clipped(r, x, y, *p, 2, 8, right_x - 4,
-                                   title_color);
+  for (p = left; *p && x < right_x - 4; p++, x += 9) {
+    plumos_fbdev_draw_rg280v_header_glyph(r, x, y, *p, 8, right_x - 4,
+                                          title_color);
   }
   x = right_x;
-  for (p = status; *p && x < width - 6; p++, x += 11) {
-    plumos_fbdev_draw_char_clipped(r, x, y, *p, 2, right_x, width - 6,
-                                   status_color);
+  for (p = status; *p && x < width - 6; p++, x += 9) {
+    plumos_fbdev_draw_rg280v_header_glyph(r, x, y, *p, right_x, width - 6,
+                                          status_color);
   }
 }
 
@@ -2193,7 +2214,7 @@ static void plumos_fbdev_draw_graphic_top_bar_overlay(
   plumos_fbdev_fill_rect(r, 0, 40, w, 2, p->panel);
   plumos_fbdev_fill_rect(r, 0, 0, 5, (int)r->var.yres, p->accent);
   if (rg280v) {
-    plumos_fbdev_draw_rg280v_header_text(r, title, right, 12,
+    plumos_fbdev_draw_rg280v_header_text(r, title, right, 14,
                                          p->foreground, p->muted);
   } else {
     plumos_fbdev_draw_text(r, 16, 12,
@@ -2240,7 +2261,7 @@ static void plumos_fbdev_draw_tty_top_bar(struct plumos_fbdev_renderer *r) {
   plumos_fbdev_fill_rect(r, 0, 0, w, 34, bg);
   plumos_fbdev_fill_rect(r, 0, 34, w, 2, border);
   if (rg280v) {
-    plumos_fbdev_draw_rg280v_header_text(r, "plumOS RG280V", right, 10,
+    plumos_fbdev_draw_rg280v_header_text(r, "plumOS RG280V", right, 12,
                                          prompt, muted);
   } else {
     plumos_fbdev_draw_text(r, 14, 10, "plumOS", 2, prompt, w - 8);
@@ -3183,7 +3204,7 @@ static void plumos_fbdev_draw_gallery_top_bar(
   plumos_fbdev_fill_rect(r, 0, 0, w, 40, p->panel_inner);
   plumos_fbdev_fill_rect(r, 0, 40, w, 2, p->panel);
   if (rg280v) {
-    plumos_fbdev_draw_rg280v_header_text(r, title, right, 12,
+    plumos_fbdev_draw_rg280v_header_text(r, title, right, 14,
                                          p->foreground, p->muted);
   } else {
     plumos_fbdev_draw_text(r, 16, 12,
@@ -3589,6 +3610,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   int core_settings_page;
   int system_info_page;
   int help_page;
+  int menu_page;
   int rg280v_settings_page;
   int rom_list_page;
   int entry_scale;
@@ -3615,6 +3637,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                                                    "system_info_screen=1");
   help_page = plumos_fbdev_has_prefixed_line(lines, line_count,
                                            "help_screen=1");
+  menu_page = plumos_fbdev_has_prefixed_line(lines, line_count,
+                                           "menu_screen=1");
   rg280v_settings_page = plumos_fbdev_has_prefixed_line(
       lines, line_count, "rg280v_settings_screen=1");
   settings_page = core_settings_page ||
@@ -3626,8 +3650,10 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                     settings_page;
   /* RG280V is 320 pixels wide. The 3x font clips the core selector. */
   entry_scale = core_settings_page && w > 400 ? 3 : 2;
-  line_height = rg280v_settings_page ? 34 :
-                (core_settings_page && h <= 240 ? 22 : entry_scale * 12);
+  line_height = rg280v_settings_page ? 30 :
+                menu_page && r->vertical_scale == 2 ? 28 :
+                help_page && r->vertical_scale == 2 ? 23 :
+                core_settings_page && h <= 240 ? 22 : entry_scale * 12;
   cursor_x = settings_family ? 12 : 18;
   name_x = cursor_x + (settings_family ? 18 : 24);
   right_x = w - 14;
@@ -3664,6 +3690,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   plumos_fbdev_fill_rect(r, 0, 0, 5, h, accent);
   plumos_fbdev_draw_text_font(r, 14, 48, title, 2,
                               wifi_connect_page || system_info_page || help_page ||
+                                  (menu_page && r->vertical_scale == 2) ||
                                   (settings_page && w <= 400),
                               p->muted, w - 8);
   y = core_settings_page && h <= 240 ? 70 : (settings_family ? 82 : 104);
@@ -3672,7 +3699,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
     int keyboard_row = wifi_keyboard_row >= 0;
     int keyboard_selected = keyboard_row && (int)i == wifi_keyboard_row;
     uint32_t fg = selected[i] ? p->selection_foreground : p->foreground;
-    if (y > h - (rg280v_settings_page ? 18 : 34)) {
+    if (y > h - ((rg280v_settings_page ||
+                  (help_page && r->vertical_scale == 2)) ? 18 : 34)) {
       break;
     }
     if (selected[i] && !keyboard_selected) {
@@ -3727,7 +3755,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
       }
     } else {
       int scroll_px = 0;
-      int prefer_freetype = wifi_connect_page || rom_list_page;
+      int prefer_freetype = wifi_connect_page || rom_list_page ||
+                            (menu_page && r->vertical_scale == 2);
       if (rom_list_page && selected[i] && right_x > name_x) {
         int name_width = plumos_fbdev_text_width_font(
             r, items[i], entry_scale, prefer_freetype);
