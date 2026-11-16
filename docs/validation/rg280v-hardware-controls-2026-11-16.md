@@ -28,7 +28,7 @@ The replacement keeps the game's DRM master, mode, plane geometry and pixel form
 - Reboot: selected from the game menu. The device restarted into FE. The kernel boot ID changed from `9bb999fb-600e-46e3-8bb1-c84dc0e032dd` to `7883f112-f019-4dfb-88db-0338b1b6fa02`.
 - Shutdown: selected from the game menu. The device powered off, then started normally with the physical power button and displayed FE. The subsequent boot ID was `92d1ce11-6dfe-4963-9b10-a1e66ddb8911`.
 - Sleep: `mem` with the default `deep` mode turned off the screen but did not respond to a short power-button press. A trial with `freeze` had the same result. Ping and ADB were unavailable while suspended, and RESET restored FE in both cases. Repeating `mem` with the USB cable unplugged still failed to resume, so USB power alone does not explain it. `gpio-keys/power/wakeup` was `enabled`, and the device tree's power key has `wakeup-source`.
-- A screen-off-only fallback was considered but rejected because it would keep the system running. No such fallback was installed. The temporary `freeze` script was removed and the original `mem` script restored. Sleep remains a failed physical gate; avoid selecting it until the kernel wake path is corrected.
+- A screen-off-only fallback was considered but rejected because it would keep the system running. No such fallback was installed. The temporary `freeze` script was removed and the original `mem` script restored. This was the failing baseline before the OST fix documented below.
 
 ## Sleep wake-path diagnosis
 
@@ -45,6 +45,14 @@ The upstream PM trace facility depends on x86 in this kernel, so temporary diagn
 - After the hanging `platform` test, RESET preserved `0x504d0004`, placing the stop inside `dpm_suspend_noirq()`.
 - A finer trial preserved `0x504d000d`: `device_wakeup_arm_wake_irqs()` and `suspend_device_irqs()` completed, but the noirq device loop did not.
 - A per-device trial preserved `0x518c0a0c`. The 24-bit name hash matched only `/sys/devices/platform/10002000.timer/100020e0.timer` in the captured sysfs list. Its driver is `ingenic-ost`; the marker was recorded immediately before its noirq suspend callback.
-- A comparison kernel that left the OST clock running in `ingenic_ost_suspend()` and skipped re-enabling it in the matching resume callback returned from the `platform` PM test (`RESULT:0`). This establishes the OST clock gate as the cause of the diagnostic test hang. It is not yet a valid final Sleep implementation: after setting RTC time, `rtcwake -m mem -s 20` still did not bring back ping or ADB after the alarm deadline. A further CPU/core-stage test and physical wake check are required.
+- A comparison kernel that left the OST clock running in `ingenic_ost_suspend()` and skipped re-enabling it in the matching resume callback returned from the `platform` PM test (`RESULT:0`). This establishes the OST clock gate as the cause of the diagnostic test hang. Timed `rtcwake -m mem -s 20` still did not bring back ping or ADB after the alarm deadline; the subsequent power-key and CPU/core checks are recorded below.
+
+## Accepted Sleep fix
+
+- With the OST clock left running, `pm_test=processors` and `pm_test=core` both returned (`RESULT:0`). The in-game/FE power key then resumed from deep suspend three times on the diagnostic kernel.
+- The production kernel was rebuilt from the 6.8 source with only the OST change. The temporary PM markers and `CONFIG_PM_DEBUG` were removed. The deployed `/boot/uzImage.bin` SHA-256 is `7c2563ccd9934a8245b7c6bb2bbc5e590f638307d864d9b2efede638bd4d3c70`; the former image remains on SD1 as `/boot/uzImage.bin.pre-wakepress`. RTC time was restored with `RTC_SET_TIME` after removing the marker code.
+- Physical production-kernel checks: FE Sleep/resume passed; NES standalone and PicoArch Sleep/resume passed; Sleep/resume with USB unplugged passed. The kernel log shows five `PM: suspend entry (deep)` and `PM: suspend exit` pairs under one boot ID, `b13baea5-668a-46e1-9127-2c30783fcde7`. This confirms real deep suspend and resume without reboot, across the tested routes.
+- `patches/0001-rg280v-keep-ost-clock-running-in-suspend.patch` is listed in `configs/plumos_rg280v_defconfig` for subsequent RG280V builds. `patch --dry-run -p1` against the unmodified 6.8 source passed, and the equivalent production kernel was built and checked on hardware.
+- Timed RTC wake was not fixed by this OST change; the user requirement for power-key Sleep/resume passed, while RTC alarm wake remains a separate follow-up. Power-button long-hold shutdown before userspace boot is also separate and was not changed here.
 
 PicoArch FCEUmm showed green color artifacts in Akumajou Densetsu before opening the power menu. This is a separate emulator display issue. It was not used as evidence for power-menu rendering; SuperGrafx was the PicoArch control.

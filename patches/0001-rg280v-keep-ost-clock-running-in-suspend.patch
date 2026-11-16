@@ -1,0 +1,36 @@
+From: plumOS RG280V port
+Subject: [PATCH] clocksource: ingenic-ost: keep OST running through suspend
+
+The JZ4770 RG280V hangs in the OST noirq suspend callback when the
+clocksource is gated. Keeping the OST clock enabled lets all PM test stages
+return and lets the physical power key resume from deep suspend. Tested on
+RG280V with the plumOS power menu.
+
+---
+ drivers/clocksource/ingenic-ost.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/clocksource/ingenic-ost.c b/drivers/clocksource/ingenic-ost.c
+--- a/drivers/clocksource/ingenic-ost.c
++++ b/drivers/clocksource/ingenic-ost.c
+@@ -143,18 +143,13 @@ static int __init ingenic_ost_probe(struct platform_device *pdev)
+ 
+ static int ingenic_ost_suspend(struct device *dev)
+ {
+-	struct ingenic_ost *ost = dev_get_drvdata(dev);
+-
+-	clk_disable(ost->clk);
+-
++	/* Keep the active clocksource running during system suspend. */
+ 	return 0;
+ }
+ 
+ static int ingenic_ost_resume(struct device *dev)
+ {
+-	struct ingenic_ost *ost = dev_get_drvdata(dev);
+-
+-	return clk_enable(ost->clk);
++	return 0;
+ }
+ 
+ static const struct dev_pm_ops ingenic_ost_pm_ops = {
