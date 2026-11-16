@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — PCエンジンCDの実機確認
+
+- ユーザーがPCエンジンCDを「OK」と報告。FEの唯一の候補であるPCE Fastを維持する。起動ログでは `ForceGear.chd` と `syscard3.pce` の読込、コア終了を確認し、FEプロセスも稼働中。個別のFPS値や音質の数値は未取得。
+- FE登録順で次はPS1。既定はPCSX4ALL、もう一つの候補はPCSX ReARMed。
+
 ## 2026-11-16 — SuperGrafxのPCE Fastを非対応としてFE候補から除外
 
 - ユーザーがSuperGrafxのPCE Fastで映像異常と無音を報告。公式コア説明でPCE FastにSuperGrafx機能が含まれないことを確認し、SuperGrafxのFE候補をBeetle SuperGrafxだけにした。PCエンジン側のPCE FastとSuperGrafx両候補は維持。
