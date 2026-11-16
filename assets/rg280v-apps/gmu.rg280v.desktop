@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Gmu Music Player
+Comment=Music player
+Exec=gmu-rg280v.sh
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=gmu
+Categories=applications;
