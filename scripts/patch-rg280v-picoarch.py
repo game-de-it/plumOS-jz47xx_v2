@@ -213,9 +213,12 @@ video = video.replace("#include <math.h>", "#include <math.h>\n#include <stdint.
 old_flip = "static void *fb_flip(void)\n{\n\tSDL_Flip(screen);"
 new_flip = '''static int needs_rgb565_handoff_swap(void)
 {
-    return core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888 ||
-           (core_pixel_format == RETRO_PIXEL_FORMAT_RGB565 &&
-            strcmp(core_name, "quicknes") == 0);
+    /* The current KMSDRM RGB565 plane displays NES pixels in native order.
+       Swapping these cores turns Mario's blue sky cyan after a cold boot. */
+    if (!strcmp(core_name, "fceumm") || !strcmp(core_name, "nestopia") ||
+        !strcmp(core_name, "quicknes"))
+        return 0;
+    return core_pixel_format == RETRO_PIXEL_FORMAT_XRGB8888;
 }
 
 static void swap_rgb565_words(uint16_t *pixels, int width, int height, int pitch)
@@ -231,8 +234,7 @@ static void swap_rgb565_words(uint16_t *pixels, int width, int height, int pitch
 
 static void *fb_flip(int convert_pixels)
 {
-    /* QuickNES and host-converted XRGB8888 need swapped words at the RG280V
-       SDL handoff. Other RGB565 cores, including fake08, do not. */
+    /* Retain the proven handoff for other XRGB8888 cores. */
     if (convert_pixels && needs_rgb565_handoff_swap())
         swap_rgb565_words(screen->pixels, screen->w, screen->h, screen->pitch);
     SDL_Flip(screen);'''

@@ -1,0 +1,9 @@
+# RG280V PicoArch NES color regression — 2026-11-16
+
+After reboot, the user reported incorrect colors in all three NES PicoArch cores. This is a regression in a later PicoArch build, not a Git rollback: the earlier RGB565 handoff swap remained in `scripts/patch-rg280v-picoarch.py`, and the device binary SHA-256 `aeacea598b60e6287c65b77f0f37fb313e6ceee699315cb13cb9ea1ee58a5be4` matched the current local build.
+
+With the same `Super Mario Bros..nes` on the same device, the later binary showed sky `(189, 234, 230)` in FCEUmm. The archived pre-scaling binary SHA-256 `97e1688f539829a3f449bdb760b3f6fb5b3319ee66f142e45dbba8055bd670c4`, using the same installed core and ROM, showed the correct `(90, 149, 255)`. Therefore the regression arose after that binary was built, while the shared scaling/video path was revised. The exact intermediate commit has not been isolated. The current RGB565 plane receives NES pixel data in native byte order; applying the old NES handoff swap creates the wrong color. The new build skips that swap for FCEUmm, Nestopia and QuickNES while retaining the existing XRGB8888 handling for other cores.
+
+The rebuilt binary SHA-256 `9d17cb53319a8c995082b2ec96045a7c925c01ddd9643a5c251a5173cb52b3fb` was uploaded, checked against the device copy and installed. Captures of the same Mario title screen now show sky `(90, 149, 255)` in FCEUmm and QuickNES, and `(90, 137, 255)` in Nestopia (its own palette). The latter was captured six seconds after launch because the first three-second capture was black during startup. The device FE was restarted and its process verified after the diagnostic runs.
+
+The original and revised images are local ignored artifacts under `output/rg280v-emulators/` and contain no committed ROM data. The user then launched all three cores from FE and confirmed both the game colors and SELECT+START menu colors were normal on the physical display.
