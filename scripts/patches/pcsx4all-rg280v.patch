@@ -12,7 +12,7 @@ index 913abaa..1a54f65 100644
  	return err;
  }
 diff --git a/src/port/sdl/frontend.cpp b/src/port/sdl/frontend.cpp
-index afbdccb..e877de1 100755
+index afbdccb..9b78d22 100755
 --- a/src/port/sdl/frontend.cpp
 +++ b/src/port/sdl/frontend.cpp
 @@ -1295,7 +1295,7 @@ static int MenuToggleCombo_alter(u32 keys)
@@ -24,9 +24,12 @@ index afbdccb..e877de1 100755
  }
  
  static char* MenuToggleCombo_show()
-@@ -1462,7 +1462,7 @@ static int settings_defaults()
+@@ -1460,9 +1460,9 @@ static int settings_defaults()
+ 	Config.HLE = 1;
+ 	Config.SlowBoot = 0;
  	Config.AnalogArrow = 0;
- 	Config.AnalogMode = 3;
+-	Config.AnalogMode = 3;
++	Config.AnalogMode = 0;
  	Config.RumbleGain = 100;
 -	Config.MenuToggleCombo = 0;
 +	Config.MenuToggleCombo = 1;
@@ -34,7 +37,7 @@ index afbdccb..e877de1 100755
  	Config.RCntFix = 0;
  	Config.VSyncWA = 0;
 diff --git a/src/port/sdl/port.cpp b/src/port/sdl/port.cpp
-index d1fed5b..8a68b5c 100755
+index d1fed5b..a62f0e0 100755
 --- a/src/port/sdl/port.cpp
 +++ b/src/port/sdl/port.cpp
 @@ -897,7 +897,6 @@ void pad_update()
@@ -54,7 +57,14 @@ index d1fed5b..8a68b5c 100755
  #endif
  
  void update_window_size(int w, int h, bool ntsc_fix)
-@@ -1473,7 +1472,7 @@ int main (int argc, char **argv)
+@@ -1467,13 +1466,13 @@ int main (int argc, char **argv)
+ 	Config.SpuIrq=0; /* 1=SPU IRQ always on, fixes some games */
+ 
+ 	Config.AnalogArrow = 0; /* 0=disable 1=use L-stick as D-pad arrow key */
+-	Config.AnalogMode = 3; /* 0-Digital 1-DualAnalog 2-DualShock (digital mode) 3-DualShock (analog enabled) */
++	Config.AnalogMode = 0; /* 0-Digital 1-DualAnalog 2-DualShock (digital mode) 3-DualShock (analog enabled) */
+ 	Config.RumbleGain = 100; /* [0,100]-Rumble effect strength */
+ 	/* Gamepad combo used to open menu
  	 * 0: L3 + R3
  	 * 1: SELECT + START
  	 * 2: None */

@@ -47,7 +47,7 @@ Gambatte-DMSにも専用のSDL入力ライブラリを適用し、SELECT＋START
 
 エミュレータ一式は `ADB_SERVER_PORT=5039 scripts/deploy-rg280v-emulators.sh` でSD1 p2へ展開する。OPK、補助ライブラリ、GPIO入力ルールをSHA-256で照合し、FEの対応機種の起動プロファイルだけ更新する。既存設定は `.pre-emulators` に退避する。取得元と補助ライブラリの再現手順は `scripts/fetch-rg280v-emulators.sh`、`scripts/build-rg280v-emulator-libs.sh` に固定した。ReGBA 1.9.2は[公開リリース](https://github.com/jdgleaver/ReGBA/releases/tag/1.9.2)から取得し、同じタグの[ソース](https://github.com/jdgleaver/ReGBA/tree/1.9.2)を記録する。
 
-PSXのPCSX4ALLは `scripts/build-rg280v-pcsx4all.sh` でRG350版の固定リビジョンからSoft float版をビルドし、`ADB_SERVER_PORT=5039 scripts/deploy-rg280v-pcsx4all.sh` でSD1へ配置する。FEのPSX既定候補はPCSX4ALL、PCSX ReARMedも候補として残す。SELECT＋STARTでメニューを開く。BIOSとメモリーカードはSD1のデータ領域に置く。M3Uは先頭ディスクを起動する。実機の確認範囲は`docs/validation/rg280v-pcsx4all-2026-11-16.md`に記録する。
+PSXのPCSX4ALLは `scripts/build-rg280v-pcsx4all.sh` でRG350版の固定リビジョンからSoft float版をビルドし、`ADB_SERVER_PORT=5039 scripts/deploy-rg280v-pcsx4all.sh` でSD1へ配置する。FEのPSX既定候補はPCSX4ALL、PCSX ReARMedも候補として残す。RG280Vの入力既定値はDigitalで、SELECT＋STARTでメニューを開く。BIOSとメモリーカードはSD1のデータ領域に置く。M3Uは先頭ディスクを起動する。実機の確認範囲は`docs/validation/rg280v-pcsx4all-2026-11-16.md`に記録する。
 
 PicoArchは `scripts/build-rg280v-picoarch.sh` で固定リビジョン `802047c` からビルドし、PC EngineコアはBeetle PCE Fastの `2de1ce1` からビルドする。RG280V用に320×240、MIPS用Cスケーラ、SDL入力、SELECT＋STARTメニュー、ダブルバッファによるVSync待機、SD1上の設定・セーブ・BIOSパスを適用する。現時点でFEに公開するPicoArchプロファイルはPC Engineだけ。ソースアーカイブとライセンスを配布用データ領域へ含める。
 

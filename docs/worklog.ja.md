@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — RG280VのPCSX4ALLをDigital入力で起動
+
+- RG280Vに物理アナログスティックがないため、PCSX4ALLの起動時と設定初期化時の `Analog Mode` を `Digital`（0）に変更した。既存SD1の共通設定もデプロイ時に `Analog_Mode 0` へ更新する。
+- 再ビルドしたSoft float版をSD1へ配置し、SHA-256 `6262810b9374ff451cffad750ac7afff150ae733f7b923f6f9e52c876fb1f030` が一致。共通設定とTobal 2専用設定の両方でDigital、FE稼働を確認した。Tobal 2の対戦中にDigitalモードで十字キーが効くことは前段の実機試験で確認済み。
+
 ## 2026-11-16 — Tobal 2のFPS・解像度・十字キー操作を実機調査
 
 - DRM画面取得でPCSX4ALLの `512x480x15`、CPU 98〜100%、対戦中43〜49/60 FPSを読取。996 MHzで実行中。`512x480`はゲーム内部の映像モード。

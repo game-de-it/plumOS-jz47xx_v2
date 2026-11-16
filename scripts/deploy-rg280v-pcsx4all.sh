@@ -49,6 +49,10 @@ if re.search(r"(?m)^MenuToggleCombo [0-9]+$", text):
     text = re.sub(r"(?m)^MenuToggleCombo [0-9]+$", "MenuToggleCombo 1", text)
 else:
     text += "\nMenuToggleCombo 1\n"
+if re.search(r"(?m)^Analog_Mode [0-9]+$", text):
+    text = re.sub(r"(?m)^Analog_Mode [0-9]+$", "Analog_Mode 0", text)
+else:
+    text = text.rstrip("\n") + "\nAnalog_Mode 0\n"
 target.write_text(text)
 PY
     copy_checked "$out/pcsx4all-config-updated.cfg" "$config" 0644
