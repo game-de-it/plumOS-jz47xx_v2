@@ -1045,9 +1045,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:mednafen_wswan"
+        "picoarch:mednafen_wswan"
       ],
-      "default_launch_profile": "retroarch:mednafen_wswan",
+      "default_launch_profile": "picoarch:mednafen_wswan",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,

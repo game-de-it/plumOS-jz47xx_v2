@@ -8,6 +8,9 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 "$repo_root/scripts/build-rg280v-picodrive.sh"
 "$repo_root/scripts/build-rg280v-pcsx4all.sh"
 "$repo_root/scripts/build-rg280v-picoarch.sh"
+PLUMOS_PICOARCH_RECIPES="$repo_root/scripts/rg280v-picoarch-extra-cores.tsv" \
+    PLUMOS_PICOARCH_CORE_FILTER=mednafen_wswan \
+    "$repo_root/scripts/build-rg280v-picoarch-cores.sh"
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 "$repo_root/scripts/build-rg280v-emulator-libs.sh"

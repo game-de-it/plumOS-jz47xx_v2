@@ -8,7 +8,7 @@ port=${ADB_SERVER_PORT:-5037}
 serial=${PLUMOS_RG280V_ADB_SERIAL:-10.1.1.2:5555}
 adb=(adb -P "$port" -s "$serial")
 "${adb[@]}" get-state >/dev/null
-"${adb[@]}" shell "mkdir -p $remote/picoarch/cores $remote/bin $remote/config/frontend"
+"${adb[@]}" shell "mkdir -p $remote/picoarch/cores $remote/bin $remote/config/frontend $remote/licenses"
 
 copy_checked() {
     local source=$1 destination=$2 mode=$3 expected actual attempt
@@ -41,6 +41,12 @@ if [[ "${PLUMOS_PICOARCH_ONLY_EXTRA:-0}" != 1 ]]; then
         "$remote/bin/plumos-picoarch-launch" 0755
     copy_checked "$out/picoarch-rg280v" "$remote/picoarch/bin/picoarch" 0755
     deploy_cores "$repo_root/scripts/rg280v-picoarch-cores.tsv"
+    copy_checked "$out/mednafen_wswan_libretro.so" \
+        "$remote/picoarch/cores/mednafen_wswan_libretro.so" 0644
+    copy_checked "$out/picoarch-cores/mednafen_wswan/COPYING" \
+        "$remote/licenses/mednafen_wswan-COPYING" 0644
+    copy_checked "$out/mednafen_wswan-rg280v-source.tar.gz" \
+        "$remote/licenses/mednafen_wswan-rg280v-source.tar.gz" 0644
 fi
 
 if [[ "${PLUMOS_PICOARCH_INCLUDE_EXTRA:-0}" == 1 ]]; then

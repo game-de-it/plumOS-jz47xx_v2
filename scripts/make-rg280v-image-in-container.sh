@@ -71,6 +71,10 @@ cp /workspace/output/rg280v-emulators/picoarch-source/LICENSE \
     "$data_root/plumos/licenses/picoarch-LICENSE"
 cp /workspace/output/rg280v-emulators/beetle-pce-fast-source/COPYING \
     "$data_root/plumos/licenses/mednafen_pce_fast-COPYING"
+cp /workspace/output/rg280v-emulators/picoarch-cores/mednafen_wswan/COPYING \
+    "$data_root/plumos/licenses/mednafen_wswan-COPYING"
+cp /workspace/output/rg280v-emulators/mednafen_wswan-rg280v-source.tar.gz \
+    "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/picoarch-rg280v-source.tar.gz \
     /workspace/output/rg280v-emulators/mednafen_pce_fast-rg280v-source.tar.gz \
     "$data_root/plumos/licenses/"
@@ -78,6 +82,8 @@ cp /workspace/output/rg280v-emulators/picoarch-rg280v \
     "$data_root/plumos/picoarch/bin/picoarch"
 cp /workspace/output/rg280v-emulators/mednafen_pce_fast_libretro.so \
     "$data_root/plumos/picoarch/cores/mednafen_pce_fast_libretro.so"
+cp /workspace/output/rg280v-emulators/mednafen_wswan_libretro.so \
+    "$data_root/plumos/picoarch/cores/mednafen_wswan_libretro.so"
 for name in libSDL_image-1.2.so.0 libSDL_mixer-1.2.so.0 libpng14.so.14 \
     libregba-doublebuf.so libfceux-menu.so libgambatte-menu.so; do
     cp "/workspace/output/rg280v-emulators/lib/$name" "$data_root/plumos/lib/$name"
@@ -121,10 +127,13 @@ for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
             /plumos/emulators/PicoDrive_rg280v.opk \
             /plumos/picoarch/bin/picoarch \
             /plumos/picoarch/cores/mednafen_pce_fast_libretro.so \
+            /plumos/picoarch/cores/mednafen_wswan_libretro.so \
             /plumos/licenses/PicoDrive-COPYING \
             /plumos/licenses/PicoDrive_rg280v-source.tar.gz \
             /plumos/licenses/picoarch-LICENSE \
             /plumos/licenses/mednafen_pce_fast-COPYING \
+            /plumos/licenses/mednafen_wswan-COPYING \
+            /plumos/licenses/mednafen_wswan-rg280v-source.tar.gz \
             /plumos/licenses/picoarch-rg280v-source.tar.gz \
             /plumos/licenses/pcsx4all-GPL.txt \
             /plumos/licenses/pcsx4all-rg280v-source.tar.gz \

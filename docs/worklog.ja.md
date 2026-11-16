@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — WonderSwanのRA候補をPicoArchに置換
+
+- ユーザーがRA経路の廃止を指定し、PicoArchは約50〜60 FPSで遊べると報告。FE候補と既定を `picoarch:mednafen_wswan` のみに変更した。マージ処理、通常配置、SDイメージ作成にも固定リビジョンのコアとソースを組み込んだ。
+- 実機の既存コアと再ビルド品のSHA-256が一致。FE設定を反映して再起動し、選択画面にはPicoArchのみ表示。更新後のFEからの物理的な起動・終了確認は進行中。詳細は `docs/validation/rg280v-wonderswan-pico-fe-2026-11-16.md`。
+
 ## 2026-11-16 — NGPCを性能不足でFEから除外
 
 - ユーザーがFE登録順のNGPCを実機で確認し、約40 FPSのため除外を指定。確認したROM名や音声・操作の個別結果は未取得。`assets/frontend/systems.json` の `ngpc.enabled` を `false` にした。

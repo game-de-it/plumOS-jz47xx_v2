@@ -13,6 +13,9 @@ local_emulators="$repo_root/output/rg280v-emulators"
 "$repo_root/scripts/repack-rg280v-gambatte.sh"
 "$repo_root/scripts/build-rg280v-picodrive.sh"
 "$repo_root/scripts/build-rg280v-picoarch.sh"
+PLUMOS_PICOARCH_RECIPES="$repo_root/scripts/rg280v-picoarch-extra-cores.tsv" \
+    PLUMOS_PICOARCH_CORE_FILTER=mednafen_wswan \
+    "$repo_root/scripts/build-rg280v-picoarch-cores.sh"
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 if [[ ! -f "$local_emulators/lib/libSDL_image-1.2.so.0" ||
@@ -44,6 +47,12 @@ copy_checked "$repo_root/assets/frontend/bin/plumos-picoarch-launch" "$remote/bi
 copy_checked "$local_emulators/picoarch-rg280v" "$remote/picoarch/bin/picoarch" 0755
 copy_checked "$local_emulators/mednafen_pce_fast_libretro.so" \
     "$remote/picoarch/cores/mednafen_pce_fast_libretro.so" 0644
+copy_checked "$local_emulators/mednafen_wswan_libretro.so" \
+    "$remote/picoarch/cores/mednafen_wswan_libretro.so" 0644
+copy_checked "$local_emulators/picoarch-cores/mednafen_wswan/COPYING" \
+    "$remote/licenses/mednafen_wswan-COPYING" 0644
+copy_checked "$local_emulators/mednafen_wswan-rg280v-source.tar.gz" \
+    "$remote/licenses/mednafen_wswan-rg280v-source.tar.gz" 0644
 copy_checked "$local_emulators/picoarch-rg280v-source.tar.gz" \
     "$remote/licenses/picoarch-rg280v-source.tar.gz" 0644
 copy_checked "$local_emulators/mednafen_pce_fast-rg280v-source.tar.gz" \

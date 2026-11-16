@@ -5,6 +5,7 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 out="$repo_root/output/rg280v-emulators"
 sources="$out/picoarch-cores"
 recipes=${PLUMOS_PICOARCH_RECIPES:-$repo_root/scripts/rg280v-picoarch-cores.tsv}
+core_filter=${PLUMOS_PICOARCH_CORE_FILTER:-}
 mkdir -p "$sources" "$out/picoarch-cores-logs"
 
 build_one() {
@@ -124,17 +125,28 @@ PY
         return 1
     fi
     cp "$built" "$out/${id}_libretro.so"
+    if [[ "$id" == mednafen_wswan ]]; then
+        git -C "$checkout" archive --format=tar.gz \
+            --output="$out/mednafen_wswan-rg280v-source.tar.gz" HEAD
+    fi
     file "$out/${id}_libretro.so"
     shasum -a 256 "$out/${id}_libretro.so"
 }
 
 failed=()
+matched=0
 while IFS='|' read -r id class repo ref subdir makefile args; do
     [[ -z "$id" || "$id" == \#* ]] && continue
+    [[ -z "$core_filter" || "$id" == "$core_filter" ]] || continue
+    matched=1
     if ! build_one "$id" "$repo" "$ref" "$subdir" "$makefile" "$args"; then
         failed+=("$id")
     fi
 done < "$recipes"
+if [[ -n "$core_filter" && "$matched" == 0 ]]; then
+    echo "Core not found in recipes: $core_filter" >&2
+    exit 1
+fi
 if (( ${#failed[@]} )); then
     printf 'Failed cores: %s\n' "${failed[*]}" >&2
     exit 1
