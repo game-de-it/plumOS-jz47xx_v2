@@ -347,10 +347,61 @@ video = video.replace("scale(width, height, pitch, data, screen->pixels);",
                       "scale(width, height, pitch, rgb565, screen->pixels);", 1)
 video = video.replace("buffer_scale(width, height, pitch, data);",
                       "buffer_scale(width, height, pitch, rgb565);", 1)
+duplicate_support = '''/* Libretro NULL video frames repeat the previous image. SDL's double
+   buffer still needs that image copied into its next back buffer. */
+static uint8_t last_game_frame[SCREEN_HEIGHT * SCREEN_PITCH];
+static int last_game_frame_valid;
+static int fresh_game_frame;
+
+'''
+marker = "void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {"
+if video.count(marker) != 1:
+    raise SystemExit("video frame process marker changed")
+video = video.replace(marker, duplicate_support + marker, 1)
+marker = "\tif (msg[0]) {\n\t\tvideo_print_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP, msg);"
+if video.count(marker) != 1:
+    raise SystemExit("video message marker changed")
+video = video.replace(marker,
+                      "\tif (screen->h == SCREEN_HEIGHT && screen->pitch == SCREEN_PITCH) {\n"
+                      "\t\tmemcpy(last_game_frame, screen->pixels, sizeof(last_game_frame));\n"
+                      "\t\tlast_game_frame_valid = 1;\n"
+                      "\t}\n"
+                      "\tfresh_game_frame = 1;\n\tif (msg[0]) {\n"
+                      "\t\tvideo_print_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP, msg);", 1)
+marker = "void plat_video_flip(void)\n{\n"
+if video.count(marker) != 1:
+    raise SystemExit("video flip marker changed")
+video = video.replace(marker, marker +
+                      "\tif (!fresh_game_frame) {\n"
+                      "\t\tif (!last_game_frame_valid) return;\n"
+                      "\t\tSDL_LockSurface(screen);\n"
+                      "\t\tmemcpy(screen->pixels, last_game_frame, sizeof(last_game_frame));\n"
+                      "\t\tif (msg[0])\n"
+                      "\t\t\tvideo_print_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP, msg);\n"
+                      "\t\tSDL_UnlockSurface(screen);\n"
+                      "\t\tvideo_update_msg();\n"
+                      "\t}\n"
+                      "\tfresh_game_frame = 0;\n", 1)
+marker = "void plat_video_close(void)\n{\n\t\n}"
+if video.count(marker) != 1:
+    raise SystemExit("video close marker changed")
+video = video.replace(marker, "void plat_video_close(void)\n{\n\tlast_game_frame_valid = 0;\n\tfresh_game_frame = 0;\n}", 1)
 video = video.replace("\tSDL_FreeSurface(screen);\n", "\tSDL_FreeSurface(screen);\n"
                       "\tfree(converted_frame);\n\tconverted_frame = NULL;\n"
                       "\tconverted_frame_pixels = 0;\n", 1)
 video_path.write_text(video)
+
+main_path = source / "main.c"
+main_data = main_path.read_text()
+marker = 'snprintf(fps_msg, sizeof(fps_msg), "FPS: %.1f (%.0f)", rendersps, vsyncsps);'
+if main_data.count(marker) != 1:
+    raise SystemExit("FPS HUD marker changed")
+main_data = main_data.replace(marker,
+    'if (!strcmp(core_name, "pcsx_rearmed"))\n'
+    '\t\t\t\t\t\tsnprintf(fps_msg, sizeof(fps_msg), "FPS: %.0f DRAW: %.0f", vsyncsps, rendersps);\n'
+    '\t\t\t\t\telse\n'
+    '\t\t\t\t\t\t' + marker, 1)
+main_path.write_text(main_data)
 
 replace("plat_linux.c", "{ SDLK_LCTRL,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_B },", "{ SDLK_LCTRL,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_A },")
 replace("plat_linux.c", "{ SDLK_SPACE,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_A },", "{ SDLK_SPACE,     IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_X },")

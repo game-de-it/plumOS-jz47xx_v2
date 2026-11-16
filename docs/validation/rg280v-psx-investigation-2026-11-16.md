@@ -30,4 +30,10 @@ PCSX4ALLは独自のMIPS→MIPS再コンパイラを使用し、Lightrecは使�
 | `sin_FortuneQuest.cue`、70秒 | watchdog timeoutまでSIGSEGVなし。DRM取得画像でタイトル画面から次の街並みシーンへ進むことを確認。起動後の計測区間で約54～59画面更新/秒。 |
 | `Tobal 2 (Japan) (v1.1).cue`、45秒 | watchdog timeoutまでSIGSEGVなし。DRM取得画像でSQUARESOFTロゴから次のムービーへ進むことを確認。 |
 
-この自動試験は起動と画面進行を確認した。音声計測は起動直後約10秒で無音を記録しただけなので、ゲーム内の音声品質は判定していない。十字キー入力、SELECT＋STARTメニュー、FE復帰もユーザーの実機確認待ち。ログと画像はGit管理外の `output/rg280v-emulators/` と本体の `Logs/picoarch/` に保存した。
+この自動試験は起動と画面進行を確認した。音声計測は起動直後約10秒で無音を記録しただけなので、ゲーム内の音声品質は判定していない。後続のユーザー試験では十字キー操作ができた。SELECT＋STARTメニューとFE復帰は確認待ち。ログと画像はGit管理外の `output/rg280v-emulators/` と本体の `Logs/picoarch/` に保存した。
+
+## 画面点滅とFPS表示
+
+ユーザーの実機試験で、PCSX ReARMedは操作できたが画面が点滅した。PicoArchの `pa_video_refresh()` はlibretroの `data == NULL`（前フレーム再利用）を描画しない一方、メインループは毎回 `SDL_Flip()` を呼んでいた。RG280VのSDL二重バッファでは、未描画の裏バッファを表示して点滅する。`scripts/patch-rg280v-picoarch.py` に、最後のゲーム画面を保持し、再利用フレーム時に裏バッファへコピーしてからHUDを描画・flipする処理を追加した。メニューから戻る際も保持画面を使用する。
+
+PCSX ReARMedだけHUDを `FPS: <エミュレーション回数/秒> DRAW: <新規描画回数/秒>` と表示する。静止画を多く使う画面ではDRAWが低くてもエミュレーション速度を別に読める。RG280VのRUNABOUT-2タイトル画面取得では `FPS: 53 DRAW: 7`、CPU `51.1%`。これはタイトル画面の一時値であり、ゲーム中の性能値ではない。修正版PicoArchのSHA-256は `b8979b59a01ccd38f3a6935741ba28c0c58160c9d37b59dc1754b0711c2370ff`。ユーザーは同タイトル画面で点滅が止まり、両数値を読めることを確認した。
