@@ -60,6 +60,20 @@ if [ -n "$data_device" ]; then
         /media/data/local/bin/rg280v-fbshow /media/data/local/share/boot-logo.ppm \
             >/dev/null 2>&1 || true
     fi
+    # Register the handheld input keys while FE boots. The helper writes the
+    # libudev runtime entry directly and retains udev as a fallback.
+    if [ -x /media/data/plumos/bin/plumos-prepare-opk-input ]; then
+        mkdir -p /media/data/plumos/Logs
+        (
+            printf '%s\n' 'plumOS RG280V: INPUT_PREP_START' >/dev/kmsg
+            if /media/data/plumos/bin/plumos-prepare-opk-input \
+                >>/media/data/plumos/Logs/input-prepare.log 2>&1; then
+                printf '%s\n' 'plumOS RG280V: INPUT_PREP_READY' >/dev/kmsg
+            else
+                printf '%s\n' 'plumOS RG280V: INPUT_PREP_FAILED' >/dev/kmsg
+            fi
+        ) </dev/null &
+    fi
 else
     log DATA_MOUNT_FAILED
 fi
