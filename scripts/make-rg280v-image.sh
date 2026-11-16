@@ -24,6 +24,7 @@ done
 "$repo_root/scripts/build-rg280v-input-test-opk.sh"
 "$repo_root/scripts/build-rg280v-gcw-apps.sh"
 "$repo_root/scripts/build-rg280v-bard.sh"
+"$repo_root/scripts/build-rg280v-ffplay.sh"
 "$repo_root/scripts/verify-rg280v-build.sh"
 docker run --rm --platform linux/arm64 \
     --user "$(id -u):$(id -g)" -e HOME=/tmp \

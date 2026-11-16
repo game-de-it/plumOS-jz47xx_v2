@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=FFPlay
+Comment=Video and music player
+Exec=ffplay.sh
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=ffplay
+Categories=applications;
+MimeType=video/mp4;video/x-matroska;video/avi;video/webm;audio/mpeg;audio/ogg;audio/flac;audio/wav;

@@ -58,7 +58,7 @@ cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
 cp /workspace/output/rg280v-apps/input-test-rg280v.opk "$data_root/apps/"
 cp /workspace/output/rg280v-apps/input-test-rg280v-source.tar.gz \
     "$data_root/plumos/licenses/"
-for name in calculator commander bard; do
+for name in calculator commander bard ffplay; do
     cp "/workspace/output/rg280v-apps/$name-rg280v.opk" "$data_root/apps/"
     cp "/workspace/output/rg280v-apps/$name-rg280v-source.tar.gz" \
         "$data_root/plumos/licenses/"
@@ -150,9 +150,11 @@ for path in /local/bin/rg280v-fbshow \
             /plumos/licenses/input-test-rg280v-source.tar.gz \
             /apps/calculator-rg280v.opk /apps/commander-rg280v.opk \
             /apps/bard-rg280v.opk \
+            /apps/ffplay-rg280v.opk \
             /plumos/licenses/calculator-rg280v-source.tar.gz \
             /plumos/licenses/commander-rg280v-source.tar.gz \
             /plumos/licenses/bard-rg280v-source.tar.gz \
+            /plumos/licenses/ffplay-rg280v-source.tar.gz \
             /plumos/lib/libSDL2-2.0.so.0 \
             /plumos/lib/libSDL2_image-2.0.so.0 \
             /plumos/lib/libSDL2_ttf-2.0.so.0 \

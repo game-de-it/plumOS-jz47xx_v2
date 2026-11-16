@@ -1,0 +1,59 @@
+diff --git a/ffplay.c b/ffplay.c
+index 9aca0af..2d55baa 100644
+--- a/ffplay.c
++++ b/ffplay.c
+@@ -64,6 +64,7 @@
+ const char program_name[] = "ffplay";
+ const int program_birth_year = 2003;
+ 
++
+ #define MAX_QUEUE_SIZE (15 * 1024 * 1024)
+ #define MIN_FRAMES 5
+ 
+@@ -817,6 +818,10 @@ static void calculate_display_rect(SDL_Rect *rect, int scr_xleft, int scr_ytop,
+     if (aspect_ratio <= 0.0)
+         aspect_ratio = 1.0;
+     aspect_ratio *= (float)vp->width / (float)vp->height;
++#ifdef PLUMOS_RG280V
++    /* The 320x480 framebuffer is shown as a 320x240 physical display. */
++    aspect_ratio *= 0.5f;
++#endif
+ 
+     /* XXX: we suppose the screen has a 1.0 pixel ratio */
+     height = scr_height;
+@@ -1197,7 +1202,11 @@ static void sigterm_handler(int sig)
+ 
+ static int video_open(VideoState *is, int force_set_video_mode, VideoPicture *vp)
+ {
++#ifdef PLUMOS_RG280V
++    int flags = SDL_SWSURFACE;
++#else
+     int flags = SDL_HWSURFACE | SDL_ASYNCBLIT | SDL_HWACCEL;
++#endif
+     int w,h;
+     SDL_Rect rect;
+ 
+@@ -3236,7 +3245,11 @@ static void event_loop(VideoState *cur_stream)
+                 cur_stream->force_refresh = 1;
+                 break;
+             case SDLK_p:
++#ifdef PLUMOS_RG280V
++            case SDLK_LSHIFT: // Physical Y on RG280V.
++#else
+             case SDLK_SPACE:
++#endif
+                 toggle_pause(cur_stream);
+                 break;
+             case SDLK_s: // S: Step to next frame
+@@ -3259,7 +3272,11 @@ static void event_loop(VideoState *cur_stream)
+             case SDLK_t:
+                 stream_cycle_channel(cur_stream, AVMEDIA_TYPE_SUBTITLE);
+                 break;
++#ifdef PLUMOS_RG280V
++            case SDLK_SPACE: // Physical X on RG280V.
++#else
+             case SDLK_LSHIFT: // GCW0: X button.
++#endif
+             case SDLK_w:
+                 toggle_audio_display(cur_stream);
+                 break;
