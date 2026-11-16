@@ -2056,6 +2056,87 @@ static void plumos_fbdev_battery_label(char *out, size_t out_size) {
   snprintf(out, out_size, "%s %ld", prefix, percent);
 }
 
+static void plumos_fbdev_rg280v_status_label(char *out, size_t out_size) {
+  static time_t cached_at = (time_t)-1;
+  static char cached[48];
+  char value[32];
+  char rtc_epoch[32];
+  char clock_label[16];
+  char battery_label[24];
+  char *end;
+  long voltage;
+  long low;
+  long high;
+  long percent;
+  time_t now = time(NULL);
+
+  if (!out || out_size == 0) {
+    return;
+  }
+  if (now == cached_at) {
+    plumos_fbdev_copy_text(out, out_size, cached);
+    return;
+  }
+  plumos_fbdev_copy_text(cached, sizeof(cached), "BAT --");
+  if (plumos_fbdev_read_first_line(
+          "/sys/class/power_supply/jz-battery/capacity", value,
+          sizeof(value))) {
+    percent = strtol(value, &end, 10);
+    if (end != value && *end == '\0' && percent >= 0 && percent <= 100) {
+      snprintf(cached, sizeof(cached), "BAT %ld", percent);
+    }
+  } else if (plumos_fbdev_read_first_line(
+                 "/sys/class/power_supply/jz-battery/voltage_now", value,
+                 sizeof(value))) {
+    voltage = strtol(value, &end, 10);
+    if (end != value && *end == '\0' && voltage > 0 &&
+        plumos_fbdev_read_first_line(
+            "/sys/class/power_supply/jz-battery/voltage_min_design", value,
+            sizeof(value))) {
+      low = strtol(value, &end, 10);
+      if (end != value && *end == '\0' &&
+          plumos_fbdev_read_first_line(
+              "/sys/class/power_supply/jz-battery/voltage_max_design", value,
+              sizeof(value))) {
+        high = strtol(value, &end, 10);
+        if (end != value && *end == '\0' && high > low) {
+          percent = (voltage - low) * 100 / (high - low);
+          if (percent < 0) percent = 0;
+          if (percent > 100) percent = 100;
+          snprintf(cached, sizeof(cached), "BAT ~%ld", percent);
+        }
+      }
+    }
+  }
+  if (plumos_fbdev_read_first_line("/sys/class/rtc/rtc0/since_epoch",
+                                   rtc_epoch, sizeof(rtc_epoch)) &&
+      strtoll(rtc_epoch, &end, 10) >= 1577836800LL && *end == '\0') {
+    plumos_fbdev_time_label(clock_label, sizeof(clock_label));
+    if (strcmp(clock_label, "--:--") != 0) {
+      plumos_fbdev_copy_text(battery_label, sizeof(battery_label), cached);
+      snprintf(cached, sizeof(cached), "%s  %s", clock_label, battery_label);
+    }
+  }
+  cached_at = now;
+  plumos_fbdev_copy_text(out, out_size, cached);
+}
+
+static void plumos_fbdev_draw_rg280v_header_text(
+    struct plumos_fbdev_renderer *r, const char *title, const char *status,
+    int y, uint32_t title_color, uint32_t status_color) {
+  const char *left = title && title[0] ? title : "plumOS RG280V";
+  int right_width;
+  int width = (int)r->var.xres;
+
+  if (strcmp(left, "plumOS") == 0) {
+    left = "plumOS RG280V";
+  }
+  right_width = plumos_fbdev_text_width(status, 2);
+  plumos_fbdev_draw_text(r, 14, y - 10, left, 2, title_color, width - 12);
+  plumos_fbdev_draw_text(r, width - 14 - right_width, y + 8, status, 2,
+                         status_color, width - 12);
+}
+
 static void plumos_fbdev_draw_graphic_top_bar_overlay(
     struct plumos_fbdev_renderer *r, const struct plumos_fbdev_palette *p,
     const char *title) {
@@ -2066,16 +2147,15 @@ static void plumos_fbdev_draw_graphic_top_bar_overlay(
   int w = (int)r->var.xres;
   int right_width;
   int title_max_x;
+  int rg280v = getenv("PLUMOS_DEVICE_ID") &&
+               strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0;
 
-  plumos_fbdev_time_label(time_label, sizeof(time_label));
-  plumos_fbdev_wifi_label(wifi_label, sizeof(wifi_label));
-  plumos_fbdev_battery_label(battery_label, sizeof(battery_label));
-  if (getenv("PLUMOS_DEVICE_ID") &&
-      strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0) {
-    snprintf(right, sizeof(right), "%s", strcmp(battery_label, "BAT --") == 0
-                                               ? "RG280V"
-                                               : battery_label);
+  if (rg280v) {
+    plumos_fbdev_rg280v_status_label(right, sizeof(right));
   } else {
+    plumos_fbdev_time_label(time_label, sizeof(time_label));
+    plumos_fbdev_wifi_label(wifi_label, sizeof(wifi_label));
+    plumos_fbdev_battery_label(battery_label, sizeof(battery_label));
     snprintf(right, sizeof(right), "%s  %s  %s", time_label, wifi_label,
              battery_label);
   }
@@ -2088,11 +2168,16 @@ static void plumos_fbdev_draw_graphic_top_bar_overlay(
   plumos_fbdev_fill_rect(r, 0, 0, w, 40, p->panel_inner);
   plumos_fbdev_fill_rect(r, 0, 40, w, 2, p->panel);
   plumos_fbdev_fill_rect(r, 0, 0, 5, (int)r->var.yres, p->accent);
-  plumos_fbdev_draw_text(r, 16, 12,
-                         title && title[0] ? title : "plumOS", 2,
-                         p->foreground, title_max_x);
-  plumos_fbdev_draw_text(r, w - 14 - right_width, 12, right, 2, p->muted,
-                         w - 12);
+  if (rg280v) {
+    plumos_fbdev_draw_rg280v_header_text(r, title, right, 12,
+                                         p->foreground, p->muted);
+  } else {
+    plumos_fbdev_draw_text(r, 16, 12,
+                           title && title[0] ? title : "plumOS", 2,
+                           p->foreground, title_max_x);
+    plumos_fbdev_draw_text(r, w - 14 - right_width, 12, right, 2, p->muted,
+                           w - 12);
+  }
 }
 
 static void plumos_fbdev_draw_graphic_top_bar(
@@ -2110,20 +2195,19 @@ static void plumos_fbdev_draw_tty_top_bar(struct plumos_fbdev_renderer *r) {
   char right[80];
   int w = (int)r->var.xres;
   int right_width;
+  int rg280v = getenv("PLUMOS_DEVICE_ID") &&
+               strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0;
   uint32_t bg = plumos_fbdev_pack_color(r, 0, 5, 4);
   uint32_t border = plumos_fbdev_pack_color(r, 31, 82, 56);
   uint32_t prompt = plumos_fbdev_pack_color(r, 158, 255, 199);
   uint32_t muted = plumos_fbdev_pack_color(r, 179, 235, 219);
 
-  plumos_fbdev_time_label(time_label, sizeof(time_label));
-  plumos_fbdev_wifi_label(wifi_label, sizeof(wifi_label));
-  plumos_fbdev_battery_label(battery_label, sizeof(battery_label));
-  if (getenv("PLUMOS_DEVICE_ID") &&
-      strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0) {
-    snprintf(right, sizeof(right), "%s", strcmp(battery_label, "BAT --") == 0
-                                               ? "RG280V"
-                                               : battery_label);
+  if (rg280v) {
+    plumos_fbdev_rg280v_status_label(right, sizeof(right));
   } else {
+    plumos_fbdev_time_label(time_label, sizeof(time_label));
+    plumos_fbdev_wifi_label(wifi_label, sizeof(wifi_label));
+    plumos_fbdev_battery_label(battery_label, sizeof(battery_label));
     snprintf(right, sizeof(right), "%s  %s  %s", time_label, wifi_label,
              battery_label);
   }
@@ -2131,8 +2215,13 @@ static void plumos_fbdev_draw_tty_top_bar(struct plumos_fbdev_renderer *r) {
 
   plumos_fbdev_fill_rect(r, 0, 0, w, 34, bg);
   plumos_fbdev_fill_rect(r, 0, 34, w, 2, border);
-  plumos_fbdev_draw_text(r, 14, 10, "plumOS", 2, prompt, w - 8);
-  plumos_fbdev_draw_text(r, w - 14 - right_width, 10, right, 2, muted, w - 8);
+  if (rg280v) {
+    plumos_fbdev_draw_rg280v_header_text(r, "plumOS RG280V", right, 10,
+                                         prompt, muted);
+  } else {
+    plumos_fbdev_draw_text(r, 14, 10, "plumOS", 2, prompt, w - 8);
+    plumos_fbdev_draw_text(r, w - 14 - right_width, 10, right, 2, muted, w - 8);
+  }
 }
 
 static const char *plumos_fbdev_find_value(
@@ -3049,16 +3138,15 @@ static void plumos_fbdev_draw_gallery_top_bar(
   int w = (int)r->var.xres;
   int right_width;
   int title_max_x;
+  int rg280v = getenv("PLUMOS_DEVICE_ID") &&
+               strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0;
 
-  plumos_fbdev_time_label(time_label, sizeof(time_label));
-  plumos_fbdev_wifi_label(wifi_label, sizeof(wifi_label));
-  plumos_fbdev_battery_label(battery_label, sizeof(battery_label));
-  if (getenv("PLUMOS_DEVICE_ID") &&
-      strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0) {
-    snprintf(right, sizeof(right), "%s", strcmp(battery_label, "BAT --") == 0
-                                               ? "RG280V"
-                                               : battery_label);
+  if (rg280v) {
+    plumos_fbdev_rg280v_status_label(right, sizeof(right));
   } else {
+    plumos_fbdev_time_label(time_label, sizeof(time_label));
+    plumos_fbdev_wifi_label(wifi_label, sizeof(wifi_label));
+    plumos_fbdev_battery_label(battery_label, sizeof(battery_label));
     snprintf(right, sizeof(right), "%s  %s  %s", time_label, wifi_label,
              battery_label);
   }
@@ -3070,11 +3158,16 @@ static void plumos_fbdev_draw_gallery_top_bar(
 
   plumos_fbdev_fill_rect(r, 0, 0, w, 40, p->panel_inner);
   plumos_fbdev_fill_rect(r, 0, 40, w, 2, p->panel);
-  plumos_fbdev_draw_text(r, 16, 12,
-                         title && title[0] ? title : "GALLERY", 2,
-                         p->foreground, title_max_x);
-  plumos_fbdev_draw_text(r, w - 14 - right_width, 12, right, 2, p->muted,
-                         w - 12);
+  if (rg280v) {
+    plumos_fbdev_draw_rg280v_header_text(r, title, right, 12,
+                                         p->foreground, p->muted);
+  } else {
+    plumos_fbdev_draw_text(r, 16, 12,
+                           title && title[0] ? title : "GALLERY", 2,
+                           p->foreground, title_max_x);
+    plumos_fbdev_draw_text(r, w - 14 - right_width, 12, right, 2, p->muted,
+                           w - 12);
+  }
 }
 
 static void plumos_fbdev_draw_gallery_card(
@@ -3339,6 +3432,7 @@ static int plumos_fbdev_is_hidden_line(const char *line) {
       strncmp(line, "menu_screen=", 12) == 0 ||
       strncmp(line, "settings_screen=", 16) == 0 ||
       strncmp(line, "system_info_screen=", 19) == 0 ||
+      strncmp(line, "help_screen=", 12) == 0 ||
       strncmp(line, "scraping_screen=", 16) == 0 ||
       strncmp(line, "thumbnail_results_screen=", 25) == 0 ||
       strncmp(line, "thumbnail_running", 17) == 0 ||
@@ -3469,6 +3563,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   int settings_page;
   int core_settings_page;
   int system_info_page;
+  int help_page;
   int rom_list_page;
   int entry_scale;
   int line_height;
@@ -3492,6 +3587,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                                                      "core_settings_screen=1");
   system_info_page = plumos_fbdev_has_prefixed_line(lines, line_count,
                                                    "system_info_screen=1");
+  help_page = plumos_fbdev_has_prefixed_line(lines, line_count,
+                                           "help_screen=1");
   settings_page = core_settings_page ||
                   plumos_fbdev_has_prefixed_line(lines, line_count,
                                                  "settings_screen=1");
@@ -3537,7 +3634,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   plumos_fbdev_draw_tty_top_bar(r);
   plumos_fbdev_fill_rect(r, 0, 0, 5, h, accent);
   plumos_fbdev_draw_text_font(r, 14, 48, title, 2,
-                              wifi_connect_page || system_info_page,
+                              wifi_connect_page || system_info_page || help_page,
                               p->muted, w - 8);
   y = core_settings_page && h <= 240 ? 70 : (settings_family ? 82 : 104);
 
@@ -3563,6 +3660,9 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
       /* One 18-pixel font fits every RG280V core name without animation. */
       plumos_fbdev_draw_text_clipped(r, name_x, y, items[i], entry_scale,
                                     1, name_x, right_x, fg);
+    } else if (help_page) {
+      plumos_fbdev_draw_text_font(r, name_x, y, items[i], entry_scale, 1,
+                                  fg, right_x);
     } else if (settings_page) {
       char setting_label[160];
       char setting_control[80];

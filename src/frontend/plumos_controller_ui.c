@@ -9454,11 +9454,12 @@ static void render_power_menu(struct ui_state *ui) {
 static void render_help(struct ui_state *ui) {
   if (runtime_device_is_rg280v()) {
     ui_printf(ui, "plumOS RG280V - HELP\n");
+    ui_printf(ui, "help_screen=1\n");
     ui_printf(ui, "UP/DOWN/LEFT/RIGHT: Move\n");
     ui_printf(ui, "A: Open  B: Back\n");
     ui_printf(ui, "START: Settings and power\n");
     ui_printf(ui, "SELECT: Core choice\n");
-    ui_printf(ui, "USB: ADB development connection\n");
+    ui_printf(ui, "USB: ADB connection\n");
     ui_printf(ui, "SD2: ROM library (read-only)\n");
     return;
   }
