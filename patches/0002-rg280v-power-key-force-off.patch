@@ -1,0 +1,108 @@
+From: plumOS RG280V port
+Subject: [PATCH] input: gpio-keys: force RG280V power off after long hold
+
+--- a/drivers/input/keyboard/gpio_keys.c
++++ b/drivers/input/keyboard/gpio_keys.c
+@@ -28,6 +28,7 @@
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+ #include <linux/spinlock.h>
++#include <linux/reboot.h>
+ #include <dt-bindings/input/gpio-keys.h>
+ 
+ struct gpio_button_data {
+@@ -41,6 +42,9 @@
+ 	unsigned int release_delay;	/* in msecs, for IRQ-only buttons */
+ 
+ 	struct delayed_work work;
++	struct delayed_work longpress_work;
++	struct delayed_work forceoff_work;
++	unsigned int longpress_ms;
+ 	struct hrtimer debounce_timer;
+ 	unsigned int software_debounce;	/* in msecs, for GPIO-driven buttons */
+ 
+@@ -131,6 +135,11 @@
+ {
+ 	struct gpio_button_data *bdata = data;
+ 
++	if (bdata->longpress_ms) {
++		cancel_delayed_work_sync(&bdata->longpress_work);
++		cancel_delayed_work_sync(&bdata->forceoff_work);
++	}
++
+ 	if (!bdata->gpiod)
+ 		hrtimer_cancel(&bdata->release_timer);
+ 	else if (bdata->debounce_use_hrtimer)
+@@ -365,6 +374,27 @@
+ };
+ ATTRIBUTE_GROUPS(gpio_keys);
+ 
++static void gpio_keys_forceoff_work(struct work_struct *work)
++{
++	pr_emerg("RG280V power key: forcing kernel power off\n");
++	emergency_sync();
++	msleep(250);
++	kernel_power_off();
++}
++
++static void gpio_keys_longpress_work(struct work_struct *work)
++{
++	struct gpio_button_data *bdata =
++		container_of(work, struct gpio_button_data, longpress_work.work);
++
++	if (gpiod_get_value_cansleep(bdata->gpiod) != 1)
++		return;
++	pr_warn("RG280V power key held: requesting power off\n");
++	orderly_poweroff(true);
++	mod_delayed_work(system_wq, &bdata->forceoff_work,
++			 msecs_to_jiffies(3000));
++}
++
+ static void gpio_keys_gpio_report_event(struct gpio_button_data *bdata)
+ {
+ 	const struct gpio_keys_button *button = bdata->button;
+@@ -379,6 +409,14 @@
+ 		dev_err(input->dev.parent,
+ 			"failed to get gpio state: %d\n", state);
+ 		return;
++	}
++
++	if (bdata->longpress_ms) {
++		if (state)
++			mod_delayed_work(system_wq, &bdata->longpress_work,
++					 msecs_to_jiffies(bdata->longpress_ms));
++		else
++			cancel_delayed_work(&bdata->longpress_work);
+ 	}
+ 
+ 	if (type == EV_ABS) {
+@@ -556,6 +594,16 @@
+ 		bdata->gpiod = gpio_to_desc(button->gpio);
+ 		if (!bdata->gpiod)
+ 			return -EINVAL;
++	}
++
++	if (child && bdata->gpiod && button->code == KEY_POWER &&
++	    !fwnode_property_read_u32(child, "plumos,long-press-poweroff-ms",
++				      &bdata->longpress_ms) &&
++	    bdata->longpress_ms >= 3000 && bdata->longpress_ms <= 30000) {
++		INIT_DELAYED_WORK(&bdata->longpress_work, gpio_keys_longpress_work);
++		INIT_DELAYED_WORK(&bdata->forceoff_work, gpio_keys_forceoff_work);
++	} else {
++		bdata->longpress_ms = 0;
+ 	}
+ 
+ 	if (bdata->gpiod) {
+--- a/arch/mips/boot/dts/ingenic/rg280v.dts
++++ b/arch/mips/boot/dts/ingenic/rg280v.dts
+@@ -23,6 +23,10 @@
+ 
+ &btn8 {
+ 	gpios = <&gpb 10 GPIO_ACTIVE_LOW>;
++};
++
++&btn12 {
++	plumos,long-press-poweroff-ms = <8000>;
+ };
+ 
+ &gpio_keys {

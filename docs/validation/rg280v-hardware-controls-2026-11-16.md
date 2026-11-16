@@ -55,4 +55,10 @@ The upstream PM trace facility depends on x86 in this kernel, so temporary diagn
 - `patches/0001-rg280v-keep-ost-clock-running-in-suspend.patch` is listed in `configs/plumos_rg280v_defconfig` for subsequent RG280V builds. `patch --dry-run -p1` against the unmodified 6.8 source passed, and the equivalent production kernel was built and checked on hardware.
 - Timed RTC wake was not fixed by this OST change; the user requirement for power-key Sleep/resume passed, while RTC alarm wake remains a separate follow-up. Power-button long-hold shutdown before userspace boot is also separate and was not changed here.
 
+## Power-key long-hold trial
+
+The baseline did not power off even after a 30-second hold in FE. The RG280V-only device-tree property `plumos,long-press-poweroff-ms = <8000>` and a `gpio-keys` kernel patch now schedule shutdown only while the physical key remains asserted. At eight seconds the kernel requests `orderly_poweroff(true)`; if it is still running three seconds later, it calls the kernel power-off path. Releasing before the threshold cancels the long-hold work. Existing short-press input events remain available to FE and the game overlay. This mechanism starts after the GPIO key driver is initialized; it cannot replace a hardware PMIC hold-to-cut-power mechanism if the kernel itself is stalled.
+
+The patch applied cleanly to the unmodified 6.8 source. The patched kernel and RG280V DTB built, and the DTB contains the 8000 ms property. Trial boot image SHA-256: `c18a1857161ef1fc777cadc0f468a75675503390eb59c15cdc42b93298f25702`. The previous working image was backed up on SD1 as `/boot/uzImage.bin.pre-longpress` and verified against `7c2563ccd9934a8245b7c6bb2bbc5e590f638307d864d9b2efede638bd4d3c70`. The trial booted to FE. Short press, early release, long-hold shutdown, restart, and Sleep regression are pending physical checks.
+
 PicoArch FCEUmm showed green color artifacts in Akumajou Densetsu before opening the power menu. This is a separate emulator display issue. It was not used as evidence for power-menu rendering; SuperGrafx was the PicoArch control.
