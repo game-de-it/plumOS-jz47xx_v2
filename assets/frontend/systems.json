@@ -931,8 +931,7 @@
         ]
       },
       "launch_profiles": [
-        "standalone:pcsx4all",
-        "picoarch:pcsx_rearmed"
+        "standalone:pcsx4all"
       ],
       "default_launch_profile": "standalone:pcsx4all",
       "default_cpu_policy": "ondemand",

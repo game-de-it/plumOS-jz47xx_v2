@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — PS1のPCSX ReARMedをFE候補から除外
+
+- ユーザーの指定でPS1の候補をPCSX4ALLだけに変更し、既定も維持。マージ前後のJSON比較でPS1候補一覧以外は不変と確認した。
+- 実機へハッシュ照合して反映しFEを再起動。PS1の選択メニューはPCSX4ALLだけとなり、既存バイナリのSHA-256も一致。ReARMed本体とROMは残す。次のFE登録順はNGPC。詳細は `docs/validation/rg280v-psx-investigation-2026-11-16.md`。
+
 ## 2026-11-16 — PCエンジンCDの実機確認
 
 - ユーザーがPCエンジンCDを「OK」と報告。FEの唯一の候補であるPCE Fastを維持する。起動ログでは `ForceGear.chd` と `syscard3.pce` の読込、コア終了を確認し、FEプロセスも稼働中。個別のFPS値や音質の数値は未取得。

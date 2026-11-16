@@ -77,3 +77,7 @@ Unai版で8枚連続取得した320×240のDRM画像は、すべて約64,860画�
 重複切替省略だけを `scripts/patch-rg280v-picoarch.py` に追加し、通常手順でPicoArchを再ビルドした。SHA-256 `aeacea598b60e6287c65b77f0f37fb313e6ceee699315cb13cb9ea1ee58a5be4` を端末上で照合。通常版でRUNABOUT-2のタイトル画面を取得し、18秒の起動中にクラッシュせず、終了後にFEプロセスを復旧した。走行中の約40回/秒は診断版の測定値であり、通常版での実機目視と音声確認は未実施。60回/秒にはUnaiのコア処理をさらに約2～3 ms減らし、画面更新との合計も16.7 ms以内に収める必要がある。
 
 Unaiの主なホットスポット `gpuPolySpanFn` を含む `gpulib_if.cpp` にだけ `-funroll-loops` を適用した別ビルドも同じステートで測定した。オブジェクトは約407 KiBから645 KiBへ増え、定常期の `retro_run()` は18.6～19.1 ms、合計25.0～25.3 ms/回で改善しなかった。ループ展開は採用せず、コアを元のSHA-256 `a0f08da628e8b30ae0cb4bd1576bfce16229f209b5138abd200c949ec71b7dc8` に復元した。端末のPicoArchも上記の通常版ハッシュへ戻し、FEプロセス稼働を確認した。
+
+### FE候補の最終選択
+
+ユーザーの指定で、PS1のFE候補からPCSX ReARMedを外し、PCSX4ALLだけを残した。既定もPCSX4ALLのまま。実機の `systems.json` はSHA-256 `1ba63b43920b28ab45707c6406396d8c2e6189bb46c224944faec28727723d16` で照合し、`plumos-text-ui core system psx` にはPCSX4ALLだけが表示された。FEを再起動して稼働を確認。PCSX4ALL本体は既存のSHA-256 `6262810b9374ff451cffad750ac7afff150ae733f7b923f6f9e52c876fb1f030` のまま。ReARMedのコア本体やROMは削除していない。
