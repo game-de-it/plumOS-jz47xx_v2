@@ -12,6 +12,17 @@ fi
 if [ ! -e "$HOME/.config/gmu/gmu.conf" ]; then
     cp /opk/gmu.rg280v.conf "$HOME/.config/gmu/gmu.conf"
 fi
+if [ ! -e "$HOME/.config/gmu/.rg280v-volume-v2" ]; then
+    awk '
+      /^Gmu.Volume=0$/ { print "Gmu.Volume=15"; next }
+      /^SDL.SecondsUntilBacklightPowerOff=/ {
+          print "SDL.SecondsUntilBacklightPowerOff=0"; next
+      }
+      { print }
+    ' "$HOME/.config/gmu/gmu.conf" > "$HOME/.config/gmu/gmu.conf.tmp"
+    mv "$HOME/.config/gmu/gmu.conf.tmp" "$HOME/.config/gmu/gmu.conf"
+    touch "$HOME/.config/gmu/.rg280v-volume-v2"
+fi
 status=0
 /opk/gmu.bin -d /opk -c gmu.conf \
     >"$HOME/.config/gmu/last.log" 2>&1 || status=$?

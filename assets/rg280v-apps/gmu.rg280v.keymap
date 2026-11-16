@@ -20,8 +20,6 @@ PreviousTrack=L
 NextTrack=R
 SeekForward=Mod+R
 SeekBackward=Mod+L
-Lock=Lock
-Unlock=Unlock
 Exit=Mod+Start
 Help=Mod+Up
 
@@ -30,7 +28,8 @@ ProgramInfo=Mod+A
 ProgramInfoOkay=A
 
 # File browser mappings:
-FileBrowserPlayFile=B
+FileBrowserDirUp=B
+FileBrowserPlayFile=Mod+A
 FileBrowserAddFileToPlaylistOrChDir=A
 FileBrowserAddDirToPlaylist=X
 FileBrowserInsertFileIntoPlaylist=Mod+A

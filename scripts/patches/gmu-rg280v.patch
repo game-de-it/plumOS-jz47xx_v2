@@ -1,8 +1,52 @@
+diff --git a/src/frontends/sdl/inputconfig.c b/src/frontends/sdl/inputconfig.c
+index ab48b14..8c1de17 100644
+--- a/src/frontends/sdl/inputconfig.c
++++ b/src/frontends/sdl/inputconfig.c
+@@ -162,7 +162,7 @@ int input_config_init(char *inputconf_file)
+ int input_config_get_val(char *button_name, ActivateMethod *am)
+ {
+ 	int          w;
+-	int          result = 0;
++	int          result = -99;
+ 	unsigned int bnl = strlen(button_name);
+ 
+ 	for (w = 0; w < number_of_buttons; w++) {
+diff --git a/src/frontends/sdl/kam.c b/src/frontends/sdl/kam.c
+index 6035916..1b89d94 100644
+--- a/src/frontends/sdl/kam.c
++++ b/src/frontends/sdl/kam.c
+@@ -36,7 +36,11 @@ void key_action_mapping_init(KeyActionMapping *kam)
+ 	kam[FB_CHDIR].scope =                    FILE_BROWSER;
+ 	kam[FB_CHDIR].description =                   "Ch.dir";
+ 	kam[FB_ADD_FILE_TO_PL_OR_CHDIR].scope =  FILE_BROWSER;
++	#ifdef PLUMOS_RG280V
++	kam[FB_ADD_FILE_TO_PL_OR_CHDIR].description = "Play/Ch.dir";
++	#else
+ 	kam[FB_ADD_FILE_TO_PL_OR_CHDIR].description = "Add file/Ch.dir";
++	#endif
+ 	kam[FB_ADD_DIR_TO_PL].scope =            FILE_BROWSER;
+ 	kam[FB_ADD_DIR_TO_PL].description =           "Add dir";
+ 	kam[FB_INSERT_FILE_INTO_PL].scope =      FILE_BROWSER;
 diff --git a/src/frontends/sdl/sdl.c b/src/frontends/sdl/sdl.c
-index af4a4d8..e6fc781 100644
+index af4a4d8..7aa8541 100644
 --- a/src/frontends/sdl/sdl.c
 +++ b/src/frontends/sdl/sdl.c
-@@ -619,9 +619,16 @@ static void run_player(char *skin_name, char *decoders_str)
+@@ -272,6 +272,14 @@ static int file_browser_process_action(FileBrowser *fb, PlaylistBrowser *pb,
+ 				if (sel_file) {
+ 					path = file_browser_get_selected_file_full_path_alloc(fb);
+ 					if (path) {
++					#ifdef PLUMOS_RG280V
++						if (user_key_action == FB_ADD_FILE_TO_PL_OR_CHDIR) {
++							gmu_core_playlist_set_current(NULL);
++							gmu_core_play_file(path);
++							free(path);
++							break;
++						}
++					#endif
+ 						if (user_key_action == FB_INSERT_FILE_INTO_PL) { /* insert item */
+ 							int    pl_length = gmu_core_playlist_get_length();
+ 							Entry *sel_entry;
+@@ -619,9 +627,16 @@ static void run_player(char *skin_name, char *decoders_str)
  	}
  
  	if (quit == DONT_QUIT) {
@@ -55,10 +99,43 @@ index 40616f8..e1cca73 100644
  }
  
 diff --git a/src/hw_gcw0.c b/src/hw_gcw0.c
-index c0e8843..7edd46c 100644
+index c0e8843..90b89e4 100644
 --- a/src/hw_gcw0.c
 +++ b/src/hw_gcw0.c
-@@ -73,5 +73,9 @@ void hw_detect_device_model(void)
+@@ -46,6 +46,9 @@ void hw_set_volume(int volume)
+ 
+ void hw_display_off(void)
+ {
++	#ifdef PLUMOS_RG280V
++	return;
++	#else
+ 	FILE *f;
+ 
+ 	wdprintf(V_DEBUG, "hw_gcw0", "Display off requested.\n");
+@@ -54,10 +57,14 @@ void hw_display_off(void)
+ 		fclose(f);
+ 	}
+ 	display_on_value = -1;
++	#endif
+ }
+ 
+ void hw_display_on(void)
+ {
++	#ifdef PLUMOS_RG280V
++	return;
++	#else
+ 	FILE *f;
+ 
+ 	wdprintf(V_DEBUG, "hw_gcw0", "Display on requested.\n");
+@@ -65,6 +72,7 @@ void hw_display_on(void)
+ 		fprintf(f, "0\n");
+ 		fclose(f);
+ 	}
++	#endif
+ }
+ 
+ void hw_detect_device_model(void)
+@@ -73,5 +81,9 @@ void hw_detect_device_model(void)
  
  const char *hw_get_device_model_name(void)
  {
