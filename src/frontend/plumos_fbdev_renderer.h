@@ -3338,6 +3338,7 @@ static int plumos_fbdev_is_hidden_line(const char *line) {
       strncmp(line, "core_settings_screen=", 21) == 0 ||
       strncmp(line, "menu_screen=", 12) == 0 ||
       strncmp(line, "settings_screen=", 16) == 0 ||
+      strncmp(line, "system_info_screen=", 19) == 0 ||
       strncmp(line, "scraping_screen=", 16) == 0 ||
       strncmp(line, "thumbnail_results_screen=", 25) == 0 ||
       strncmp(line, "thumbnail_running", 17) == 0 ||
@@ -3467,6 +3468,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   int settings_family;
   int settings_page;
   int core_settings_page;
+  int system_info_page;
   int rom_list_page;
   int entry_scale;
   int line_height;
@@ -3488,6 +3490,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   rom_list_page = plumos_fbdev_title_is_rom_list(title);
   core_settings_page = plumos_fbdev_has_prefixed_line(lines, line_count,
                                                      "core_settings_screen=1");
+  system_info_page = plumos_fbdev_has_prefixed_line(lines, line_count,
+                                                   "system_info_screen=1");
   settings_page = core_settings_page ||
                   plumos_fbdev_has_prefixed_line(lines, line_count,
                                                  "settings_screen=1");
@@ -3532,7 +3536,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   plumos_fbdev_fill_rect(r, 0, 0, w, h, p->background);
   plumos_fbdev_draw_tty_top_bar(r);
   plumos_fbdev_fill_rect(r, 0, 0, 5, h, accent);
-  plumos_fbdev_draw_text_font(r, 14, 48, title, 2, wifi_connect_page,
+  plumos_fbdev_draw_text_font(r, 14, 48, title, 2,
+                              wifi_connect_page || system_info_page,
                               p->muted, w - 8);
   y = core_settings_page && h <= 240 ? 70 : (settings_family ? 82 : 104);
 
@@ -3578,7 +3583,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
         plumos_fbdev_draw_text(r, control_x, y, setting_control, entry_scale,
                                fg, right_x);
       } else {
-        plumos_fbdev_draw_text(r, name_x, y, items[i], entry_scale, fg, w - 8);
+        plumos_fbdev_draw_text_font(r, name_x, y, items[i], entry_scale,
+                                    system_info_page, fg, right_x);
       }
     } else {
       int scroll_px = 0;
