@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — SuperGrafxのPCE Fastを非対応としてFE候補から除外
+
+- ユーザーがSuperGrafxのPCE Fastで映像異常と無音を報告。公式コア説明でPCE FastにSuperGrafx機能が含まれないことを確認し、SuperGrafxのFE候補をBeetle SuperGrafxだけにした。PCエンジン側のPCE FastとSuperGrafx両候補は維持。
+- 同じSuperGrafx ROMのBeetle SuperGrafx診断ではタイトル画面が描画され、後半は約59〜60 FPS、音声PCMも後半に出た。実機の古いPCE Fast選択履歴を削除してFEを再起動。物理的な音・入力・終了の再確認は残る。詳細は `docs/validation/rg280v-supergrafx-pce-fast-2026-11-16.md`。
+
 ## 2026-11-16 — Sega CDのGenesis Plus GXをFE候補から除外、PCエンジン2コア合格
 
 - ユーザーがSega CDのGenesis Plus GXに性能上の問題があると補足し、FEからの除外を指定。Sega CDはPicoDriveだけを候補と既定に変更した。実機の古いGenesis Plus GX選択履歴をクリアし、FE再起動後にPicoDriveのみ表示されることを確認。ほかの機種のGenesis Plus GX候補は維持。
