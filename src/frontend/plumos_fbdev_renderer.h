@@ -4054,6 +4054,17 @@ static void plumos_fbdev_renderer_shutdown(struct plumos_fbdev_renderer *r) {
 #endif
 #ifdef PLUMOS_FBDEV_ENABLE_DRM
   if (r->drm.active) {
+    /* Keep the last frame visible while the next application takes DRM over.
+     * Closing DRM restores fb0's original scanout buffer; without this copy
+     * that buffer can contain an older Apps menu. */
+    int visible = r->drm.draw_index ^ 1;
+    if (r->fb_mem && r->frame_bytes > 0 &&
+        (size_t)r->frame_bytes <= r->fb_map_size &&
+        (size_t)r->frame_bytes <= r->drm.buffers[visible].size &&
+        r->drm.buffers[visible].mem) {
+      memcpy(r->fb_mem, r->drm.buffers[visible].mem,
+             (size_t)r->frame_bytes);
+    }
     plumos_drm_pageflip_close(&r->drm);
     r->mem = NULL;
   }
