@@ -1,5 +1,9 @@
 # 作業ログ
 
+## 2026-11-16 — 想定エミュの実機確認完了
+
+- ユーザーがRG280Vで想定していたエミュの動作確認完了を報告。現在のFE設定は有効15機種・候補37経路で、有効な候補にRA経路はない。FDS、32X、NGPC、FBNeoの4機種は実機結果に基づいてFEから除外済み。FEプロセスの稼働、実機設定のSHA-256 `8c4f65c763f02a10afe687b1b6e0e699cb1ce80a961a9b5b8d2d356864c938ce`、SD2読み取り専用を確認した。これは現在の想定構成の受け入れ結果であり、全ROMでの動作や全コアの60 FPS保証ではない。詳細は `docs/validation/rg280v-emulator-sweep-2026-11-16.md`。
+
 ## 2026-11-16 — MSXのRA経路をPicoArchへ変更し、起動ファイルを補完
 
 - FEのMSX候補を `picoarch:fmsx` と `picoarch:bluemsx` に変更し、既定をfMSXにした。マージ処理にもMSXを追加。実機設定の差分はMSXのみで、SHA-256は `8c4f65c763f02a10afe687b1b6e0e699cb1ce80a961a9b5b8d2d356864c938ce`。
