@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — PS1既定をPCSX4ALLに確定し、32Xから実機確認を再開
+
+- ユーザーの指定に従い、PS1の既定はPCSX4ALLとする。リポジトリとRG280V実機の `systems.json` の双方で `default_launch_profile` が `standalone:pcsx4all` であることを確認したため、設定変更は不要。
+- 32XはFE登録順の次の未確認機種。実機には4本の試験用ROMがあり、登録コアは `picoarch:picodrive` の1件。ユーザーがFEから順番に実機確認し、問題があれば報告する。映像・色・音・FPS・入力・FE復帰の結果はまだ未取得。
+
 ## 2026-11-16 — PCSX4ALL派生版をTobal 2の対戦中ステートで比較
 
 - ユーザーが対戦中に保存したスロット0のステートを使い、Ninoh-FOX・soarqin・gameblablaの3派生をSoft floatでビルドしてRG280Vで比較。画面取得時のFPSは現行版が41前後、Ninoh-FOX版が42〜48、ほか2版が36〜41で、いずれも60 FPSに届かなかった。gameblabla版のステート選択プレビューには色乱れがあった。
