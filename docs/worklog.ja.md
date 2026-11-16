@@ -4,7 +4,7 @@
 
 - FEのMSX候補を `picoarch:fmsx` と `picoarch:bluemsx` に変更し、既定をfMSXにした。マージ処理にもMSXを追加。実機設定の差分はMSXのみで、SHA-256は `8c4f65c763f02a10afe687b1b6e0e699cb1ce80a961a9b5b8d2d356864c938ce`。
 - fMSXコアと必須BIOS 5本・ディスク用BIOSが実機のPicoArch参照先に無かったため、固定リビジョンのコアをビルドし、手元のBIOSを公式MD5と転送後SHA-256で照合して配置した。blueMSXでは自動選択される `MSX2+` の機種設定だけがBIOS領域に欠けていた。SD2にある完全版からその設定を補い、参照先の共有ROM 8本とデータベースを確認した。BIOSはGitとSDイメージに含めない。
-- `usas.rom` を両コアで短時間起動し、DRM画像でゲームのタイトル画面を確認。計測区間の表示は両方とも約60 FPS。続いてユーザーがFEから既定のfMSXを実機確認し、映像・音・操作・FPS・SELECT＋STARTからのFE復帰をすべて正常と報告。blueMSXの同項目は実機確認待ち。詳細は `docs/validation/rg280v-msx-pico-fe-2026-11-16.md`。
+- `usas.rom` を両コアで短時間起動し、DRM画像でゲームのタイトル画面を確認。計測区間の表示は両方とも約60 FPS。続いてユーザーがFEからfMSXとblueMSXを実機確認し、両方とも映像・音・操作・FPS・SELECT＋STARTからのFE復帰をすべて正常と報告。blueMSXのログにも同ROMのロードとコア終了が記録され、FEが稼働している。詳細は `docs/validation/rg280v-msx-pico-fe-2026-11-16.md`。
 
 ## 2026-11-16 — FBNeoを性能不足でFEから除外
 
