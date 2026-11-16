@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-17 — GCW Zero系Calculator・CommanderをRG280V向けに再ビルド
+
+- SDL2、SDL2_image、SDL2_ttfをRG280V用Buildrootでビルドし、両アプリのソースを固定コミットからMIPS Soft floatで再ビルドした。OPKと必要な共有ライブラリをSD1へ配置し、今後のイメージ生成にも追加した。
+- Calculatorは物理Aで入力、SELECTで終了する。ユーザーの指摘した計算結果の枠外表示を、文字幅を使った右寄せと枠内クリップで修正。実機取得画像では「777」が枠内に収まり、終了後にFEへ戻った。
+- CommanderはSD2の読み取り専用領域を初期表示し、フォルダの開閉、X/Yメニュー、Quit後のFE復帰を確認した。実機でのキー操作と視認性はユーザー確認待ち。詳細は `docs/validation/rg280v-gcw-apps-2026-11-17.md`。
+
 ## 2026-11-16 — GCW Zero系OPKアプリをFEへ統合
 
 - STARTにAppsを追加し、SD1の `/media/data/apps` に置いたOPKを `opkinfo` の名前で自動表示するようにした。既存FEのアプリ起動・復帰経路に、RG280Vの入力準備、HOME、補助ライブラリを設定するOPK起動ラッパーを追加。6項目になったSTARTは1画面に収まるよう行間を調整した。

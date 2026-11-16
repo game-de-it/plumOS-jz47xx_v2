@@ -1,0 +1,80 @@
+diff --git a/src/label_cache.h b/src/label_cache.h
+index f5ae7e9..11ba1a8 100644
+--- a/src/label_cache.h
++++ b/src/label_cache.h
+@@ -7,6 +7,7 @@
+ #include <cassert>
+ #include <algorithm>
+ #include <cstdint>
++#include <string>
+ 
+ 
+ template<bool USE_SURFACE>
+diff --git a/src/sdl_helper.h b/src/sdl_helper.h
+index bee7d09..fd8a042 100644
+--- a/src/sdl_helper.h
++++ b/src/sdl_helper.h
+@@ -81,13 +81,19 @@ bool SDL<EventHandler, Renderer>::init()
+   }
+ 
+   // SDL_WINDOW_FULLSCREEN
+-#if defined(WINDOW_SCALE)
++#if defined(PLUMOS_RG280V)
++  window = SDL_CreateWindow("ODCalc v0.1", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 480, SDL_WINDOW_FULLSCREEN);
++#elif defined(WINDOW_SCALE)
+   window = SDL_CreateWindow("ODCalc v0.1", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320 * WINDOW_SCALE, 240 * WINDOW_SCALE, SDL_WINDOW_OPENGL);
+ #else
+   window = SDL_CreateWindow("ODCalc v0.1", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 240, SDL_WINDOW_OPENGL);
+ #endif
+   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+ 
++#if defined(PLUMOS_RG280V)
++  SDL_RenderSetScale(renderer, 1.0f, 2.0f);
++#endif
++
+ #if defined(WINDOW_SCALE)
+   buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 320, 240);
+ #endif
+diff --git a/src/views/calculator_view.h b/src/views/calculator_view.h
+index 8a90cf7..69849fc 100644
+--- a/src/views/calculator_view.h
++++ b/src/views/calculator_view.h
+@@ -4,6 +4,8 @@
+ 
+ #include "calculator_layout.h"
+ 
++#include <algorithm>
++
+ namespace ui
+ {
+   template<typename LayoutType>
+@@ -38,8 +40,12 @@ namespace ui
+       static char buffer[512];
+       layout.renderValue(buffer, 512, calculator.value());
+       auto texture = gvm->cache()->get(buffer, VALUE_LABEL_KEY, gvm->font());
+-      SDL_Rect dest = { dbounds.x + dbounds.w - 14, dbounds.y + 5, texture->second.rect.w, texture->second.rect.h };
+-      SDL_RenderCopy(renderer, texture->second.texture, nullptr, &dest);
++      const int available = dbounds.w - 20;
++      SDL_Rect src = { std::max(0, texture->second.rect.w - available), 0,
++                       std::min(texture->second.rect.w, available), texture->second.rect.h };
++      SDL_Rect dest = { dbounds.x + dbounds.w - 10 - src.w, dbounds.y + 5,
++                        src.w, src.h };
++      SDL_RenderCopy(renderer, texture->second.texture, &src, &dest);
+ 
+       if (calculator.hasMemory())
+         gvm->blit(gvm->cache()->texture(), gvm->cache()->get("m", gvm->tinyFont())->second, 20, 18);
+@@ -75,12 +81,12 @@ namespace ui
+           layout.hoverNext(0, 1);
+         buttonPressed = false;
+         break;
+-      case SDLK_SPACE:
++      case SDLK_LSHIFT:
+         calculator.set(0);
+         calculator.clearStacks();
+         layout.getDigits().resetPointMode();
+         break;
+-      case SDLK_LALT:
++      case SDLK_LCTRL:
+         if (!event.key.repeat)
+         {
+           buttonPressed = press;

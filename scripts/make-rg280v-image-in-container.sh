@@ -58,6 +58,16 @@ cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
 cp /workspace/output/rg280v-apps/input-test-rg280v.opk "$data_root/apps/"
 cp /workspace/output/rg280v-apps/input-test-rg280v-source.tar.gz \
     "$data_root/plumos/licenses/"
+for name in calculator commander; do
+    cp "/workspace/output/rg280v-apps/$name-rg280v.opk" "$data_root/apps/"
+    cp "/workspace/output/rg280v-apps/$name-rg280v-source.tar.gz" \
+        "$data_root/plumos/licenses/"
+done
+for name in libSDL2-2.0.so.0 libSDL2_image-2.0.so.0 libSDL2_ttf-2.0.so.0; do
+    cp "/workspace/output/rg280v-apps/runtime-lib/$name" "$data_root/plumos/lib/"
+done
+cp /workspace/output/rg280v-apps/runtime-lib/*-LICENSE.txt \
+    "$data_root/plumos/licenses/"
 cp /workspace/output/rg280v-emulators/pcsx4all_rg280v "$data_root/plumos/bin/pcsx4all"
 cp /workspace/output/rg280v-emulators/pcsx4all-source/gpl.txt \
     "$data_root/plumos/licenses/pcsx4all-GPL.txt"
@@ -138,6 +148,12 @@ for path in /local/bin/rg280v-fbshow \
             /plumos/bin/plumos-opk-app-launch \
             /apps/input-test-rg280v.opk \
             /plumos/licenses/input-test-rg280v-source.tar.gz \
+            /apps/calculator-rg280v.opk /apps/commander-rg280v.opk \
+            /plumos/licenses/calculator-rg280v-source.tar.gz \
+            /plumos/licenses/commander-rg280v-source.tar.gz \
+            /plumos/lib/libSDL2-2.0.so.0 \
+            /plumos/lib/libSDL2_image-2.0.so.0 \
+            /plumos/lib/libSDL2_ttf-2.0.so.0 \
             /plumos/bin/plumos-fceux-prepare \
             /plumos/config/70-plumos-gpio-keys.rules \
             /plumos/emulators/fceux_gcw0-2.6.6-2023-08-30.opk \
