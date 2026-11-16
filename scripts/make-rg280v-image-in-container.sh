@@ -45,6 +45,7 @@ mkdir -p "$data_root/local/bin" "$data_root/local/share" "$data_root/local/init.
 printf 'RG280V first-boot seed v1\n' > "$data_root/plumos/provision/seed-v1"
 cp /workspace/output/rg280v-status/rg280v-fbshow "$data_root/local/bin/rg280v-fbshow"
 cp /workspace/output/rg280v-status/adb-ready.ppm "$data_root/local/share/adb-ready.ppm"
+cp /workspace/output/rg280v-status/boot-logo.ppm "$data_root/local/share/boot-logo.ppm"
 cp /workspace/output/rg280v-status/first-boot.ppm "$data_root/local/share/first-boot.ppm"
 cp /workspace/output/rg280v-status/first-boot-error.ppm "$data_root/local/share/first-boot-error.ppm"
 cp /workspace/board/rg280v/adb/S90status "$data_root/local/init.d/S90status"
@@ -122,6 +123,7 @@ truncate -s 0 "$stage/data.ext4"
 truncate -s $((data_sectors * 512)) "$stage/data.ext4"
 mkfs.ext4 -F -q -d "$data_root" -L PLUMOSDATA "$stage/data.ext4"
 for path in /local/bin/rg280v-fbshow /local/share/adb-ready.ppm \
+            /local/share/boot-logo.ppm \
             /local/share/first-boot.ppm /local/share/first-boot-error.ppm \
             /local/init.d/S90status /local/init.d/S94hotkeys /local/init.d/S95frontend \
             /plumos/bin/plumos-controller-ui /plumos/bin/plumos-library-scan \

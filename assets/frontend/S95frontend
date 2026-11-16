@@ -8,18 +8,10 @@ case "${1:-}" in
             exit 0
         fi
         mkdir -p "$root/Logs" "$root/state/frontend"
-        sd2_fixed=0
-        if grep ' /media/data/sd2 vfat ' /proc/mounts | grep -q 'iocharset=iso8859-1'; then
-            if umount /media/data/sd2; then
-                if mount -t vfat -o ro,nosuid,nodev,utf8,umask=022 \
-                    /dev/mmcblk1p1 /media/data/sd2; then
-                    sd2_fixed=1
-                else
-                    mount -t vfat -o ro,nosuid,nodev /dev/mmcblk1p1 /media/data/sd2
-                fi
-            fi
-        fi
-        if [ "$sd2_fixed" = 1 ] || [ ! -s "$root/state/frontend/library-index.json" ]; then
+        # rcS mounts SD2 with UTF-8. Its mount listing can still include
+        # iocharset=iso8859-1, so testing that string caused a full scan on
+        # every boot. ROM lists refresh on entry, and TOP has a manual refresh.
+        if [ ! -s "$root/state/frontend/library-index.json" ]; then
             if [ -d /media/data/sd2/roms ]; then
                 sdcard=/media/data/sd2
             else

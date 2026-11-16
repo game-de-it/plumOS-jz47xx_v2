@@ -2,3 +2,5 @@ CONFIG_SND_USB=y
 CONFIG_SND_USB_AUDIO=m
 CONFIG_USB_MON=m
 CONFIG_EXT4_FS=y
+# The boot screen is drawn by plumOS after fb0 becomes available.
+# CONFIG_LOGO is not set
