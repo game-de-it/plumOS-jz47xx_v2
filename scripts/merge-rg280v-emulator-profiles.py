@@ -12,7 +12,7 @@ defaults = json.loads(defaults_path.read_text())
 supported = {
     "nes", "fds", "gb", "gbc", "sfc", "gba", "megadrive", "mastersystem",
     "gamegear", "sega32x", "segacd", "pcengine", "supergrafx", "pcenginecd",
-    "psx", "wonderswan", "fbneo",
+    "psx", "wonderswan", "fbneo", "msx",
 }
 profiles = {system["id"]: system for system in defaults["systems"] if system["id"] in supported}
 installed_ids = {system["id"] for system in installed["systems"]}

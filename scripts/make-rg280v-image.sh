@@ -11,6 +11,11 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 PLUMOS_PICOARCH_RECIPES="$repo_root/scripts/rg280v-picoarch-extra-cores.tsv" \
     PLUMOS_PICOARCH_CORE_FILTER=mednafen_wswan \
     "$repo_root/scripts/build-rg280v-picoarch-cores.sh"
+for msx_core in fmsx bluemsx; do
+    PLUMOS_PICOARCH_RECIPES="$repo_root/scripts/rg280v-picoarch-extra-cores.tsv" \
+        PLUMOS_PICOARCH_CORE_FILTER="$msx_core" \
+        "$repo_root/scripts/build-rg280v-picoarch-cores.sh"
+done
 "$repo_root/scripts/build-rg280v-fceux-menu.sh"
 "$repo_root/scripts/build-rg280v-gambatte-menu.sh"
 "$repo_root/scripts/build-rg280v-emulator-libs.sh"

@@ -47,11 +47,22 @@ if [[ "${PLUMOS_PICOARCH_ONLY_EXTRA:-0}" != 1 ]]; then
         "$remote/licenses/mednafen_wswan-COPYING" 0644
     copy_checked "$out/mednafen_wswan-rg280v-source.tar.gz" \
         "$remote/licenses/mednafen_wswan-rg280v-source.tar.gz" 0644
+    for msx_core in fmsx bluemsx; do
+        copy_checked "$out/${msx_core}_libretro.so" \
+            "$remote/picoarch/cores/${msx_core}_libretro.so" 0644
+        copy_checked "$out/${msx_core}-rg280v-source.tar.gz" \
+            "$remote/licenses/${msx_core}-rg280v-source.tar.gz" 0644
+    done
+    copy_checked "$out/picoarch-cores/fmsx/LICENSE" \
+        "$remote/licenses/fmsx-LICENSE" 0644
+    copy_checked "$out/picoarch-cores/bluemsx/license.txt" \
+        "$remote/licenses/bluemsx-license.txt" 0644
 fi
 
 if [[ "${PLUMOS_PICOARCH_INCLUDE_EXTRA:-0}" == 1 ]]; then
     while IFS='|' read -r id class repo ref subdir makefile args; do
         [[ -z "$id" || "$id" == \#* ]] && continue
+        [[ -z "${PLUMOS_PICOARCH_CORE_FILTER:-}" || "$id" == "$PLUMOS_PICOARCH_CORE_FILTER" ]] || continue
         [[ -s "$out/${id}_libretro.so" ]] || continue
         copy_checked "$out/${id}_libretro.so" \
             "$remote/picoarch/cores/${id}_libretro.so" 0644

@@ -129,6 +129,10 @@ PY
         git -C "$checkout" archive --format=tar.gz \
             --output="$out/mednafen_wswan-rg280v-source.tar.gz" HEAD
     fi
+    if [[ "$id" == fmsx || "$id" == bluemsx ]]; then
+        git -C "$checkout" archive --format=tar.gz \
+            --output="$out/${id}-rg280v-source.tar.gz" HEAD
+    fi
     file "$out/${id}_libretro.so"
     shasum -a 256 "$out/${id}_libretro.so"
 }

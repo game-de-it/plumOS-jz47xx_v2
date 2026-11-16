@@ -53,6 +53,16 @@ copy_checked "$local_emulators/picoarch-cores/mednafen_wswan/COPYING" \
     "$remote/licenses/mednafen_wswan-COPYING" 0644
 copy_checked "$local_emulators/mednafen_wswan-rg280v-source.tar.gz" \
     "$remote/licenses/mednafen_wswan-rg280v-source.tar.gz" 0644
+for msx_core in fmsx bluemsx; do
+    copy_checked "$local_emulators/${msx_core}_libretro.so" \
+        "$remote/picoarch/cores/${msx_core}_libretro.so" 0644
+    copy_checked "$local_emulators/${msx_core}-rg280v-source.tar.gz" \
+        "$remote/licenses/${msx_core}-rg280v-source.tar.gz" 0644
+done
+copy_checked "$local_emulators/picoarch-cores/fmsx/LICENSE" \
+    "$remote/licenses/fmsx-LICENSE" 0644
+copy_checked "$local_emulators/picoarch-cores/bluemsx/license.txt" \
+    "$remote/licenses/bluemsx-license.txt" 0644
 copy_checked "$local_emulators/picoarch-rg280v-source.tar.gz" \
     "$remote/licenses/picoarch-rg280v-source.tar.gz" 0644
 copy_checked "$local_emulators/mednafen_pce_fast-rg280v-source.tar.gz" \

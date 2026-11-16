@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-16 — MSXのRA経路をPicoArchへ変更し、起動ファイルを補完
+
+- FEのMSX候補を `picoarch:fmsx` と `picoarch:bluemsx` に変更し、既定をfMSXにした。マージ処理にもMSXを追加。実機設定の差分はMSXのみで、SHA-256は `8c4f65c763f02a10afe687b1b6e0e699cb1ce80a961a9b5b8d2d356864c938ce`。
+- fMSXコアと必須BIOS 5本・ディスク用BIOSが実機のPicoArch参照先に無かったため、固定リビジョンのコアをビルドし、手元のBIOSを公式MD5と転送後SHA-256で照合して配置した。blueMSXでは自動選択される `MSX2+` の機種設定だけがBIOS領域に欠けていた。SD2にある完全版からその設定を補い、参照先の共有ROM 8本とデータベースを確認した。BIOSはGitとSDイメージに含めない。
+- `usas.rom` を両コアで短時間起動し、DRM画像でゲームのタイトル画面を確認。計測区間の表示は両方とも約60 FPS。音・入力・メニュー終了後のFE復帰は実機での確認待ち。詳細は `docs/validation/rg280v-msx-pico-fe-2026-11-16.md`。
+
 ## 2026-11-16 — FBNeoを性能不足でFEから除外
 
 - ユーザーがPicoArch FBNeoの実機動作を約12 FPSと報告し、FEからの廃止を指定。`assets/frontend/systems.json` の `fbneo.enabled` を `false` にし、今後のプロファイル更新でも再有効化されないようマージ処理に反映した。
