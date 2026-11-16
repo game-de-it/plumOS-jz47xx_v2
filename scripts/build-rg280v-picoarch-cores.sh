@@ -38,6 +38,9 @@ build_one() {
     if [[ "$id" == mednafen_supafaust ]]; then
         python3 "$repo_root/scripts/patch-rg280v-supafaust.py" "$checkout"
     fi
+    if [[ "$id" == pcsx_rearmed ]]; then
+        python3 "$repo_root/scripts/patch-rg280v-pcsx-rearmed.py" "$checkout"
+    fi
     case "$id" in
         opera|mednafen_pcfx)
             rthreads="$source_dir/libretro-common/rthreads/rthreads.c" ;;

@@ -15,4 +15,19 @@ PCSX4ALL公開OPKのELFは **Hard float**、現在のrootfsのuClibcと今回ビ
 
 Lightrecのコアダンプで生成コード領域まで実行したことは確認できたが、`si_code=0` のためダンプの `si_addr` を通常のメモリアクセス違反位置として断定しない。`strace`付き実行は12秒で時間切れとなり、通常起動とは挙動が異なった。計測器の有無を混ぜて安定性を判定しない。
 
-FEのPSX既定候補は現行PCSX ReARMedのまま。実用候補にするには、LightrecのMIPS生成コードのクラッシュ解消、またはPCSX4ALLをSoft float ABIでビルドし、実機で映像・音声・FPS・入力・SELECT＋STARTメニュー・FE復帰を確認する必要がある。今回の試験ではユーザーによる実機の音声と操作の確認は行っていない。
+上の表は初期調査時点の結果。後続のPCSX4ALL移植とLightrec修正の結果を以下に追記する。
+
+## LightrecのMIPS生成コード修正
+
+PCSX4ALLは独自のMIPS→MIPS再コンパイラを使用し、Lightrecは使用していない。PCSX ReARMed側のLightrecクラッシュを再調査した。再生成したコアダンプでは、MIPS JITコード `0x10800e90` の入口に、プロローグより先に `lw v1,612(v1)` が残っていた。呼び出し元は `v1=0` に設定しており、実際の最初のSIGSEGVはアドレス `0x264` への参照だった。
+
+[TreeFrogUI向けPCSX ReARMed移植のコミット `2f0919a`](https://github.com/tzubertowski/TreeFrogUI_pcsx_rearmed/commit/2f0919a) に同じ故障パターンの修正がある。GNU LightningのMIPS生成器が関数生成を再試行するとき、遅延スロットに保留された命令を消していなかった。`_jitc->inst.pend = 0` を再試行前に入れる最小修正を適用した。併せてLightrecの直接アドレス方式で要求アドレス以外にmmapされても続行しないよう、4か所の匿名マッピングに `MAP_FIXED_NOREPLACE` を追加した。RG280Vのstraceでは生成コード領域 `0x10800000` が要求通り確保された。変更は `scripts/patch-rg280v-pcsx-rearmed.py` に置き、コア再ビルド時にも再適用する。
+
+修正コア SHA-256: `6d9f5f40f966706be876f202d37f1e21ea77c0bab2fe8a69e10545041638feb4`。ADBで同一ハッシュを照合してRG280Vへ配置した。FEのPSX既定候補はPCSX4ALLのまま、PCSX ReARMedを第2候補として維持した。
+
+| 自動実機試験 | 結果 |
+| --- | --- |
+| `sin_FortuneQuest.cue`、70秒 | watchdog timeoutまでSIGSEGVなし。DRM取得画像でタイトル画面から次の街並みシーンへ進むことを確認。起動後の計測区間で約54～59画面更新/秒。 |
+| `Tobal 2 (Japan) (v1.1).cue`、45秒 | watchdog timeoutまでSIGSEGVなし。DRM取得画像でSQUARESOFTロゴから次のムービーへ進むことを確認。 |
+
+この自動試験は起動と画面進行を確認した。音声計測は起動直後約10秒で無音を記録しただけなので、ゲーム内の音声品質は判定していない。十字キー入力、SELECT＋STARTメニュー、FE復帰もユーザーの実機確認待ち。ログと画像はGit管理外の `output/rg280v-emulators/` と本体の `Logs/picoarch/` に保存した。
