@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=SDL Terminal
+Comment=Terminal with on-screen keyboard
+Exec=st-sdl-rg280v.sh
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=st
+Categories=applications;

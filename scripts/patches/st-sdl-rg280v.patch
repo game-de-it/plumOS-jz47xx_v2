@@ -1,0 +1,91 @@
+diff --git a/keyboard.c b/keyboard.c
+index 95aff3f..0328c6b 100644
+--- a/keyboard.c
++++ b/keyboard.c
+@@ -16,7 +16,7 @@
+ #define KEY_SHIFT SDLK_TAB // L
+ #define KEY_LOCATION SDLK_LSHIFT // Y
+ #define KEY_ACTIVATE SDLK_SPACE // X
+-#define KEY_QUIT SDLK_HOME // SELECT
++#define KEY_QUIT SDLK_HOME // SELECT+START is handled below on RG280V
+ #define KEY_HELP SDLK_RETURN // START
+ #define KEY_TAB SDLK_ESCAPE // START
+ #define KEY_RETURN SDLK_RETURN // START
+@@ -114,7 +114,11 @@ char* help =
+ "  R2:     right\n"
+ "  L3:     up\n"
+ "  R3:     down\n"
++#ifdef PLUMOS_RG280V
++"  SELECT+START: quit\n\n"
++#else
+ "  POWER:  quit\n\n"
++#endif
+ "Cheatcheet (tutorial at www.shellscript.sh):\n"
+ "  TAB key         complete path\n"
+ "  UP/DOWN keys    navigate history\n"
+@@ -255,6 +259,14 @@ int compute_new_col(int visual_offset, int old_row, int new_row) {
+ 
+ int handle_keyboard_event(SDL_Event* event) {
+ 	static int visual_offset = 0;
++#ifdef PLUMOS_RG280V
++	static int select_held = 0, start_held = 0;
++	if (event->key.keysym.sym == SDLK_ESCAPE)
++		select_held = event->key.type == SDL_KEYDOWN;
++	if (event->key.keysym.sym == SDLK_RETURN)
++		start_held = event->key.type == SDL_KEYDOWN;
++	if (select_held && start_held) exit(0);
++#endif
+ 	if(event->key.type == SDL_KEYDOWN && !(event->key.keysym.mod & KMOD_SYNTHETIC) && event->key.keysym.sym == KEY_ACTIVATE) {
+ 		active = ! active;
+ 		return 1;
+diff --git a/st.c b/st.c
+index cf72fce..232da6f 100644
+--- a/st.c
++++ b/st.c
+@@ -430,6 +430,16 @@ void
+ xflip(void) {
+ 	if(xw.win == NULL) return;
+     //printf("flip\n");
++#ifdef PLUMOS_RG280V
++	SDL_Surface *logical = SDL_CreateRGBSurface(SDL_SWSURFACE, 320, 240, 16,
++	    screen->format->Rmask, screen->format->Gmask,
++	    screen->format->Bmask, screen->format->Amask);
++	if (!logical) return;
++	SDL_BlitSurface(xw.win, NULL, logical, NULL);
++	draw_keyboard(logical);
++	SDL_SoftStretch(logical, NULL, screen, NULL);
++	SDL_FreeSurface(logical);
++#else
+ #ifdef RS97_NO
+     SDL_Surface* buffer = SDL_CreateRGBSurface(SDL_SWSURFACE, xw.w, xw.h, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+     SDL_BlitSurface(xw.win, NULL, buffer, NULL);
+@@ -450,6 +460,7 @@ xflip(void) {
+ #else
+ 		SDL_BlitSurface(xw.win, NULL, screen, NULL);
+ 		draw_keyboard(screen);
++#endif
+ #endif
+ 
+ 	if(SDL_Flip(screen)) {
+@@ -2351,8 +2362,8 @@ sdlinit(void) {
+     //xw.w = initial_width;
+     //xw.h = initial_height;
+ 
+-#ifdef RS97_SCREEN_480
+-	if(!(screen = SDL_SetVideoMode(320, 480, 16, SDL_SWSURFACE | SDL_DOUBLEBUF))) {
++#if defined(RS97_SCREEN_480) || defined(PLUMOS_RG280V)
++	if(!(screen = SDL_SetVideoMode(320, 480, 16, SDL_SWSURFACE))) {
+ #else
+ 	if(!(screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_DOUBLEBUF))) {
+ #endif
+@@ -2740,8 +2751,8 @@ cresize(int width, int height)
+ 	row = (xw.h - 2*borderpx) / xw.ch;
+ 
+     printf("set videomode %dx%d\n", xw.w, xw.h);
+-#ifdef RS97_SCREEN_480
+-	if(!(screen = SDL_SetVideoMode(320, 480, 16, SDL_SWSURFACE | SDL_DOUBLEBUF))) {
++#if defined(RS97_SCREEN_480) || defined(PLUMOS_RG280V)
++	if(!(screen = SDL_SetVideoMode(320, 480, 16, SDL_SWSURFACE))) {
+ #else
+ 	if(!(screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_DOUBLEBUF))) {
+ #endif

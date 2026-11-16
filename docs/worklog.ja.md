@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-17 — SDL TerminalをRG280Vに移植
+
+- GCW Zero系の `st-sdl` を固定コミットからMIPS Soft floatで再ビルド。320×240の端末画面と仮想キーボードを320×480へ縦2倍表示し、SELECT＋STARTでFEへ戻るようにした。
+- OPKと変更済みソースをSD1へ配置し、今後のイメージ生成にも追加。実機のFE→Apps→起動、仮想キー入力、終了後のFE復帰を画面取得と入力注入で確認した。詳細は `docs/validation/rg280v-st-sdl-2026-11-17.md`。
+
 ## 2026-11-17 — GCW Zero系Calculator・CommanderをRG280V向けに再ビルド
 
 - SDL2、SDL2_image、SDL2_ttfをRG280V用Buildrootでビルドし、両アプリのソースを固定コミットからMIPS Soft floatで再ビルドした。OPKと必要な共有ライブラリをSD1へ配置し、今後のイメージ生成にも追加した。
