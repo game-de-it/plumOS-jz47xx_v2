@@ -7984,7 +7984,7 @@ static int ui_fbdev_reserves_footer_space(const struct ui_state *ui) {
     return 0;
   }
   if (runtime_device_is_rg280v() && ui->screen == SCREEN_SETTINGS &&
-      ui->settings_category == SETTINGS_CATEGORY_UI) {
+      ui->settings_category != SETTINGS_CATEGORY_SYSTEM_BRIGHTNESS_TEST) {
     return 0;
   }
   switch (ui->screen) {
@@ -8009,7 +8009,7 @@ static size_t ui_fbdev_text_window_size(const struct ui_state *ui) {
   int h = 480;
   int settings_family;
   int footer_reserved;
-  int rg280v_ui_settings;
+  int rg280v_settings;
   int entry_scale;
   int line_height;
   int first_entry_y;
@@ -8025,13 +8025,13 @@ static size_t ui_fbdev_text_window_size(const struct ui_state *ui) {
 
   settings_family = ui_fbdev_uses_settings_family_layout(ui);
   footer_reserved = ui_fbdev_reserves_footer_space(ui);
-  rg280v_ui_settings = runtime_device_is_rg280v() &&
-                       ui->screen == SCREEN_SETTINGS &&
-                       ui->settings_category == SETTINGS_CATEGORY_UI;
+  rg280v_settings = runtime_device_is_rg280v() &&
+                    ui->screen == SCREEN_SETTINGS &&
+                    ui->settings_category != SETTINGS_CATEGORY_SYSTEM_BRIGHTNESS_TEST;
   entry_scale = 2;
-  line_height = rg280v_ui_settings ? 34 : entry_scale * 12;
+  line_height = rg280v_settings ? 34 : entry_scale * 12;
   first_entry_y = settings_family ? 82 : 104;
-  bottom_y = h - (rg280v_ui_settings ? 18 : footer_reserved ? 76 : 34);
+  bottom_y = h - (rg280v_settings ? 18 : footer_reserved ? 76 : 34);
   if (line_height <= 0 || bottom_y < first_entry_y) {
     return 1;
   }
@@ -9402,8 +9402,8 @@ static void render_settings(struct ui_state *ui) {
   ui_printf(ui, "plumOS controller UI - %s\n",
             settings_category_title(ui, ui->settings_category));
   ui_printf(ui, "settings_screen=1\n");
-  if (runtime_device_is_rg280v() && ui->settings_category == SETTINGS_CATEGORY_UI) {
-    ui_printf(ui, "rg280v_ui_settings_screen=1\n");
+  if (runtime_device_is_rg280v()) {
+    ui_printf(ui, "rg280v_settings_screen=1\n");
   }
   if (ui->settings_category == SETTINGS_CATEGORY_SYSTEM_INFORMATION) {
     ui_printf(ui, "system_info_screen=1\n");
@@ -9433,7 +9433,7 @@ static void render_settings(struct ui_state *ui) {
     }
   }
   if (ui_renderer_a30_tty_capable(ui) && ui->setting_count > 0 &&
-      !(runtime_device_is_rg280v() && ui->settings_category == SETTINGS_CATEGORY_UI)) {
+      !runtime_device_is_rg280v()) {
     const struct setting_entry *entry = &ui->setting_entries[ui->settings_cursor];
     setting_help_lines(ui, entry, help1, sizeof(help1), help2, sizeof(help2));
     ui_printf(ui, "footer1=%s\n", help1);

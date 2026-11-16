@@ -3455,7 +3455,7 @@ static int plumos_fbdev_is_hidden_line(const char *line) {
       strncmp(line, "core_settings_screen=", 21) == 0 ||
       strncmp(line, "menu_screen=", 12) == 0 ||
       strncmp(line, "settings_screen=", 16) == 0 ||
-      strncmp(line, "rg280v_ui_settings_screen=", 26) == 0 ||
+      strncmp(line, "rg280v_settings_screen=", 23) == 0 ||
       strncmp(line, "system_info_screen=", 19) == 0 ||
       strncmp(line, "help_screen=", 12) == 0 ||
       strncmp(line, "scraping_screen=", 16) == 0 ||
@@ -3589,7 +3589,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
   int core_settings_page;
   int system_info_page;
   int help_page;
-  int rg280v_ui_settings_page;
+  int rg280v_settings_page;
   int rom_list_page;
   int entry_scale;
   int line_height;
@@ -3615,8 +3615,8 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                                                    "system_info_screen=1");
   help_page = plumos_fbdev_has_prefixed_line(lines, line_count,
                                            "help_screen=1");
-  rg280v_ui_settings_page = plumos_fbdev_has_prefixed_line(
-      lines, line_count, "rg280v_ui_settings_screen=1");
+  rg280v_settings_page = plumos_fbdev_has_prefixed_line(
+      lines, line_count, "rg280v_settings_screen=1");
   settings_page = core_settings_page ||
                   plumos_fbdev_has_prefixed_line(lines, line_count,
                                                  "settings_screen=1");
@@ -3626,7 +3626,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
                     settings_page;
   /* RG280V is 320 pixels wide. The 3x font clips the core selector. */
   entry_scale = core_settings_page && w > 400 ? 3 : 2;
-  line_height = rg280v_ui_settings_page ? 34 :
+  line_height = rg280v_settings_page ? 34 :
                 (core_settings_page && h <= 240 ? 22 : entry_scale * 12);
   cursor_x = settings_family ? 12 : 18;
   name_x = cursor_x + (settings_family ? 18 : 24);
@@ -3672,7 +3672,7 @@ static int plumos_fbdev_render_generic(struct plumos_fbdev_renderer *r,
     int keyboard_row = wifi_keyboard_row >= 0;
     int keyboard_selected = keyboard_row && (int)i == wifi_keyboard_row;
     uint32_t fg = selected[i] ? p->selection_foreground : p->foreground;
-    if (y > h - (rg280v_ui_settings_page ? 18 : 34)) {
+    if (y > h - (rg280v_settings_page ? 18 : 34)) {
       break;
     }
     if (selected[i] && !keyboard_selected) {
