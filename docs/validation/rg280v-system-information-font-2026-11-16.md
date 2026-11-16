@@ -11,4 +11,4 @@ Measured with the bundled font at 18 pixels, the title is 269 pixels wide and
 298 and 276 pixels respectively. The updated FE binary was installed on SD1,
 with the previous binary saved under `/media/data/local/backups/`.
 
-Physical inspection of the updated screen is pending.
+The user confirmed that the text fits on the RG280V after the update.
