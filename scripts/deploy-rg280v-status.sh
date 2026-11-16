@@ -7,10 +7,8 @@ out="$repo_root/output/rg280v-status"
 
 adb connect 10.1.1.2:5555
 adb -s 10.1.1.2:5555 shell \
-    'mkdir -p /media/data/local/bin /media/data/local/share /media/data/local/init.d'
+    'mkdir -p /media/data/local/bin /media/data/local/share'
 adb -s 10.1.1.2:5555 push "$out/rg280v-fbshow" /media/data/local/bin/rg280v-fbshow
-adb -s 10.1.1.2:5555 push "$out/adb-ready.ppm" /media/data/local/share/adb-ready.ppm
-adb -s 10.1.1.2:5555 push "$repo_root/board/rg280v/adb/S90status" \
-    /media/data/local/init.d/S90status
+adb -s 10.1.1.2:5555 push "$out/boot-logo.ppm" /media/data/local/share/boot-logo.ppm
 adb -s 10.1.1.2:5555 shell \
-    'chmod 0755 /media/data/local/bin/rg280v-fbshow /media/data/local/init.d/S90status; /media/data/local/init.d/S90status start'
+    'chmod 0755 /media/data/local/bin/rg280v-fbshow; rm -f /media/data/local/init.d/S90status /media/data/local/share/adb-ready.ppm'

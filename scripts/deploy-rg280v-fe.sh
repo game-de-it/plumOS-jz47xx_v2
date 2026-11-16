@@ -64,10 +64,9 @@ copy_if_missing "$repo_root/assets/frontend/apps.json" "$remote/config/frontend/
 copy_if_missing "$repo_root/assets/frontend/settings.json" "$remote/config/frontend/settings.json"
 copy_if_missing "$repo_root/assets/frontend/system-settings.json" "$remote/config/system/settings.json"
 if [[ "${PLUMOS_FE_INSTALL_SERVICE:-0}" == 1 ]]; then
-    copy_checked "$repo_root/board/rg280v/adb/S90status" \
-        /media/data/local/init.d/S90status 0755
     copy_checked "$repo_root/assets/frontend/S95frontend" \
         /media/data/local/init.d/S95frontend 0755
 fi
+"${adb[@]}" shell 'rm -f /media/data/local/init.d/S90status /media/data/local/share/adb-ready.ppm'
 copy_checked "$repo_root/assets/frontend/S94hotkeys" \
     /media/data/local/init.d/S94hotkeys 0755
