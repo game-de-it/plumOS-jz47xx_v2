@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — NGPCを性能不足でFEから除外
+
+- ユーザーがFE登録順のNGPCを実機で確認し、約40 FPSのため除外を指定。確認したROM名や音声・操作の個別結果は未取得。`assets/frontend/systems.json` の `ngpc.enabled` を `false` にした。
+- 実機の設定もNGPCの有効フラグだけを変更してハッシュ照合し、FEを再起動。再スキャンでNGPCの27本が対象外となり、登録総数は729本から702本。FE稼働、PS1のPCSX4ALL既定、SD2読み取り専用を確認。NGPCのROMとコアは残す。次の登録順はWonderSwan。
+
 ## 2026-11-16 — PS1のPCSX ReARMedをFE候補から除外
 
 - ユーザーの指定でPS1の候補をPCSX4ALLだけに変更し、既定も維持。マージ前後のJSON比較でPS1候補一覧以外は不変と確認した。
