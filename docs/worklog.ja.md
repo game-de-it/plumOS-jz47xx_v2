@@ -1,10 +1,16 @@
 # 作業ログ
 
+## 2026-11-16 — RUNABOUT-2走行中のReARMed処理内訳を採取
+
+- ユーザーが保存した走行中ステートを両GPUコアで自動ロードし、Frameskip OFF・996 MHzの同一条件で計測。P.E.Op.S.は `retro_run()` 27.2～27.5 ms、画面更新10.4～12.5 ms。Unaiはそれぞれ19.0～19.5 ms、13.8～14.3 msで、合計は約33.3 ms/回だった。
+- 約1 ms間隔のPCサンプリングをMacでシンボル照合した。P.E.Op.S.ではポリゴン描画とBGR555→RGB565色変換、Unaiでもポリゴン描画が主なCPU使用箇所。Unaiは改善するが、60 FPSに必要な16.7 ms/回には届かない。計測方法と割合の解釈は `docs/validation/rg280v-psx-investigation-2026-11-16.md` に記録。
+- 計測用PicoArchを削除して通常版のSHA-256一致を確認し、FEプロセスを復旧。既定のPCSX4ALLとユーザーのセーブデータは変更していない。
+
 ## 2026-11-16 — RG280VのPCSX ReARMedとPCSX4ALLを同一ゲームで比較
 
 - PCSX ReARMedはLightrec有効で起動・操作できる。RUNABOUT-2のFrameskip OFFでは約25～30 FPS。GPUをP.E.Op.S.からUnaiへ変えてもゲーム中は約30 FPSだった。
 - 同じRUNABOUT-2の走行中、PCSX4ALLはDRM取得画面で59/60 FPS。PicoArch診断版でReARMedのFrameskip OFF時を計測すると、`retro_run()`約27 msと画面切替約9～14 msで、60 FPSの16.7 ms予算をコア実行だけで超えていた。詳細は`docs/validation/rg280v-psx-investigation-2026-11-16.md`。
-- 計測用PicoArchは通常版へ戻す。FEのPSX既定候補はPCSX4ALLを維持する。
+- 計測用PicoArchは通常版へ戻した。FEのPSX既定候補はPCSX4ALLを維持する。
 
 ## 2026-11-16 — RG280VのPCSX4ALLをDigital入力で起動
 

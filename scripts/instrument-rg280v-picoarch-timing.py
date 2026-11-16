@@ -20,10 +20,8 @@ replace_once(
     "#include <unistd.h>\n#include <stdlib.h>\n#include <sys/time.h>\n",
 )
 replace_once(
-    "\tstate_resume();\n\n\tdo {\n\t\tcount_fps();\n\t\tadjust_audio();\n\t\tcurrent_core.retro_run();\n\t\tif (!should_quit)\n\t\t\tplat_video_flip();\n\t} while (!should_quit);",
-    '''\tstate_resume();
-
-    const char *timing_path = getenv("PLUMOS_PICOARCH_TIMING_LOG");
+    "\tdo {\n\t\tcount_fps();\n\t\tadjust_audio();\n\t\tcurrent_core.retro_run();\n\t\tif (!should_quit)\n\t\t\tplat_video_flip();\n\t} while (!should_quit);",
+    '''    const char *timing_path = getenv("PLUMOS_PICOARCH_TIMING_LOG");
     FILE *timing_log = timing_path ? fopen(timing_path, "w") : NULL;
     unsigned timing_frames = 0;
     unsigned long long timing_audio_us = 0;

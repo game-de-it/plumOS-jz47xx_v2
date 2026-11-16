@@ -48,4 +48,17 @@ PCSX ReARMedだけHUDを `FPS: <エミュレーション回数/秒> DRAW: <新�
 
 `scripts/instrument-rg280v-picoarch-timing.py` で計測用のPicoArchを別途ビルドした。走行中にFrameskipをOFFへ切り替えた後、120フレーム平均では `retro_run()` が約27.1～27.4 ms、`plat_video_flip()` が約9.3～14.1 ms、全体が約36.5～41.5 ms/フレームだった。取得画面の例は `FPS: 25 DRAW: 12`、CPU約68%で、ユーザーが報告した約30 FPSの症状を再現している。60回/秒の予算16.7 msを `retro_run()` 単体で超えるため、画面同期待ちだけが原因ではない。Frameskip Autoでは同じ走行画面の計測が約44 FPSで、DRAWが6まで減った。Autoは速度を上げる代わりに表示フレームを大きく減らす。音声品質はこの比較では判定していない。
 
-Lightrecは実行ログに `Lightrec RAM usage` が出ており、有効に動作している。ただしLinux上のメモリ配置はLightrecの「sub-par」経路で、PCSX4ALLのMIPS再コンパイラとも異なる。今回の数値からは、ReARMedの `retro_run()` 内のCPUエミュレーション・GPU・動画変換それぞれの寄与までは分離できない。GPU Unaiへの変更だけで60 FPSには届かなかったため、現時点では既定PSX候補をPCSX4ALLのままとする。計測後はPicoArch通常版 SHA-256 `b8979b59a01ccd38f3a6935741ba28c0c58160c9d37b59dc1754b0711c2370ff` に戻し、端末上のハッシュ一致とFEプロセスの稼働を確認した。
+Lightrecは実行ログに `Lightrec RAM usage` が出ており、有効に動作している。ただしLinux上のメモリ配置はLightrecの「sub-par」経路で、PCSX4ALLのMIPS再コンパイラとも異なる。GPU Unaiへの変更だけで60 FPSには届かなかったため、現時点では既定PSX候補をPCSX4ALLのままとする。
+
+### 保存ステートでの同一場面比較と関数サンプリング
+
+RUNABOUT-2の走行中ステートを両コアのslot 0へ配置し、診断専用PicoArchで起動直後に自動ロードした。Frameskipは両方ともOFF、CPUは996 MHz。`ITIMER_PROF`で実行中のPCを約1 ms間隔で採取し、非ストリップ版コアのシンボルへMac上で照合した。通常版PicoArchとは別の診断ビルドを使い、終了後に通常版へ復元した。関数の割合は取得したCPUサンプル中の比率であり、フレーム全体の時間比率ではない。
+
+| 同じ走行場面 | コア処理 `retro_run()` | 画面更新 `plat_video_flip()` | 合計 | PCサンプルの主な位置 |
+| --- | ---: | ---: | ---: | --- |
+| P.E.Op.S. | 27.2～27.5 ms/回 | 10.4～12.5 ms/回 | 37.6～40.0 ms/回 | 1003点。`drawPoly4TEx4` 33.3%、`bgr555_to_rgb565` 17.9%、`primPolyGT4` 10.9%、Lightrec生成コード1.6%。 |
+| GPU Unai | 19.0～19.5 ms/回 | 13.8～14.3 ms/回 | 約33.3 ms/回 | 821点。`gpuPolySpanFn`の主要2種類が計28.3%、`bgr555_to_rgb565` 6.3%、Lightrec生成コード15.5%。 |
+
+数値は各120回平均の定常期で、起動・ステート読込直後の最初の窓は除外した。P.E.Op.S.の走行中はポリゴン描画とBGR555→RGB565変換にCPUが集中していた。GPU Unaiではコア処理が約8 ms短縮したが、画面更新込みでは約33 msで約30回/秒にとどまる。UnaiのLightrec割合が上がったことは、JIT自体が遅くなったことを意味しない。GPU処理が減ると他の処理が相対的に目立つためである。約60回/秒に必要な16.7 msには、Unaiの `retro_run()` 単体でも達していない。次はUnaiのポリゴン処理と色変換、およびSDL画面更新の双方を削減する必要がある。画面・音の品質を維持した最適化の実機確認は未実施。
+
+計測用ソースは `src/profiling/rg280v-pc-sampler.c`、`scripts/analyze-rg280v-pc-samples.py`、`scripts/instrument-rg280v-picoarch-resume.py`、`scripts/instrument-rg280v-picoarch-timing.py` に残した。サンプル・保存ステート・ROMはGitに含めない。計測後は端末のPicoArch通常版 SHA-256 `b8979b59a01ccd38f3a6935741ba28c0c58160c9d37b59dc1754b0711c2370ff` に戻し、ハッシュ一致とFEプロセス稼働を確認した。
