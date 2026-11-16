@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=PDF Viewer
+Comment=View PDF documents
+Exec=pdfviewer-rg280v.sh
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=pdfviewer
+Categories=applications;

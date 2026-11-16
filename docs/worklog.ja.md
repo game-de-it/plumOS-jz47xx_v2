@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-17 — GCW Zero系PDF ViewerをRG280Vへ移植
+
+- OpenDinguxアプリ一覧の残るソース公開アプリからPDF Viewerを選び、配布ソースをSHA-256固定で取得。Xpdf 3.02とアプリをMIPS Soft floatで再ビルドし、320×240論理画面をRG280Vの320×480へ縦2倍表示するよう変更した。
+- Appsから起動し、試験PDFの2ページを表示、Aでページ送り、SELECT＋STARTでFEへ復帰した。OPKと変更済みソースをSD1へ配置し、新規SDイメージ生成にも追加。詳細は `docs/validation/rg280v-pdfviewer-2026-11-17.md`。
+
 ## 2026-11-17 — SDL TerminalをRG280Vに移植
 
 - GCW Zero系の `st-sdl` を固定コミットからMIPS Soft floatで再ビルド。320×240の端末画面と仮想キーボードを320×480へ縦2倍表示し、SELECT＋STARTでFEへ戻るようにした。

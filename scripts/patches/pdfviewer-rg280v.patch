@@ -1,0 +1,261 @@
+diff --git a/dialogs.cpp b/dialogs.cpp
+index 39f9569..281c7a7 100644
+--- a/dialogs.cpp
++++ b/dialogs.cpp
+@@ -27,7 +27,7 @@ void WaitScreen(const char *title, const char *mens)
+ 	WriteCenter(fcen+2, mens);
+ #ifdef GCW0
+ #else
+-  SDL_Flip(screen);
++  VideoFlip();
+ #endif
+ }
+ 
+@@ -113,7 +113,7 @@ void ShowMessage(const char *mens, int colbk, int coltx, bool wait/*=true*/)
+     else pinic=0;
+     fila +=2;
+   }
+-  SDL_Flip(screen);
++  VideoFlip();
+   if(wait) WaitKey();
+ }
+ 
+@@ -121,7 +121,7 @@ void ShowMessage(const char *mens, int colbk, int coltx, bool wait/*=true*/)
+ void ShowError(const char *mens)
+ {
+   ShowMessage(mens, COL_RED, COL_WHITE);
+-  SDL_Flip(screen);
++  VideoFlip();
+   WaitNoKey();
+ }
+ 
+@@ -140,7 +140,7 @@ void ShowListDlg(const char *lins[], int num, int colbk, int coltx)
+     WriteFormat(fila, windab.x+1, "%.*s", ancho, lins[i]);
+     fila += 2;
+   }
+-  SDL_Flip(screen);
++  VideoFlip();
+   WaitKey();
+ }
+ 
+@@ -152,10 +152,10 @@ int GetMenu(const char *mops[], int num, int colbk, int coltx)
+   do {
+     if(key != KEY_NONE) {
+       DrawMenu(mops, num, opc, colbk, coltx);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #ifdef GCW0
+       DrawMenu(mops, num, opc, colbk, coltx);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #endif
+     }
+     SDL_Delay(70);
+@@ -250,7 +250,7 @@ bool OptionsDlg(TOption options[], int num, int colbk, int coltx)
+ 	WriteCenter(windab.y+1, "== Options ==");
+ #ifdef GCW0 //David Knight --Switch keys for GCW0
+ 	WriteString(windab.y+alto-2, 2, "(A) Accept, (B) Cancel");
+-    SDL_Flip(screen);
++    VideoFlip();
+     WindowCen(SCR_COLS-2, alto, colbk);
+ 	WriteCenter(windab.y+1, "== Options ==");
+ 	WriteString(windab.y+alto-2, 2, "(A) Accept, (B) Cancel");
+@@ -263,10 +263,10 @@ bool OptionsDlg(TOption options[], int num, int colbk, int coltx)
+     TOption &opt = options[lin];
+     if(key != KEY_NONE) {
+       DrawOptions(4, options, num, lin, colbk, coltx);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #ifdef GCW0 //David Knight --Doublebuffer
+       DrawOptions(4, options, num, lin, colbk, coltx);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #endif
+ 	  }
+     SDL_Delay(70);
+@@ -340,7 +340,7 @@ bool GetNumberDlg(const char *msg, int min, int max, int *number, int colbk, int
+ 	WriteString(windab.y+4, windab.x+10+ancho, strrango);
+ #ifdef GCW0 //David Knight --Swapped keys in GCW0
+ 	WriteString(windab.y+alto-2, windab.x+1, "(A) Accept, (B) Cancel");
+-    SDL_Flip(screen);
++    VideoFlip();
+     WindowCen(25, alto, colbk);
+     WriteCenter(windab.y+1, titulo.c_str());
+ 	WriteString(windab.y+4, windab.x+1, "Number: ");
+@@ -349,7 +349,7 @@ bool GetNumberDlg(const char *msg, int min, int max, int *number, int colbk, int
+     WriteString(windab.y+alto-2, windab.x+1, "(A) Accept, (B) Cancel");
+ #else
+ 	WriteString(windab.y+alto-2, windab.x+1, "(B) Accept, (A) Cancel");
+-    SDL_Flip(screen);
++    VideoFlip();
+ #endif
+ 
+   char strvalor[20]; // valor cadena
+@@ -359,10 +359,10 @@ bool GetNumberDlg(const char *msg, int min, int max, int *number, int colbk, int
+ 	do {
+     if(key != KEY_NONE) {
+       DrawNumField(4, 9, strvalor, digito, colbk, coltx);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #ifdef GCW0 //David Knight --Doublebuffer
+       DrawNumField(4, 9, strvalor, digito, colbk, coltx);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #endif
+ 	  }
+     SDL_Delay(70);
+@@ -470,10 +470,10 @@ int FileDialog(const char *path, const char *ext, TString *selfile)
+   while (!elegido) {
+     if(key != KEY_NONE) {
+       DrawFileList(lfiles, isel, inic, nlins, COL_FONDO, COL_TEXTO);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #ifdef GCW0 //David Knight --Doublebuffer
+       DrawFileList(lfiles, isel, inic, nlins, COL_FONDO, COL_TEXTO);
+-      SDL_Flip(screen);
++      VideoFlip();
+ #endif
+     }
+     SDL_Delay(70);
+diff --git a/pdfviewer.cpp b/pdfviewer.cpp
+index a044d3e..33c90d0 100644
+--- a/pdfviewer.cpp
++++ b/pdfviewer.cpp
+@@ -102,7 +102,12 @@ void CargarFich()
+   if(!disk.DirExists(path))
+     strcpy(path, pdf.GetAppPath().c_str());
+ #else // gcw0
+-  strcpy(path, "/media/");
++#ifdef PLUMOS_RG280V
++  strcpy(path, "/media/user/Documents/");
++  if (!disk.DirExists(path)) strcpy(path, "/media/user/");
++#else
++  strcpy(path, "/media/");
++#endif
+ #endif
+ 
+   TString selfile;
+@@ -179,7 +184,7 @@ void Ayuda()
+     "",
+ #ifdef CAANOO
+     "Home: Shows the menu",
+-#elifdef GCW0
++#elif defined(GCW0)
+     "Select:     Shows the menu",
+ #else
+     "Select: Shows the menu",
+@@ -484,22 +489,22 @@ int main(int argc, char *args[])
+       {
+         WaitScreen("PdfViewer v" VERSION, "Press Select to show Menu");
+         pdf.ShowInfoBar();
+-        SDL_Flip(screen);
++        VideoFlip();
+         WaitScreen("PdfViewer v" VERSION, "Press Select to show Menu");
+         pdf.ShowInfoBar();
+-        SDL_Flip(screen);
++        VideoFlip();
+       } else {
+         pdf.ShowInfoBar();
+-        SDL_Flip(screen);
++        VideoFlip();
+         if(pdf.ShowPage(screen, ofs.x, ofs.y)){
+           pdf.ShowInfoBar();
+-          SDL_Flip(screen);
++          VideoFlip();
+         }
+       }
+ #else
+         WaitScreen("PdfViewer v" VERSION, "Press Select to show Menu");
+       pdf.ShowInfoBar();
+-      SDL_Flip(screen);
++      VideoFlip();
+ #endif
+     }
+     SDL_Delay(50);
+diff --git a/xpvideo.cpp b/xpvideo.cpp
+index 1cf6738..1daeb20 100644
+--- a/xpvideo.cpp
++++ b/xpvideo.cpp
+@@ -10,7 +10,10 @@
+ #include <string.h>
+ #include "xpvideo.h"
+ 
+-SDL_Surface *screen = NULL;
++SDL_Surface *screen = NULL;
++#ifdef PLUMOS_RG280V
++static SDL_Surface *video_screen = NULL;
++#endif
+ static SDL_Joystick *m_joy = NULL;
+ static int m_txcolor = 0xffffffff; // en RGBA
+ 
+@@ -38,7 +41,16 @@ bool VideoInit()
+ 
+   // create the screen surface, 24 bits rgb (ikari)
+ #ifdef GCW0 //David Knight --Added Hardware triplebuffering
+-  screen = SDL_SetVideoMode(SCR_WIDTH, SCR_HEIGHT, 16, SDL_HWSURFACE|SDL_DOUBLEBUF);
++#ifdef PLUMOS_RG280V
++  video_screen = SDL_SetVideoMode(SCR_WIDTH, SCR_HEIGHT * 2, 16, SDL_SWSURFACE);
++  if (!video_screen) return false;
++  screen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCR_WIDTH, SCR_HEIGHT,
++      video_screen->format->BitsPerPixel, video_screen->format->Rmask,
++      video_screen->format->Gmask, video_screen->format->Bmask,
++      video_screen->format->Amask);
++#else
++  screen = SDL_SetVideoMode(SCR_WIDTH, SCR_HEIGHT, 16, SDL_HWSURFACE|SDL_DOUBLEBUF);
++#endif
+ #else
+   screen = SDL_SetVideoMode(SCR_WIDTH, SCR_HEIGHT, 16, SDL_SWSURFACE);
+ #endif
+@@ -72,6 +84,10 @@ void VideoDone()
+   // cerrar el joystick
+   if(SDL_JoystickOpened(0))
+      SDL_JoystickClose(m_joy);
++#ifdef PLUMOS_RG280V
++  SDL_FreeSurface(screen);
++  screen = NULL;
++#endif
+   SDL_Quit();
+ 
+ #ifdef GPHMODE
+@@ -80,6 +96,17 @@ void VideoDone()
+ #endif
+ }
+ 
++int VideoFlip()
++{
++#ifdef PLUMOS_RG280V
++  if (!screen || !video_screen) return -1;
++  if (SDL_SoftStretch(screen, NULL, video_screen, NULL) < 0) return -1;
++  return SDL_Flip(video_screen);
++#else
++  return SDL_Flip(screen);
++#endif
++}
++
+ // lee tecla con repetición sin bloqueo
+ int ReadKey()
+ {
+@@ -269,6 +296,9 @@ int ReadKey()
+         if (keystates[SDLK_UP]    && keystates[SDLK_RIGHT]) ret = KEY_UPRIGHT;
+         if (keystates[SDLK_DOWN]  && keystates[SDLK_LEFT])  ret = KEY_DOWNLEFT;
+         if (keystates[SDLK_DOWN]  && keystates[SDLK_RIGHT]) ret = KEY_DOWNRIGHT;
++#ifdef PLUMOS_RG280V
++        if (keystates[SDLK_ESCAPE] && keystates[SDLK_RETURN]) exit(0);
++#endif
+         if (keystates[SDLK_LCTRL])                         {ret = KEY_FB;
+             SDL_Delay(100);
+         }
+diff --git a/xpvideo.h b/xpvideo.h
+index 32ae877..1ce4a19 100644
+--- a/xpvideo.h
++++ b/xpvideo.h
+@@ -22,7 +22,8 @@
+ #define SCR_COLS (SCR_WIDTH >> 3)  // 40
+ #define SCR_ROWS (SCR_HEIGHT >> 3) // 30
+ 
+-extern SDL_Surface *screen;
++extern SDL_Surface *screen;
++int VideoFlip();
+ 
+ #define KEY_NONE -1
+ 
