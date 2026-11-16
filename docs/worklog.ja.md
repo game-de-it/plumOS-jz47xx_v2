@@ -1,8 +1,13 @@
 # 作業ログ
 
+## 2026-11-16 — Sega CDのGenesis Plus GXをFE候補から除外、PCエンジン2コア合格
+
+- ユーザーがSega CDのGenesis Plus GXに性能上の問題があると補足し、FEからの除外を指定。Sega CDはPicoDriveだけを候補と既定に変更した。実機の古いGenesis Plus GX選択履歴をクリアし、FE再起動後にPicoDriveのみ表示されることを確認。ほかの機種のGenesis Plus GX候補は維持。
+- PCエンジンのPCE FastとSuperGrafxはユーザーが両方合格と報告。候補設定はそのまま。次はSuperGrafx。詳細は `docs/validation/rg280v-segacd-pcengine-cores-2026-11-16.md`。
+
 ## 2026-11-16 — Sega CD実機確認、次はPCエンジン
 
-- ユーザーがFE登録順でSega CDを確認し、約50〜60 FPSで「ぎりぎり遊べる」と報告。FEのSega CD登録と候補2件（Genesis Plus GX、PicoDrive）は維持する。候補別のFPS内訳、映像・音声・操作・FE復帰の個別結果は未取得。
+- ユーザーがFE登録順でSega CDを確認し、約50〜60 FPSで「ぎりぎり遊べる」と報告。この時点では候補2件（Genesis Plus GX、PicoDrive）を維持したが、後続の補足によりGenesis Plus GXを除外した。候補別のFPS内訳、映像・音声・操作・FE復帰の個別結果は未取得。
 - リポジトリと実機のFE設定で、次のPCエンジンにはPCE Fast、SuperGrafxの順に2候補が登録され、既定はPCE Fastであることを確認。ユーザーが続けて実機確認する。
 
 ## 2026-11-16 — 32Xを性能不足でFEから除外

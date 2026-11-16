@@ -707,10 +707,9 @@
         ]
       },
       "launch_profiles": [
-        "picoarch:genesis_plus_gx",
         "picoarch:picodrive"
       ],
-      "default_launch_profile": "picoarch:genesis_plus_gx",
+      "default_launch_profile": "picoarch:picodrive",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": false,
