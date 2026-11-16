@@ -607,7 +607,7 @@
       "short_name": "32X",
       "sort_order": 100,
       "hardware": "console",
-      "enabled": true,
+      "enabled": false,
       "pinned": false,
       "directory_aliases": [
         {

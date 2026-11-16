@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — 32Xを性能不足でFEから除外
+
+- ユーザーが32XのPicoDriveを実機で確認し、約30 FPS止まりと報告。指定に従い `sega32x.enabled=false` とし、既存設定へのマージでも無効状態を維持するよう変更した。
+- 実機へハッシュ照合して反映しFEを再起動。ライブラリ再スキャンで32Xの4本が除外され、登録数は733本から729本。FE稼働、SD2読み取り専用、PS1のPCSX4ALL既定を確認した。ROMとコアは残す。次はSega CD。詳細は `docs/validation/rg280v-sega32x-rom-placement-2026-11-16.md`。
+
 ## 2026-11-16 — PS1既定をPCSX4ALLに確定し、32Xから実機確認を再開
 
 - ユーザーの指定に従い、PS1の既定はPCSX4ALLとする。リポジトリとRG280V実機の `systems.json` の双方で `default_launch_profile` が `standalone:pcsx4all` であることを確認したため、設定変更は不要。

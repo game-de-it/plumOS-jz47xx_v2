@@ -24,6 +24,9 @@ for system in installed["systems"]:
         if system["id"] == "fds":
             # FCEUmm currently renders incorrect colors and runs below full speed.
             system["enabled"] = False
+        if system["id"] == "sega32x":
+            # PicoDrive remains around 30 FPS on RG280V in the hardware test.
+            system["enabled"] = False
 for system in defaults["systems"]:
     if system["id"] in supported and system["id"] not in installed_ids:
         installed["systems"].append(system)
