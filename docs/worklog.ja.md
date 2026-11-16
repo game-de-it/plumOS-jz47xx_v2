@@ -1,5 +1,10 @@
 # 作業ログ
 
+## 2026-11-16 — FBNeoのRA候補をFEから外す
+
+- FEのFBNeo候補と既定を `retroarch:fbneo` から `picoarch:fbneo` に変更し、プロファイルのマージ対象にもFBNeoを加えた。実機へ反映した設定のSHA-256は `cbf2a5a8cc4be502e9029f878a2cba10fa314d48e468442a3021bbb740141934`。実機の設定差分はFBNeoのみで、SD2は読み取り専用のまま。
+- 停止していたPicoArchはTERMに応答しなかったため終了し、FEを復旧した。ログには `airduelm72.zip` の必須ROM 2ファイル不足が記録されていた。現行FBNeoのDATと17本のROMをCRC照合し、`bchopper.zip` は必須23ファイルがすべて一致。実機とMac上の同ファイルのSHA-256も一致した。更新後のFBNeoでの映像・音・操作・FPSは未確認。詳細は `docs/validation/rg280v-fbneo-pico-fe-2026-11-16.md`。
+
 ## 2026-11-16 — WonderSwanのRA候補をPicoArchに置換
 
 - ユーザーがRA経路の廃止を指定し、PicoArchは約50〜60 FPSで遊べると報告。FE候補と既定を `picoarch:mednafen_wswan` のみに変更した。マージ処理、通常配置、SDイメージ作成にも固定リビジョンのコアとソースを組み込んだ。

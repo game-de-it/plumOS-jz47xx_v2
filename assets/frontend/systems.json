@@ -1107,9 +1107,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:fbneo"
+        "picoarch:fbneo"
       ],
-      "default_launch_profile": "retroarch:fbneo",
+      "default_launch_profile": "picoarch:fbneo",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": false,
