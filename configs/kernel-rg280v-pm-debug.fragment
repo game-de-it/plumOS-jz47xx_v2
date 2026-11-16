@@ -1,0 +1,2 @@
+# Diagnostic build only. Enables /sys/power/pm_test for staged suspend checks.
+CONFIG_PM_DEBUG=y
