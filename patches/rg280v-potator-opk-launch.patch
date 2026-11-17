@@ -1,8 +1,110 @@
+diff --git a/common/sound.c b/common/sound.c
+index ee0d56c..63ee25f 100644
+--- a/common/sound.c
++++ b/common/sound.c
+@@ -61,9 +61,10 @@ void sound_stream_update(Uint8 *stream, int len) {
+ 	SVISION_CHANNEL *channel;
+ 	short s;
+ 	unsigned short *left=(unsigned short *) stream;
+-	unsigned short *right=(unsigned short *) (stream+1);
++	unsigned short *right=((unsigned short *)stream) + 1;
+ 
+-	for (i = 0; i < len>>1; i++) {
++	for (i = 0; i < len / 4; i++) {
++        *left = *right = 0;
+ 		s=0;
+ 
+ 		for (channel=m_channel, j=0; j<2; j++, channel++) {
+@@ -157,7 +158,7 @@ void sound_stream_update(Uint8 *stream, int len) {
+ 			}
+ 		}
+ 		
+-		right++; left++;
++		right += 2; left += 2;
+ 	}
+ }
+ 
 diff --git a/platform/opendingux/main_od.c b/platform/opendingux/main_od.c
-index db4120a..38c00dc 100644
+index db4120a..2c9c028 100644
 --- a/platform/opendingux/main_od.c
 +++ b/platform/opendingux/main_od.c
-@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
+@@ -41,59 +41,23 @@ unsigned long SDL_UXTimerRead(void) {
+ }
+ 
+ void graphics_paint(void) {
+-	unsigned short *buffer_scr = (unsigned short *) actualScreen->pixels;
+-	unsigned short *buffer_flip = (unsigned short *) XBuf;
+-	unsigned int W,H,ix,iy,x,y, xfp,yfp;
+-	static char buffer[32];
++    static char buffer[32];
++    unsigned int w = GameConf.m_ScreenRatio ? 320 : SYSVID_WIDTH;
++    unsigned int h = GameConf.m_ScreenRatio ? 240 : SYSVID_HEIGHT;
++    unsigned int left = (actualScreen->w - w) / 2;
++    unsigned int top = (actualScreen->h - h) / 2;
++    unsigned int xfp = left + w - 20, yfp = top + 1;
++    unsigned int x, y;
++    if (SDL_MUSTLOCK(actualScreen)) SDL_LockSurface(actualScreen);
++    /* The core already emits pixels in actualScreen->format (RGB565). */
++    SDL_FillRect(actualScreen, NULL, 0);
++    for (y = 0; y < h; ++y) {
++        unsigned short *dst = (unsigned short *)((unsigned char *)actualScreen->pixels +
++            (top + y) * actualScreen->pitch) + left;
++        const unsigned short *src = XBuf + (y * SYSVID_HEIGHT / h) * SYSVID_WIDTH;
++        for (x = 0; x < w; ++x) dst[x] = src[x * SYSVID_WIDTH / w];
++    }
+ 
+-	if(SDL_MUSTLOCK(actualScreen)) SDL_LockSurface(actualScreen);
+-	
+-	if (GameConf.m_ScreenRatio) { // Full screen
+-		x=0;
+-		y=0; 
+-		W=320;
+-		H=240;
+-		ix=(SYSVID_WIDTH<<16)/W;
+-		iy=(SYSVID_HEIGHT<<16)/H;
+-		xfp = 300;yfp = 1;
+-
+-		do   
+-		{
+-			unsigned short *buffer_mem=(buffer_flip+((y>>16)*SYSVID_WIDTH));
+-			W=320; x=0;
+-			do {
+-				unsigned short value = (((buffer_mem[x>>16]) & 0x7FE0) << 1) | ((buffer_mem[x>>16]) & 0x001F);
+-				*buffer_scr++=value;
+-				x+=ix;
+-			} while (--W);
+-			y+=iy;
+-		} while (--H);
+-	}
+-	else { // Original show
+-		x=((actualScreen->w - SYSVID_WIDTH)/2);
+-		y=((actualScreen->h - SYSVID_HEIGHT)/2); 
+-		W=SYSVID_WIDTH;
+-		H=SYSVID_HEIGHT;
+-		ix=(SYSVID_WIDTH<<16)/W;
+-		iy=(SYSVID_HEIGHT<<16)/H;
+-		xfp = (x+SYSVID_WIDTH)-20;yfp = y+1;
+-		
+-		buffer_scr += (y)*320;
+-		buffer_scr += (x);
+-		do   
+-		{
+-			unsigned short *buffer_mem=(buffer_flip+((y>>16)*SYSVID_WIDTH));
+-			W=SYSVID_WIDTH; x=((actualScreen->w - SYSVID_WIDTH)/2);
+-			do {
+-				unsigned short value = (((buffer_mem[x>>16]) & 0x7FE0) << 1) | ((buffer_mem[x>>16]) & 0x001F);
+-				*buffer_scr++=value;
+-				x+=ix;
+-			} while (--W);
+-			y+=iy;
+-			buffer_scr += actualScreen->pitch - 320 - SYSVID_WIDTH;
+-		} while (--H);
+-	}
+-	
+ 	pastFPS++;
+ 	newTick = SDL_UXTimerRead();
+ 	if ((newTick-lastTick)>1000000) {
+@@ -184,7 +148,7 @@ int main(int argc, char *argv[]) {
  
  	// Get init file directory & name
  	gethomedir(current_conf_app, "potator");
@@ -11,7 +113,7 @@ index db4120a..38c00dc 100644
  	
  	// Init graphics & sound
  	initSDL();
-@@ -193,18 +193,18 @@ int main(int argc, char *argv[]) {
+@@ -193,18 +157,18 @@ int main(int argc, char *argv[]) {
  
      //load rom file via args if a rom path is supplied
  	if(argc > 1) {
@@ -33,6 +135,20 @@ index db4120a..38c00dc 100644
  		unsigned char *keys = SDL_GetKeyState(NULL);
  
  		switch (m_Flag) {
+diff --git a/platform/opendingux/menu.c b/platform/opendingux/menu.c
+index 618ea90..6c9ffb5 100644
+--- a/platform/opendingux/menu.c
++++ b/platform/opendingux/menu.c
+@@ -996,7 +996,8 @@ void gethomedir(char *dir, char* name) {
+ 	if (strlen(dir) == 0) {
+ 		getcwd(dir, 256);
+ 	}
+-	sprintf(dir,"%s//.%s//",dir, name);
++	size_t used = strlen(dir);
++	snprintf(dir + used, MAX__PATH - used, "/.%s/", name);
+ 	mkdir(dir,S_IRWXU | S_IRWXG | S_IRWXO); // create $HOME/.config/program if it doesn't exist
+ #else
+ 	getcwd(dir, 256);
 diff --git a/platform/opendingux/sound_od.c b/platform/opendingux/sound_od.c
 index 97eb264..c02a4f0 100644
 --- a/platform/opendingux/sound_od.c

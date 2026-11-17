@@ -102,12 +102,16 @@ def main():
         log = out / f"{number:02d}.log"
         png = out / f"{number:02d}.png"
         remote = "/media/data/local/rg350-audit-candidate.opk"
+        tested_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
         pushed = cmd(ADB + ["push", str(path), remote], env=env)
         if pushed.returncode:
             record = {"number": number, "name": name, "error": pushed.stderr.strip()}
             with results.open("a") as fh: fh.write(json.dumps(record) + "\n")
             print(f"{number:02d}/62 {name}: push failed", flush=True)
             continue
+        remote_sha = shell("sha256sum " + shlex.quote(remote), env=env).stdout.split()
+        if not remote_sha or remote_sha[0] != tested_sha256:
+            raise RuntimeError("OPK transfer hash mismatch for " + str(number))
         shell("/media/data/local/init.d/S95frontend stop", env=env)
         remote_log = f"/tmp/rg350-audit-{number:02d}.tsv"
         remote_out = f"/tmp/rg350-audit-{number:02d}.out"
@@ -196,7 +200,7 @@ def main():
         if ranges and not audio_signal and any(int(low) == int(high) != 0 for low, high in ranges):
             signal = "constant/DC output"
         record = {"number": number, "name": name, "rom": rom, "elapsed_s": round(time.monotonic()-started, 1),
-                  "tested_opk": str(path), "tested_opk_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                  "tested_opk": str(path), "tested_opk_sha256": tested_sha256,
                   "exit": stdout.decode(errors="replace").strip(),
                   "emulator_exits": child_exits, "fps_windows": fps, "audio": audio[-1] if audio else None,
                   "audio_signal": audio_signal,
