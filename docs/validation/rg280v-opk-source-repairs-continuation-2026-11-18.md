@@ -60,3 +60,5 @@ SDLのsignal parachuteを外して採取した停止位置は `pc=0x734f2c`, `ra
 - `unreal-keyboard-and-exit-20261118`: START単独の試行を挟んでもSTART＋SELECT → Quitで実終了0、FEへ戻る。約60更新/秒。仮想キーボードの取得画像では表示を確証できず、キーボード／実プレイ入力は残件。追加候補なし。
 
 今回の新規Apps追加は0件。性能と画面・音声の条件を満たしたことにせず、既存8入口を維持する。修正済みソースと未解決事項を保存し、未合格項目を「恒久除外」にはしない。
+
+次の継続作業でUnreal Speccyの実プレイを確認し、Appsへ追加した。最新の結果は [実プレイとOPK修正の追試](rg280v-unreal-gameplay-and-opk-repairs-2026-11-18.md) を参照。

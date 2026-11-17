@@ -39,7 +39,7 @@
 
 ## 他のOPK
 
-- **GnGeo**: BIOSのreset vectorが誤って`c0000204`になっていた。既にホストの16bit単位で並ぶデータを再度swapする処理を除去し、`00c00402`へ修正。GEN68k側の命令語・即値・分岐／index拡張バイトの読取りも同じ並びへ統一。再試験中であり、Appsへは未追加。
+- **GnGeo**: BIOSのreset vectorが誤って`c0000204`になっていた。既にホストの16bit単位で並ぶデータを再度swapする処理を除去し、`00c00402`へ修正。GEN68k側の命令語・即値・分岐／index拡張バイトの読取りも同じ並びへ統一。起動時の異常終了は解消したが、約43〜45更新/秒・無音で未合格。Appsへは未追加。
 - **UAE4All**: FAME Cコアとstrict-aliasing回避でBaby Joのゲーム画面が正常に出るようになった。旧CPUコアの青色ノイズ表示を解消。STARTはゲーム開始でなくSuperThrottle切替にも使われ、音声停止・大量frameskipを伴うため、START連打の試行を音声・性能の根拠にしない。Frameskip 0でSTARTを押さない比較は約78〜85更新/秒とPCM変化を得たが、速度が正常と認められない。Autoに戻すと約45更新/秒・PCM無音。表示の修正を音声・速度の合格と混同せず、Appsへは未追加。
 
 ## 証拠と再現
@@ -54,3 +54,13 @@
 `audit-rg350-opks-device.py`は`--environment PLUMOS_UNREAL_CORE_LOG=/tmp/...`でフレーム計測を有効化できる。装置watchdogの上限と揃え、`--seconds`は1〜300に制限した。以前の420秒指定はwatchdogが実行前に2で拒否した無効試行であり、エミュレータの起動不具合に数えない。
 
 UAE4All追試: `uae-fame-sound-no-turbo-20261118`（Frameskip 0）、`uae-fame-auto-normal-20261118`（Auto）。Autoの約45は未達。NO_THREADS音声経路にはPALの312ラインと異なる282ラインのサンプル周期補正と、旧式のバッファ位置補正があり、音声／速度制御を継続調査する。
+
+## 端末反映と最終状態
+
+`setup-rg350-source-repair-tests.py`で既存8入口を保ったままUnreal Speccy 1入口を追加し、合計9入口／5パッケージとした。実際のFEでSTART→Apps→`TEST 61 Unreal Speccy: 10th Frame`をAで起動し、Rで実プレイ状態を読み込み、A入力後にSTART＋SELECT→Quitで終了した。通常Appsのログは`PLUMOS_EMULATOR_EXIT=0`、元のFEプロセスへ復帰。計測用環境変数とLD_PRELOADなしの経路でも確認した。Apps選択画面を端末へ残す。
+
+Apps設定更新直後の最初のFE再起動ではFEプロセスが残らず黒画面だったため、S95frontend stop/startで復旧し、その後の実際のApps起動・終了を確認した。ブラックアウトをエミュレータの起動成功として数えていない。
+
+追加の証拠: `unreal-apps-selected.png`、`unreal-apps-real-launch.png`、`unreal-apps-normal-return.png`。目視確認待ちmanifestに最終OPKとバイナリのSHA-256、Core約50 HzとSDL再描画約57〜60 Hzを分けて保存。
+
+GnGeo最終追試 `gngeo-native-byte-fixed-20261118` は、従来のinvalid instruction終了を通過し、32秒間の監査を完走。BIOS／ゲームベクタ切替まで進み、再描画は約43〜45回/秒、PCM無音だった。起動修正と性能・音声の合格を区別し、Appsには追加しない。UAE4Allも今回Appsには追加しない。既存SA・PicoArch・受入れ済みOPK・カーネル／電源機能は変更していない。
