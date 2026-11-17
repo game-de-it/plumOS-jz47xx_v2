@@ -1,0 +1,71 @@
+diff --git a/gcw0/fileio.c b/gcw0/fileio.c
+index 71dd509..68c8c79 100644
+--- a/gcw0/fileio.c
++++ b/gcw0/fileio.c
+@@ -127 +127 @@ int load_archive(char *filename, unsigned char *buffer, int maxsize, char *exten
+-    gzFile *gd = gzopen(filename, "rb");
++    gzFile gd = gzopen(filename, "rb");
+diff --git a/gcw0/main.c b/gcw0/main.c
+index 5724ce0..4aad686 100644
+--- a/gcw0/main.c
++++ b/gcw0/main.c
+@@ -81,18 +81,10 @@ static void sdl_sound_callback(void *userdata, Uint8 *stream, int len)
+-    if(sdl_sound.current_emulated_samples < len)
+-    {
+-        memset(stream, 0, len);
+-    }
+-    else
+-    {
+-        memcpy(stream, sdl_sound.buffer, len);
+-        /* loop to compensate desync */
+-        do
+-        {
+-            sdl_sound.current_emulated_samples -= len;
+-        }
+-        while(sdl_sound.current_emulated_samples > 2 * len);
+-        memcpy(sdl_sound.buffer,
+-               sdl_sound.current_pos - sdl_sound.current_emulated_samples,
+-               sdl_sound.current_emulated_samples);
+-        sdl_sound.current_pos = sdl_sound.buffer + sdl_sound.current_emulated_samples;
+-    }
++ int used = sdl_sound.current_emulated_samples;
++ int count = used < len ? used : len;
++ memset(stream, 0, len);
++ if (count) {
++  memcpy(stream, sdl_sound.buffer, count);
++  used -= count;
++  memmove(sdl_sound.buffer, sdl_sound.buffer + count, used);
++  sdl_sound.current_emulated_samples = used;
++  sdl_sound.current_pos = sdl_sound.buffer + used;
++ }
+@@ -104,0 +97 @@ static int sdl_sound_init()
++    memset(&as_desired, 0, sizeof(as_desired));
+@@ -143 +136 @@ static int sdl_sound_init()
+-static void sdl_sound_update(enabled)
++static void sdl_sound_update(int enabled)
+@@ -152 +145,8 @@ static void sdl_sound_update(enabled)
+-        SDL_LockAudio();
++        Uint32 started = SDL_GetTicks();
++        for (;;) {
++            SDL_LockAudio();
++            if (sdl_sound.current_emulated_samples + size * (int)sizeof(short) <= SOUND_SAMPLES_SIZE * 2 * (int)sizeof(short) * 20) break;
++            SDL_UnlockAudio();
++            if (SDL_GetTicks() - started > 200) return;
++            SDL_Delay(1);
++        }
+@@ -997 +997 @@ static int gcw0menu(void)
+-            tempbgSurface = IMG_Load( "./MD.png" );
++            tempbgSurface = IMG_Load( "./md.png" );
+diff --git a/gcw0/utils.c b/gcw0/utils.c
+index a350aef..d90669c 100644
+--- a/gcw0/utils.c
++++ b/gcw0/utils.c
+@@ -13 +13 @@ void create_default_directories(void) {
+-    char pathname[MAXPATHLEN];
++    static char pathname[MAXPATHLEN];
+@@ -120 +120 @@ char* get_save_directory(void) {
+-    char pathname[MAXPATHLEN];
++    static char pathname[MAXPATHLEN];
+@@ -160 +160 @@ char *get_file_name(char *full_path) {
+-	char file_name[256];
++	static char file_name[256];

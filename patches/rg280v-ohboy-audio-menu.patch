@@ -1,0 +1,113 @@
+diff --git a/main.c b/main.c
+index 3176a10..c392594 100644
+--- a/main.c
++++ b/main.c
+@@ -148 +148 @@ rcvar_t pcm_exports[] =
+-#define PCM_BUFFER 2048
++#define PCM_BUFFER 8192
+@@ -1607 +1606,0 @@ void VideoExitGame() {
+-	screen = SDL_SetVideoMode(160, 120, 16, SDL_HWSURFACE | SDL_DOUBLEBUF); // Force a different resolution before changing from SDL_HWSURFACE|SDL_DOUBLEBUF to SDL_SWSURFACE to avoid screen not updating bug.
+@@ -1732,5 +1731,9 @@ static void audio_callback(void *d, byte *stream, int len) {
+-	if(pcm_buffered==0) return;
+-	memcpy(stream, pcm_tail, len);
+-	pcm_tail += pcm.len;
+-	if(pcm_tail == pcm_buffer+pcm_bufferlen) pcm_tail = pcm_buffer;
+-	pcm_buffered -= pcm.len;
++ int samples = len / sizeof(n16);
++ int count = pcm_buffered < samples ? pcm_buffered : samples;
++ int i;
++ memset(stream, 0, len);
++ for (i = 0; i < count; ++i) {
++  ((n16 *)stream)[i] = *pcm_tail++;
++  if (pcm_tail == pcm_buffer + pcm_bufferlen) pcm_tail = pcm_buffer;
++ }
++ pcm_buffered -= count;
+@@ -1771,41 +1774,25 @@ int pcm_submit(){
+-	static int lastbuffer = 0;
+-	byte *src;
+-	n16 sample;
+-#define DEBUG_DISABLE_SOUND
+-#undef DEBUG_DISABLE_SOUND
+-#ifdef DEBUG_DISABLE_SOUND
+-return 0; /* no sound */
+-#endif /* DEBUG_DISABLE_SOUND */
+-    
+-	if(pcm.pos<pcm.len)
+-		return 1;
+-
+-	if (pcm_buffered>=1) while(pcm_buffered == pcm_bufferlen);
+-
+-	src = pcm.buf;
+-
+-	pcm_soft_volume += dvolume;
+-	if(pcm_soft_volume < 0)
+-		pcm_soft_volume = 0;
+-	else if(pcm_soft_volume >256)
+-		pcm_soft_volume = 256;
+-
+-	while(pcm.pos){
+-		sample = (*src++) - 128;
+-		sample = sample * pcm_soft_volume * VOL_MULTIPLIER;
+-		*(pcm_head++) = sample;
+-		pcm.pos--;
+-	}
+-	if(pcm_head == pcm_buffer + pcm_bufferlen)
+-		pcm_head = pcm_buffer;
+-
+-	pcm_buffered += pcm.len;
+-	if(frameskip==-1){
+-		if(pcm_buffered<lastbuffer)
+-			vid_fb.enabled = 0;
+-		else if(pcm_buffered==pcm_bufferlen || pcm_buffered==0)
+-			vid_fb.enabled = 1;
+-	}
+-	lastbuffer = pcm_buffered;
+-
+-	return 1;
++ int i, sample;
++ Uint32 started;
++ if (pcm.pos < pcm.len) return 1;
++ started = SDL_GetTicks();
++ for (;;) {
++  SDL_LockAudio();
++  if (pcm_buffered + pcm.pos <= pcm_bufferlen) break;
++  SDL_UnlockAudio();
++  if (SDL_GetTicks() - started > 200) return 0;
++  SDL_Delay(1);
++ }
++ pcm_soft_volume += dvolume;
++ if (pcm_soft_volume < 0) pcm_soft_volume = 0;
++ if (pcm_soft_volume > 256) pcm_soft_volume = 256;
++ for (i = 0; i < pcm.pos; ++i) {
++  sample = ((int)pcm.buf[i] - 128) * pcm_soft_volume * VOL_MULTIPLIER;
++  if (sample > 32767) sample = 32767;
++  if (sample < -32768) sample = -32768;
++  *pcm_head++ = sample;
++  if (pcm_head == pcm_buffer + pcm_bufferlen) pcm_head = pcm_buffer;
++ }
++ pcm_buffered += pcm.pos;
++ pcm.pos = 0;
++ SDL_UnlockAudio();
++ return 1;
+@@ -1933 +1920 @@ void ev_poll()
+-			} else if(event.key.keysym.sym==SDLK_HOME){
++			} else if(event.key.keysym.sym==SDLK_F12){
+@@ -1941 +1928 @@ void ev_poll()
+-			} else if (alt_menu_combo == 1){
++			} else {
+diff --git a/menu.c b/menu.c
+index 6bd1ae4..8de5447 100644
+--- a/menu.c
++++ b/menu.c
+@@ -1515 +1515 @@ int menu(){
+-		dialog_begin(rom.name,"Slide Power to open the menu");
++		dialog_begin(rom.name,"SELECT + START opens menu");
+@@ -1519 +1519 @@ int menu(){
+-		dialog_begin(rom.name,"Slide Power to open the menu");
++		dialog_begin(rom.name,"SELECT + START opens menu");
+@@ -1616 +1616 @@ launcher:
+-	dialog_begin("OHBOY","Slide Power to open the menu");
++	dialog_begin("OHBOY","SELECT + START opens menu");
+@@ -1620 +1620 @@ launcher:
+-	dialog_begin("OHBOY","Slide Power to open the menu");
++	dialog_begin("OHBOY","SELECT + START opens menu");

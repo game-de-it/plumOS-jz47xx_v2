@@ -22,7 +22,9 @@ new=[];cases=[]
 for number,label in LABELS.items():
  group=next(g for g in GROUPS if number in g['catalog_numbers'])
  opk=BASE+f'/opk/{number:02d}.opk'
- push(ROOT/'output/rg280v-apps/rg350-catalog'/CATALOG[number-1]['name'],opk)
+ source=ROOT/'output/rg280v-apps/rg350-catalog'/CATALOG[number-1]['name']
+ if number in (12,49): source=ROOT/f'output/rg280v-apps/rg350-audio-fixed-{number}.opk'
+ push(source,opk)
  for index,rom in enumerate(group['candidates'],1):
   if not rom['remote']:continue
   ident=f'rg350_romtest_{number:02d}_{index}'
