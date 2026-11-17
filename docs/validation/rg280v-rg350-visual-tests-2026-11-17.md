@@ -35,7 +35,7 @@ AtariとFBAのROMは `<local-path>` から試験用ディレクトリへコピ�
 | 候補 | ソース・コミット | RG280V向け処理 | 実機で確認できたこと | 残る確認 |
 | --- | --- | --- | --- | --- |
 | FBA .44 | [plrguez/fba-sdl](https://github.com/plrguez/fba-sdl) `9448a9c6f1040ad8ec204b5e9cb83e25574ac0c8` | MIPS soft floatで再ビルド。配布OPKの`fbasdl.dge`のみ交換 | Kung-Fu Masterのタイトルとゲーム中の画面が正常。旧版でSDL画素の時点から出ていた重複・色化けが消失。ゲーム中画面まで進み、プロセスは45秒の計測時間内で動作 | 実機で音声・操作・終了、他2 ROM、FPS |
-| Atari800 4.1.0 | [atari800/atari800](https://github.com/atari800/atari800) `d9d9ad1b47169d30b41e90b709dfc437844c9b9c` | `patches/rg280v-atari800-input.patch` で十字キー・A・START・メニュー入力をRG280Vに割当。生16 KB ROMを標準16 KB型のCART形式へ変換 | Caverns of Marsがタイトルからゲーム中へ進み、START・A・右入力後も終了せず動作。旧OPKはボタン押下後に終了コード10だった | 実機で音声・メニュー・終了、他2 ROM |
+| Atari800 4.1.0 | [atari800/atari800](https://github.com/atari800/atari800) `d9d9ad1b47169d30b41e90b709dfc437844c9b9c` | `patches/rg280v-atari800-input-video.patch` で十字キー・A・START・メニュー入力をRG280Vに割当。生16 KB ROMを標準16 KB型のCART形式へ変換 | Caverns of Marsがタイトルからゲーム中へ進み、START・A・右入力後も終了せず動作。旧OPKはボタン押下後に終了コード10だった | 実機で音声・メニュー・終了、他2 ROM |
 | Temper | [gameblabla/temper](https://github.com/gameblabla/temper) `a6c9ef2c5d1a086c22eb51980e07f3c38d0b42ae` | soft floatで再ビルドし、GCW専用IPU経路を外した比較版を作成 | Blazing Lazersのタイトル、Air Zonkの約25秒後のタイトルが表示。Air Zonkの初期黒画面は同じROMのPicoArchでも再現し、導入演出の途中だった | ゲーム中の映像・音声・操作・終了、IPUあり版との比較 |
 
 FBAの配布バイナリはhard float ABIだったため、そのまま使用しない。ビルドスクリプトは `scripts/build-rg280v-fba-softfloat.sh`。ソースと依存ヘッダーは `output/rg280v-apps/rg350-visual-tests` 内に隔離し、ソースタグに含まれるKung-Fu Masterの256×246描画処理を取り込んだ。ビルド時のpng++は0.2.9、AVIRは2.5、JSONは3.9.1、BoostヘッダーはDebian bookwormの1.74を利用した。`Tag_GNU_MIPS_ABI_FP: Soft float`をELFで確認した。
@@ -52,9 +52,17 @@ Atari800とTemperのパッチは上流ソースとの差分をゼロ行コンテ
 
 FBA Kung-Fu Masterの映像・操作・音声はユーザーの目視で正常だったが、SELECT＋STARTではメニューを開けず終了できなかった。実行中のFBAはTERMに応答しなかったため、そのプロセスだけをKILLし、FEへ戻した。FBAの上流実装はSELECT＋STARTを2人同時スタートに使い、メニューは別のキーへ割り当てていた。`patches/rg280v-fba-menu.patch` でSELECT＋STARTを優先してGUIへ送るよう変更した。
 
-同じ操作で他の試験用エミュもメニューを開けるよう、Atari800はSELECT単独をコンソールSELECT、START単独をコンソールSTARTとして残し、同時押しだけをGUIに送るよう `patches/rg280v-atari800-input.patch` を更新した。TemperはSDLのSELECT・STARTキー状態を追跡し、同時押しを1回だけメニュー操作として送るよう `patches/rg280v-temper-noipu.patch` を更新した。電源ボタンはエミュメニューには使用しない。
+同じ操作で他の試験用エミュもメニューを開けるよう、Atari800はSELECT単独をコンソールSELECT、START単独をコンソールSTARTとして残し、同時押しだけをGUIに送るよう `patches/rg280v-atari800-input-video.patch` を更新した。TemperはSDLのSELECT・STARTキー状態を追跡し、同時押しを1回だけメニュー操作として送るよう `patches/rg280v-temper-noipu.patch` を更新した。電源ボタンはエミュメニューには使用しない。
 
 3本をsoft float ABIで再ビルドし、試験用Appsへ転送後、ホスト・端末のSHA-256を照合した。ADBから入力イベントのSELECT＋STARTを送って画面を取得し、FBA・Atari800・Temperの全てでメニューが表示された。画像はGit管理外の `output/rg280v-apps/rg350-visual-tests/{fba,atari,temper}-menu-chord.png` にある。自動試験では各プロセスを終了してFE起動を確認した。メニュー項目からの通常終了とゲーム復帰は、実機操作による確認が残る。
 
 更新後のOPK SHA-256はFBA `8b935db05bb4bf9b1dc9ae4058627a5381ca804d7cfd52af3f1998fdc20e5652`、Atari800 `921793d7873f687f911a251d974448319f8409ba444cfa20c6880c7a0e49e4bc`、Temper `34cabae61b5c44f61e31eb4c05e8474fef3ed41e7e5cda5f42f55ac4987e3c73`。差分はいずれもゼロ行コンテキストで、適用時は `git apply --unidiff-zero` を使う。
 TemperのSDLソースはCRLFなので、対応するパッチもCRLFを保持している。差分の空白検査には `git -c core.whitespace=cr-at-eol diff --check` を使った。
+
+## Atari800の表示比率修正
+
+ユーザーはAtari800のゲームとメニューが横につぶれ、メニュー文字を読めないと報告。DRM取得画像は320×480だが、有効なゲーム・メニュー画素は中央の y=120〜359 の320×240だけで、残りは上下の黒帯だった。FBAとTemperは320×240のDRMモードだった。Atari800へ `-fullscreen -fs-width 320 -fs-height 240` を渡す比較でも320×480のままで、SDLが列挙した解像度から選ぶ処理に原因が残った。
+
+`patches/rg280v-atari800-input-video.patch` に `PLUMOS_RG280V` ビルド時の320×240解像度固定とフルスクリーン指定を追加した。メニュー・ゲーム共通のSDL表示設定だけを修正し、入力・ROM・他の試験用エミュは変更していない。`scripts/build-rg280v-atari800-test.sh` は設定済みのAtari800 4.1.0ソースと展開済み試験OPKを入力として、パッチ適用、soft floatビルド、OPK再作成を実行する。
+
+修正版のCaverns of Marsは、ゲーム・SELECT＋STARTメニューともDRM画像が320×240になり、ゲーム絵とメニュー文字が画面の高さを使うようになった。取得画像はGit管理外の `output/rg280v-apps/rg350-visual-tests/atari-240-{game,menu}.png`。OPKのホスト・端末SHA-256は `12b3d15309e984bfc9744ec30ecb11e0aed8d8413db1c49a3f5517d606eb4b43` で一致し、試験後にFE起動を確認した。実機での読みやすさとゲーム・メニュー復帰の確認は待機中。

@@ -37,3 +37,30 @@ index 1df8818..ede315e 100644
 +		return AKEY_RETURN;
 +	if (UI_is_active && lastkey == SDLK_LALT)
 +		return AKEY_ESCAPE;
+diff --git a/src/sdl/video.c b/src/sdl/video.c
+index ff075d4..a483736 100644
+--- a/src/sdl/video.c
++++ b/src/sdl/video.c
+@@ -244,0 +245,9 @@ VIDEOMODE_resolution_t *PLATFORM_AvailableResolutions(unsigned int *size)
++#ifdef PLUMOS_RG280V
++	/* The panel is 320x480, but SDL's 320x240 mode uses its correct
++	 * vertical scaling. Atari800's 320x480 mode letterboxes to half height. */
++	VIDEOMODE_resolution_t *resolutions = Util_malloc(sizeof(*resolutions));
++	resolutions[0].width = 320;
++	resolutions[0].height = 240;
++	*size = 1;
++	return resolutions;
++#else
+@@ -268,0 +278 @@ VIDEOMODE_resolution_t *PLATFORM_AvailableResolutions(unsigned int *size)
++#endif
+diff --git a/src/videomode.c b/src/videomode.c
+index 9a6b627..e3a8693 100644
+--- a/src/videomode.c
++++ b/src/videomode.c
+@@ -1201,0 +1202,6 @@ int VIDEOMODE_InitialiseDisplay(void)
++#ifdef PLUMOS_RG280V
++	/* Override settings read from the shared home directory on this device. */
++	VIDEOMODE_windowed = FALSE;
++	init_fs_resolution.width = 320;
++	init_fs_resolution.height = 240;
++#endif
