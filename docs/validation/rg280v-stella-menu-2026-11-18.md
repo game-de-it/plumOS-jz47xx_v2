@@ -30,7 +30,7 @@ GCW0ビルドではRomAuditDialogを作成しない一方、`myRomAuditDialog` �
 - 初期化不備の修正後、Asteroids、Centipede、Breakoutの3本すべてで、十字キーでExit Gameを選び、Aで終了すると終了コード0でFEへ戻ることを確認。
 - START単押しをResetにしない最終版でも、3本のゲーム開始・約60 FPS・音声信号・START＋SELECTメニュー・Exit Gameの終了コード0・FE復帰を再確認した。
 
-この記録は実機で取得した画像・入力注入・PCM・終了コードの確認。修正後の本体での目視・聴取はユーザー確認待ち。
+この記録は実機で取得した画像・入力注入・PCM・終了コードの確認。その後ユーザーからStellaとNEO4ALLの動作OKとの報告を受け、修正版の実機確認を完了した。今回の報告に新しいFPS測定値はない。
 
 ## 配置と再現
 

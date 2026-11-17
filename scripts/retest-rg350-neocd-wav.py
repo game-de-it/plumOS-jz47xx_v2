@@ -6,6 +6,7 @@ import pathlib
 import shlex
 import subprocess
 import argparse
+from rg350_test_rom_storage import ROM_ROOT, stage_file
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
@@ -22,32 +23,21 @@ source = status['destination']
 def shell(command):
     return subprocess.check_output(ADB + ['shell', command], text=True, errors='replace')
 
-shell('mkdir -p ' + HOME + '/cd ' + HOME + '/.neo4all/roms')
+shell('mkdir -p ' + HOME + '/.neo4all/roms')
 bios = NAS / 'bios/neocd/neocd.bin'
-dest = HOME + '/.neo4all/neocd.bin'
-subprocess.run(ADB + ['push', str(bios), dest], check=True)
-assert shell('sha256sum ' + dest).split()[0] == hashlib.sha256(bios.read_bytes()).hexdigest()
+dest = ROM_ROOT + '/bios/home-15/.neo4all/neocd.bin'
+stage_file(bios, dest)
+shell('ln -sf ' + shlex.quote(dest) + ' ' + HOME + '/.neo4all/neocd.bin')
 shell('ln -sf ../neocd.bin ' + HOME + '/.neo4all/roms/neocd.bin')
-shell('ln -sf ../.neo4all/neocd.bin ' + HOME + '/cd/neocd.bin')
-for item in status['files']:
-    path = item['name']
-    if path == 'Fatal Fury.iso':
-        # opkrun resolves symlinks before passing the argument. Keep a regular
-        # ISO beside the renamed CUE so the emulator can find its track table.
-        target = HOME + '/cd/' + path
-        shell('rm -f ' + shlex.quote(target))
-        shell('cp ' + shlex.quote(source + '/' + path) + ' ' + shlex.quote(target))
-        assert shell('sha256sum ' + shlex.quote(target)).split()[0] == item['sha256']
-        continue
-    shell('ln -sf ' + shlex.quote(source + '/' + path) + ' ' + shlex.quote(HOME + '/cd/' + path))
-# This executable looks for a CUE with the ISO's basename. Do not edit the NAS set.
-shell('cp ' + shlex.quote(source + '/Fatal Fury WAV.cue') + ' ' + shlex.quote(HOME + '/cd/Fatal Fury.cue'))
+# ISO and audio are regular files on SD2; opkrun can resolve the ISO safely.
+stage_file(NAS / '_etc/neogeocd/Fatal Fury WAV/Fatal Fury WAV.cue', source + '/Fatal Fury.cue')
+assert shell('test -f ' + shlex.quote(source + '/Fatal Fury.iso') + ' && echo yes').strip() == 'yes'
 if args.prepare_only:
     raise SystemExit(0)
 subprocess.run([
     'python3', str(ROOT / 'scripts/audit-rg350-opks-device.py'),
     '--only', '15', '--opk', '15=' + str(ROOT / 'output/rg280v-apps/missing-rom-opks/15.opk'),
-    '--rom', '15=' + HOME + '/cd/Fatal Fury.iso',
+    '--rom', '15=' + source + '/Fatal Fury.iso',
     '--seconds', '45', '--screenshot-delay', '38', '--start-presses', '10',
     '--tag', 'rom-retest-wav-20261118-15-1',
 ], check=True, cwd=ROOT)

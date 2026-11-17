@@ -27,7 +27,7 @@ wrapper = OUT / 'run-stella'
 wrapper.write_text('''#!/bin/sh
 set -eu
 case "${1:-}" in
-    4|5|6) rom=/media/data/local/rg350-rom-candidates/atari2600/0$1.bin ;;
+    4|5|6) rom=/media/data/sd2/.plumos-rg350-tests-20261118/relocated/rom-candidates/atari2600/0$1.bin ;;
     *) exit 2 ;;
 esac
 root=/media/data/plumos

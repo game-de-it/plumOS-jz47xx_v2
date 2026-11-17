@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """Retest previously unassigned OPKs with complete data in an isolated device tree."""
 import pathlib,json,subprocess,shlex,hashlib,zipfile,time
+from rg350_test_rom_storage import writable_sd2
 R=pathlib.Path(__file__).resolve().parents[1];NAS=pathlib.Path('<local-path>');base='/media/data/local/rg350-missing-rom-retest';adb=['adb','-P','5041','-s','10.1.1.2:5555']
 subprocess.run(['adb','-P','5041','connect','10.1.1.2:5555'],check=True)
-def shell(s):return subprocess.check_output(adb+['shell',s],text=True,errors='replace')
+def shell(s):
+ if s.startswith('rm ') and base in s:
+  with writable_sd2():return subprocess.check_output(adb+['shell',s],text=True,errors='replace')
+ return subprocess.check_output(adb+['shell',s],text=True,errors='replace')
 def push(src,dest):
- if src.is_file():
-  free=int(shell('df -k /media/data').splitlines()[-1].split()[3])*1024
-  if src.stat().st_size > free-32*1024*1024:raise RuntimeError('Insufficient SD1 space for '+str(src))
- shell('mkdir -p '+shlex.quote(str(pathlib.PurePosixPath(dest).parent)))
- subprocess.run(adb+['push',str(src),dest],check=True,capture_output=True)
- if src.is_file():assert shell('sha256sum '+shlex.quote(dest)).split()[0]==hashlib.sha256(src.read_bytes()).hexdigest()
+ with writable_sd2():
+  if src.is_file():
+   free=int(shell('df -k /media/data').splitlines()[-1].split()[3])*1024
+   if src.stat().st_size > free-32*1024*1024:raise RuntimeError('Insufficient SD1 space for '+str(src))
+  shell('mkdir -p '+shlex.quote(str(pathlib.PurePosixPath(dest).parent)))
+  subprocess.run(adb+['push',str(src),dest],check=True,capture_output=True)
+  if src.is_file():assert shell('sha256sum '+shlex.quote(dest)).split()[0]==hashlib.sha256(src.read_bytes()).hexdigest()
 def done(n,i):
  p=R/f'output/rg280v-apps/rg350-device-audit-rom-retest-extra-20261118-{n:02d}-{i}/results.jsonl'
  return p.exists() and any(not json.loads(line).get('error') for line in p.read_text().splitlines())

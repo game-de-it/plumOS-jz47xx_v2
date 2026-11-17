@@ -10,6 +10,7 @@ import json
 import pathlib
 import subprocess
 import sys
+from rg350_test_rom_storage import ROM_ROOT as SD2_TEST_ROOT, stage_file
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ROM_ROOT = pathlib.Path("<local-path>")
@@ -101,6 +102,9 @@ def main():
         if missing:
             raise RuntimeError("missing sources: " + ", ".join(missing))
         for relative, path in files.items():
+            if relative.startswith("rom/"):
+                stage_file(path, SD2_TEST_ROOT + "/visual-roms/" + relative[4:])
+                continue
             dest = REMOTE + "/" + relative
             shell("mkdir -p '" + str(pathlib.PurePosixPath(dest).parent) + "'")
             push(path, dest)

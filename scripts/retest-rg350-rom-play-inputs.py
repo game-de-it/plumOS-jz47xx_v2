@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Use emulator-specific controls instead of mistaking START menus for gameplay."""
 import pathlib,json,subprocess,hashlib,shlex
+from rg350_test_rom_storage import CANDIDATES, stage_file
 R=pathlib.Path(__file__).resolve().parents[1]
 subprocess.run(['adb','-P','5041','connect','10.1.1.2:5555'],check=True)
 groups=json.loads((R/'output/rg280v-apps/rg350-rom-candidates.json').read_text())
@@ -10,10 +11,8 @@ adb=['adb','-P','5041','-s','10.1.1.2:5555']
 stella=next(g for g in groups if 28 in g['catalog_numbers'])
 for i,name in enumerate(['Asteroids.bin','Centipede.bin','Breakout.bin'],4):
  src=pathlib.Path('<local-path>')/name
- dest=f'/media/data/local/rg350-rom-candidates/atari2600/{i:02d}.bin'
- subprocess.run(adb+['push',str(src),dest],capture_output=True,check=True)
- actual=subprocess.check_output(adb+['shell','sha256sum '+shlex.quote(dest)],text=True).split()[0]
- assert actual==hashlib.sha256(src.read_bytes()).hexdigest()
+ dest=f'{CANDIDATES}/atari2600/{i:02d}.bin'
+ stage_file(src,dest)
  stella['candidates'].append(dict(source='ATARI/2600/'+name,remote=dest))
 profiles={
  5:['2:2:120','4:29:500','7:106:1200','10:29:1200'],

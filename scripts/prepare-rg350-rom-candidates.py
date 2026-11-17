@@ -2,6 +2,7 @@
 """Inventory ROM candidates for all 62 OPKs; optionally stage small ROMs."""
 import argparse,os,json,re,hashlib,subprocess,zipfile,shlex
 from pathlib import Path
+from rg350_test_rom_storage import CANDIDATES, writable_sd2
 ROOT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--rom-root',type=Path,default=Path('<local-path>'))
@@ -45,45 +46,47 @@ groups={
 'gg':([57],['gamegear'],['gg']), 'sms':([58],['mastersystem'],['sms']),
 'tic80':([59],['_etc/tic80'],['tic']), 'zx':([61,62],['_etc/zxspectrum'],['tap','tzx','z80','sna'])}
 prefs={'gb':['Super Mario Land','Dr. Mario','Dracula Densetsu'],'ngpc':['Baseball Stars','Metal Slug - 1st','Sonic'],'md':['Bare Knuckle','Sonic','VampireKiller'],'fba':['kungfum.zip','bchopper.zip','nspirit.zip'],'pce':['AirZonk','Blazing','BONK'],'nes':['Super Mario Bros.','Baseball','Rockman'],'pokemini':['Pichu','Anime','Europe']}
-adb=['adb','-P','5041','-s','10.1.1.2:5555'];remote='/media/data/local/rg350-rom-candidates'
+adb=['adb','-P','5041','-s','10.1.1.2:5555'];remote=CANDIDATES
 def shell(s):return subprocess.check_output(adb+['shell',s],text=True).strip()
 manifest=[];staged=[]
-for family,(ids,dirs,exts) in groups.items():
- matches=[f for f in files if '/bios/' not in f.lower()
-          and Path(f).name.upper() not in {'ATARIBAS.ROM','ATARIOSB.ROM','ATARIXL.ROM'}
-          and any(f.startswith(d+'/') for d in dirs) and Path(f).suffix.lower()[1:] in exts]
- def rank(f):
-  name=Path(f).name
-  return (next((i for i,p in enumerate(prefs.get(family,[])) if p.lower() in name.lower()),99),len(Path(f).parts),f.lower())
- matches.sort(key=rank);chosen=[];seen=set()
- for f in matches:
-  title=re.sub(r'\([^)]*\)|\[[^]]*\]','',Path(f).stem).lower().strip()
-  if family=='neogeocd':title=title.replace(' wav','')
-  if title in seen:continue
-  seen.add(title);chosen.append(f)
-  if len(chosen)==3:break
- entries=[]
- for i,f in enumerate(chosen,1):
-  p=NAS/f; item={'source':f,'title':p.stem,'bytes':p.stat().st_size,'remote':None}
-  # CD media and game directories require their full data set; keep them at source.
-  directory_game=family in ['easyrpg','scummvm','neogeocd','pcfx','segacd','psx','3do']
-  if args.deploy and not directory_game and item['bytes']<=8*1024*1024:
-   dest=f'{remote}/{family.strip()}/{i:02d}{p.suffix.lower()}'
-   if p.suffix.lower()=='.zip' and family not in ['fba','mame','neogeo','dos','c64']:
-    with zipfile.ZipFile(p) as z:
-     inner=[x for x in z.infolist() if not x.is_dir() and not x.filename.startswith('__MACOSX') and Path(x.filename).suffix.lower() in ['.min','.rom','.gw']]
-     if len(inner)==1:
-      data=z.read(inner[0]);local=ROOT/'output/rg280v-apps/rom-candidate-stage'/family.strip()/f'{i:02d}{Path(inner[0].filename).suffix.lower()}'
-      local.parent.mkdir(parents=True,exist_ok=True);local.write_bytes(data);p=local;dest=str(Path(dest).with_suffix(local.suffix))
-   # Arcade loaders depend on the original ZIP basename.
-   if family in ['fba','mame','neogeo']:dest=f'{remote}/{family}/{p.name}'
-   shell('mkdir -p '+shlex.quote(str(Path(dest).parent)))
-   subprocess.run(adb+['push',str(p),dest],check=True,capture_output=True)
-   digest=hashlib.sha256(p.read_bytes()).hexdigest()
-   actual=shell('sha256sum '+shlex.quote(dest)).split()[0];assert actual==digest
-   item.update(remote=dest,sha256=digest);staged.append(item)
-  entries.append(item)
- manifest.append({'family':family.strip(),'catalog_numbers':ids,'available_file_count':len(matches),'candidates':entries})
- print(family,len(matches),len(entries),flush=True)
+import contextlib
+with writable_sd2() if args.deploy else contextlib.nullcontext():
+ for family,(ids,dirs,exts) in groups.items():
+  matches=[f for f in files if '/bios/' not in f.lower()
+           and Path(f).name.upper() not in {'ATARIBAS.ROM','ATARIOSB.ROM','ATARIXL.ROM'}
+           and any(f.startswith(d+'/') for d in dirs) and Path(f).suffix.lower()[1:] in exts]
+  def rank(f):
+   name=Path(f).name
+   return (next((i for i,p in enumerate(prefs.get(family,[])) if p.lower() in name.lower()),99),len(Path(f).parts),f.lower())
+  matches.sort(key=rank);chosen=[];seen=set()
+  for f in matches:
+   title=re.sub(r'\([^)]*\)|\[[^]]*\]','',Path(f).stem).lower().strip()
+   if family=='neogeocd':title=title.replace(' wav','')
+   if title in seen:continue
+   seen.add(title);chosen.append(f)
+   if len(chosen)==3:break
+  entries=[]
+  for i,f in enumerate(chosen,1):
+   p=NAS/f; item={'source':f,'title':p.stem,'bytes':p.stat().st_size,'remote':None}
+   # CD media and game directories require their full data set; keep them at source.
+   directory_game=family in ['easyrpg','scummvm','neogeocd','pcfx','segacd','psx','3do']
+   if args.deploy and not directory_game and item['bytes']<=8*1024*1024:
+    dest=f'{remote}/{family.strip()}/{i:02d}{p.suffix.lower()}'
+    if p.suffix.lower()=='.zip' and family not in ['fba','mame','neogeo','dos','c64']:
+     with zipfile.ZipFile(p) as z:
+      inner=[x for x in z.infolist() if not x.is_dir() and not x.filename.startswith('__MACOSX') and Path(x.filename).suffix.lower() in ['.min','.rom','.gw']]
+      if len(inner)==1:
+       data=z.read(inner[0]);local=ROOT/'output/rg280v-apps/rom-candidate-stage'/family.strip()/f'{i:02d}{Path(inner[0].filename).suffix.lower()}'
+       local.parent.mkdir(parents=True,exist_ok=True);local.write_bytes(data);p=local;dest=str(Path(dest).with_suffix(local.suffix))
+    # Arcade loaders depend on the original ZIP basename.
+    if family in ['fba','mame','neogeo']:dest=f'{remote}/{family}/{p.name}'
+    shell('mkdir -p '+shlex.quote(str(Path(dest).parent)))
+    subprocess.run(adb+['push',str(p),dest],check=True,capture_output=True)
+    digest=hashlib.sha256(p.read_bytes()).hexdigest()
+    actual=shell('sha256sum '+shlex.quote(dest)).split()[0];assert actual==digest
+    item.update(remote=dest,sha256=digest);staged.append(item)
+   entries.append(item)
+  manifest.append({'family':family.strip(),'catalog_numbers':ids,'available_file_count':len(matches),'candidates':entries})
+  print(family,len(matches),len(entries),flush=True)
 out=ROOT/'output/rg280v-apps/rg350-rom-candidates.json';out.write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
 print('staged',len(staged),'bytes',sum(x['bytes'] for x in staged))

@@ -29,7 +29,7 @@ root=/media/data/plumos
 "$root/bin/plumos-prepare-opk-input"
 export PLUMOS_ROOT="$root" HOME=/media/data/local/rg350-missing-rom-retest/home-15
 export SDL_VIDEODRIVER=kmsdrm LD_LIBRARY_PATH="$root/lib"
-exec /usr/bin/opkrun /media/data/local/rg350-missing-rom-retest/neo4all-bgm.opk "/media/data/local/rg350-missing-rom-retest/home-15/cd/Fatal Fury.iso"
+exec /usr/bin/opkrun /media/data/local/rg350-missing-rom-retest/neo4all-bgm.opk "/media/data/sd2/.plumos-rg350-tests-20261118/Fatal Fury WAV/Fatal Fury.iso"
 ''')
 push(wrapper, BASE + '/run-neo4all-wav')
 shell('chmod 755 ' + BASE + '/run-neo4all-wav')

@@ -4,11 +4,12 @@ import hashlib
 import pathlib
 import shlex
 import subprocess
+from rg350_test_rom_storage import ROM_ROOT, stage_file
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 NAS = pathlib.Path('<local-path>')
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
-BASE = '/media/data/local/rg350-missing-rom-retest/scumm-corrected'
+BASE = ROM_ROOT + '/extra-roms/scumm-corrected'
 subprocess.run(['adb', '-P', '5041', 'connect', '10.1.1.2:5555'], check=True)
 
 def shell(text):
@@ -16,14 +17,12 @@ def shell(text):
 
 for i, name in enumerate(["Monkey Island 2 LeChuck's Revenge (Floppy DOS VGA)", 'BASS-Floppy-1.3'], 1):
     dest = BASE + '/' + name
-    shell('mkdir -p ' + shlex.quote(dest))
     try:
         for src in (NAS / name).iterdir():
             if not src.is_file():
                 continue
             target = dest + '/' + src.name
-            subprocess.run(ADB + ['push', str(src), target], capture_output=True, check=True)
-            assert shell('sha256sum ' + shlex.quote(target)).split()[0] == hashlib.sha256(src.read_bytes()).hexdigest()
+            stage_file(src, target)
         subprocess.run([
             'python3', str(ROOT / 'scripts/audit-rg350-opks-device.py'),
             '--only', '56', '--opk', '56=' + str(ROOT / 'output/rg280v-apps/missing-rom-opks/56.opk'),
@@ -33,4 +32,4 @@ for i, name in enumerate(["Monkey Island 2 LeChuck's Revenge (Floppy DOS VGA)", 
             '--tag', f'rom-retest-play-20261118-56-{i}',
         ], cwd=ROOT, check=True)
     finally:
-        shell('rm -rf ' + shlex.quote(dest))
+        pass  # Keep verified ROM data on SD2 for repeat tests.

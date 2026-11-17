@@ -2,13 +2,14 @@
 # Isolated visual test launcher. Only known case IDs can be run.
 set -eu
 base=/media/data/local/rg350-visual-tests
+rombase=/media/data/sd2/.plumos-rg350-tests-20261118/relocated/visual-roms
 case "${1:-}" in
-    atari_caverns) opk=atari-input.opk; rom="$base/rom/atari/CavernsOfMars.car" ;;
-    atari_miner) opk=atari-input.opk; rom="$base/rom/atari/Miner2049er.car" ;;
-    atari_food) opk=atari-input.opk; rom="$base/rom/atari/FoodFight.rom" ;;
-    fba_kungfum) opk=fba-softfloat.opk; rom="$base/rom/fba/kungfum.zip" ;;
-    fba_bchopper) opk=fba-softfloat.opk; rom="$base/rom/fba/bchopper.zip" ;;
-    fba_nspirit) opk=fba-softfloat.opk; rom="$base/rom/fba/nspirit.zip" ;;
+    atari_caverns) opk=atari-input.opk; rom="$rombase/atari/CavernsOfMars.car" ;;
+    atari_miner) opk=atari-input.opk; rom="$rombase/atari/Miner2049er.car" ;;
+    atari_food) opk=atari-input.opk; rom="$rombase/atari/FoodFight.rom" ;;
+    fba_kungfum) opk=fba-softfloat.opk; rom="$rombase/fba/kungfum.zip" ;;
+    fba_bchopper) opk=fba-softfloat.opk; rom="$rombase/fba/bchopper.zip" ;;
+    fba_nspirit) opk=fba-softfloat.opk; rom="$rombase/fba/nspirit.zip" ;;
     temper_airzonk) opk=temper-noipu.opk; rom=/media/data/sd2/roms/pcengine/AirZonk_U.pce ;;
     temper_blazing) opk=temper-noipu.opk; rom=/media/data/sd2/roms/pcengine/BlazingLazers_U.pce ;;
     temper_bonk) opk=temper-noipu.opk; rom=/media/data/sd2/roms/pcengine/BONKs_REVENGE.PCE ;;
