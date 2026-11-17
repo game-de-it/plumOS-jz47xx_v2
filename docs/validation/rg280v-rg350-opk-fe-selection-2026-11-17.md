@@ -41,8 +41,8 @@
 | 08 | `Daphne_2015-05-07.opk` | ROMなし／起動後終了（FPS未測定） | 未採用・検証不足 |
 | 09 | `DinguxVectrex_2014-05-25.opk` | 起動不可: libpng14.so.14（FPS未測定） | 未採用・検証不足 |
 | 10 | `EasyRPG_2017-12-13.opk` | 起動不可: libvorbisidec.so.1（FPS未測定） | 未採用・検証不足 |
-| 11 | `FCEUX_2019-11-15.opk` | Baseballタイトル（短時間側は本編未確認）（59.9 FPS） | 未採用・検証不足 |
-| 12 | `GenesisPlusGX_2019-12-23.opk` | SEGAロゴ（短時間側は本編未確認）（60.0 FPS） | 未採用・検証不足 |
+| 11 | `FCEUX_2019-11-15.opk` | Baseballタイトル（短時間側は本編未確認）（59.9 FPS） | 速度面は目視確認候補（約59〜60 FPS）。採取音声が無音に近く、発音する本編で確認が必要。 |
+| 12 | `GenesisPlusGX_2019-12-23.opk` | SEGAロゴ（短時間側は本編未確認）（60.0 FPS） | 目視確認候補・優先。後続のオープニング試験で約60 FPS・PCM信号あり。 |
 | 13 | `Handy_2019-12-10.opk` | ROMなし／起動後終了（FPS未測定） | 未採用・検証不足 |
 | 14 | `KEGS_2016-05-04.opk` | ROMなし／起動後終了（FPS未測定） | 未採用・検証不足 |
 | 15 | `NEO4All_2019-12-16.opk` | NEO4ALLロゴ（24.2 FPS） | 未採用・検証不足 |
@@ -51,24 +51,24 @@
 | 18 | `Oswan_2019-10-09.opk` | 起動不可: ABI不一致（別実行でも確認）（FPS未測定） | 未採用・検証不足 |
 | 19 | `PicoDrive-gcw0_1.99.opk` | ROM指定後に終了・画面未確定（FPS未測定） | 未採用・検証不足 |
 | 20 | `PocketSNES_2019-12-12.opk` | 起動不可: libpng14.so.14（FPS未測定） | 未採用・検証不足 |
-| 21 | `PokeMini_2015-07-05.opk` | PokeMiniメニュー（55.4 FPS） | 未採用・検証不足 |
+| 21 | `PokeMini_2015-07-05.opk` | PokeMiniメニュー（55.4 FPS） | 目視確認候補。メニュー約55 FPS、本編の音・速度を確認する。 |
 | 22 | `Potator_2013-09-17.opk` | Potatorメニュー（30.0 FPS） | 未採用・検証不足 |
 | 23 | `ProSystem_2013-06-16-launcher.opk` | ProSystemメニュー（30.0 FPS） | 未採用・検証不足 |
-| 24 | `Race(Explorer)_2019-12-11.opk` | Baseball Starsタイトル（短時間側は本編未確認）（60.0 FPS） | 有望・ゲーム本編未確認。選択画面までは約60 FPS。対戦中の音・入力・終了は未確認。 |
+| 24 | `Race(Explorer)_2019-12-11.opk` | Baseball Starsタイトル（短時間側は本編未確認）（60.0 FPS） | 目視確認候補・優先。選択画面まで約60 FPS・PCM信号あり。 |
 | 25 | `Race(Neogeo Pocket).opk` | Raceメニュー（30.0 FPS） | 未採用・検証不足 |
 | 26 | `ReGBA_2019-12-26.opk` | 起動不可: libpng14.so.14（FPS未測定） | 未採用・検証不足 |
-| 27 | `Snes9x_2019-11-11.opk` | 起動不可: libintl.so.8（FPS未測定） | 未採用・検証不足 |
+| 27 | `Snes9x_2019-11-11.opk` | 起動不可: libintl.so.8（FPS未測定） | 性能面で低優先。後続ROM試験で約34〜37 FPS。 |
 | 28 | `Stella_2015-10-06.opk` | 起動不可: libpng14.so.14（FPS未測定） | 未採用・検証不足 |
 | 29 | `Temper_2016-10-20.opk` | 起動不可: libbz2.so.1.0（FPS未測定） | 改修版は追加候補。配布原版は不合格。ソース改修版では約60 FPS、メニュー入力修正を実機確認。 |
 | 30 | `UAE4All_2019-08-23.opk` | ROMなし／起動後終了（FPS未測定） | 未採用・検証不足 |
 | 31 | `VICEx64_2020-02-13.opk` | 起動不可: libjpeg.so.8（FPS未測定） | 未採用・検証不足 |
 | 32 | `XMAME_2015-03-15.opk` | XMAMEインストーラ（FPS未測定） | 未採用・検証不足 |
-| 33 | `crocods_20200115.opk` | CrocoDS起動（50.0 FPS） | 未採用・検証不足 |
+| 33 | `crocods_20200115.opk` | CrocoDS起動（50.0 FPS） | 目視確認候補。起動画面約50 FPS、本編と発音場面を確認する。 |
 | 34 | `fba44.opk` | 起動不可: libcrypto.so.1.0.0（FPS未測定） | Kung-Fu限定で合格。配布原版は不合格。ソース改修版のKung-Fu Masterは60 FPS。Ninja Spiritは約38 FPS・音飛び。 |
-| 35 | `gambatte-dms-multi-r572u4-20200628.opk` | GBタイトル（短時間側は本編未確認）（59.9 FPS） | 未採用・検証不足 |
-| 36 | `gambatte-dms-multi-r572u4-20211021.opk` | GBタイトル（短時間側は本編未確認）（59.5 FPS） | 未採用・検証不足 |
-| 37 | `gambatte-opendingux-r572u3-20191201-204032(GB).opk` | GBタイトル（短時間側は本編未確認）（59.7 FPS） | 未採用・検証不足 |
-| 38 | `gambatte-opendingux-r572u3-20191201-204032(GBC).opk` | GBC注意画面（短時間側は本編未確認）（59.9 FPS） | 未採用・検証不足 |
+| 35 | `gambatte-dms-multi-r572u4-20200628.opk` | GBタイトル（短時間側は本編未確認）（59.9 FPS） | 速度面は目視確認候補（約59〜60 FPS）。採取音声が無音に近く、発音する本編で確認が必要。 |
+| 36 | `gambatte-dms-multi-r572u4-20211021.opk` | GBタイトル（短時間側は本編未確認）（59.5 FPS） | 速度面は目視確認候補（約59〜60 FPS）。採取音声が無音に近く、発音する本編で確認が必要。 |
+| 37 | `gambatte-opendingux-r572u3-20191201-204032(GB).opk` | GBタイトル（短時間側は本編未確認）（59.7 FPS） | 速度面は目視確認候補（約59〜60 FPS）。採取音声が無音に近く、発音する本編で確認が必要。 |
+| 38 | `gambatte-opendingux-r572u3-20191201-204032(GBC).opk` | GBC注意画面（短時間側は本編未確認）（59.9 FPS） | 速度面は目視確認候補（約59〜60 FPS）。採取音声が無音に近く、発音する本編で確認が必要。 |
 | 39 | `gngeo.opk` | ROMなし／起動後終了（FPS未測定） | 未採用・検証不足 |
 | 40 | `gpsp-2019-11-15.opk` | gpSP言語選択（FPS未測定） | 未採用・検証不足 |
 | 41 | `gw-rg350_2020-03-18.opk` | 起動不可: libshake.so.1（FPS未測定） | 未採用・検証不足 |
@@ -79,9 +79,9 @@
 | 46 | `mednafen_pce.opk` | 起動不可: libintl.so.8（FPS未測定） | 未採用・検証不足 |
 | 47 | `mednafen_pcfx.opk` | 起動不可: libintl.so.8（FPS未測定） | 未採用・検証不足 |
 | 48 | `mupen64plus.opk` | 起動不可: libSDL2-2.0.so.0（FPS未測定） | 未採用・検証不足 |
-| 49 | `ohboy.opk` | GBタイトル（短時間側は本編未確認）（59.0 FPS） | 有望・ゲーム本編未確認。タイトル約59 FPSとPCM信号を確認。ゲーム中と実機音は未確認。 |
+| 49 | `ohboy.opk` | GBタイトル（短時間側は本編未確認）（59.0 FPS） | 目視確認候補・優先。タイトル約59 FPS・PCM信号あり。 |
 | 50 | `openMSX-0.15-remap.opk` | 起動不可: libtheoradec.so.1（FPS未測定） | 未採用・検証不足 |
-| 51 | `pcsx4all.opk` | 起動不可: libshake.so.1（FPS未測定） | 未採用・検証不足 |
+| 51 | `pcsx4all.opk` | 起動不可: libshake.so.1（FPS未測定） | 配布原版は低優先。後続試験で黒画面・約3 FPS。既存改修版は別判定。 |
 | 52 | `picodrive_gcw0(32X).opk` | 起動不可: SDLマウス初期化（FPS未測定） | 未採用・検証不足 |
 | 53 | `picodrive_gcw0(CD).opk` | 起動不可: SDLマウス初期化（FPS未測定） | 未採用・検証不足 |
 | 54 | `picodrive_gcw0(MD).opk` | 起動不可: SDLマウス初期化（FPS未測定） | 未採用・検証不足 |
