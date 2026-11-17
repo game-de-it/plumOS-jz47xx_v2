@@ -3,15 +3,15 @@
 set -eu
 base=/media/data/local/rg350-visual-tests
 case "${1:-}" in
-    atari_caverns) opk=atari.opk; rom="$base/rom/atari/CavernsOfMars.rom" ;;
-    atari_miner) opk=atari.opk; rom="$base/rom/atari/Miner2049er.rom" ;;
-    atari_food) opk=atari.opk; rom="$base/rom/atari/FoodFight.rom" ;;
-    fba_kungfum) opk=fba.opk; rom="$base/rom/fba/kungfum.zip" ;;
-    fba_bchopper) opk=fba.opk; rom="$base/rom/fba/bchopper.zip" ;;
-    fba_nspirit) opk=fba.opk; rom="$base/rom/fba/nspirit.zip" ;;
-    temper_airzonk) opk=temper.opk; rom=/media/data/sd2/roms/pcengine/AirZonk_U.pce ;;
-    temper_blazing) opk=temper.opk; rom=/media/data/sd2/roms/pcengine/BlazingLazers_U.pce ;;
-    temper_bonk) opk=temper.opk; rom=/media/data/sd2/roms/pcengine/BONKs_REVENGE.PCE ;;
+    atari_caverns) opk=atari-input.opk; rom="$base/rom/atari/CavernsOfMars.car" ;;
+    atari_miner) opk=atari-input.opk; rom="$base/rom/atari/Miner2049er.car" ;;
+    atari_food) opk=atari-input.opk; rom="$base/rom/atari/FoodFight.rom" ;;
+    fba_kungfum) opk=fba-softfloat.opk; rom="$base/rom/fba/kungfum.zip" ;;
+    fba_bchopper) opk=fba-softfloat.opk; rom="$base/rom/fba/bchopper.zip" ;;
+    fba_nspirit) opk=fba-softfloat.opk; rom="$base/rom/fba/nspirit.zip" ;;
+    temper_airzonk) opk=temper-noipu.opk; rom=/media/data/sd2/roms/pcengine/AirZonk_U.pce ;;
+    temper_blazing) opk=temper-noipu.opk; rom=/media/data/sd2/roms/pcengine/BlazingLazers_U.pce ;;
+    temper_bonk) opk=temper-noipu.opk; rom=/media/data/sd2/roms/pcengine/BONKs_REVENGE.PCE ;;
     *) echo "Unknown visual test: ${1:-}" >&2; exit 2 ;;
 esac
 [ -f "$base/opk/$opk" ] || { echo "Missing OPK: $opk" >&2; exit 1; }

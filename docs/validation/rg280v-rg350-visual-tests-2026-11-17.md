@@ -27,3 +27,23 @@ AtariとFBAのROMは `<local-path>` から試験用ディレクトリへコピ�
 旧FBA44の `FBA_HWSCALING` を0から1にした短時間試験でもKung-Fu Masterの崩れは残った。設定は元に戻した。`scripts/probe-rg280v-fba-frame.c` でSDL_Flipの直前に320×240、RGB565、pitch 640の画素を保存したところ、既に画面が崩れていた。したがってこの画面の崩れはDRM転送後ではなく旧FBA44側の描画経路で発生する。
 
 残り2本を同じ旧FBA44で8秒ずつ機械試験した。Battle Chopperの画面は目視で正常なランキング画面を表示したが、計測時は約30 FPS。Ninja Spiritのタイトル画面も目視では色・配置とも正常で、計測時は約19 FPS。どちらもゲームプレイ中の速度、音、操作は未確認。Battle Chopper試験後にFE自動復帰が一度失敗したため `S95frontend restart` で復旧し、FE稼働を確認した。両スクリーンショットはGit管理外の `output/rg280v-apps/rg350-device-audit-fba-{bchopper,nspirit}-visual/34.png` に保存した。
+
+## ソースからの修正試験
+
+試験用Appsだけをソース版へ切り替えた。通常のFEエミュ経路は変更していない。ROM、OPK、スクリーンショット、ビルドツリーは引き続きGit管理外。各OPKはMac側とRG280V側のSHA-256一致を確認した。
+
+| 候補 | ソース・コミット | RG280V向け処理 | 実機で確認できたこと | 残る確認 |
+| --- | --- | --- | --- | --- |
+| FBA .44 | [plrguez/fba-sdl](https://github.com/plrguez/fba-sdl) `9448a9c6f1040ad8ec204b5e9cb83e25574ac0c8` | MIPS soft floatで再ビルド。配布OPKの`fbasdl.dge`のみ交換 | Kung-Fu Masterのタイトルとゲーム中の画面が正常。旧版でSDL画素の時点から出ていた重複・色化けが消失。ゲーム中画面まで進み、プロセスは45秒の計測時間内で動作 | 実機で音声・操作・終了、他2 ROM、FPS |
+| Atari800 4.1.0 | [atari800/atari800](https://github.com/atari800/atari800) `d9d9ad1b47169d30b41e90b709dfc437844c9b9c` | `patches/rg280v-atari800-input.patch` で十字キー・A・START・メニュー入力をRG280Vに割当。生16 KB ROMを標準16 KB型のCART形式へ変換 | Caverns of Marsがタイトルからゲーム中へ進み、START・A・右入力後も終了せず動作。旧OPKはボタン押下後に終了コード10だった | 実機で音声・メニュー・終了、他2 ROM |
+| Temper | [gameblabla/temper](https://github.com/gameblabla/temper) `a6c9ef2c5d1a086c22eb51980e07f3c38d0b42ae` | soft floatで再ビルドし、GCW専用IPU経路を外した比較版を作成 | Blazing Lazersのタイトル、Air Zonkの約25秒後のタイトルが表示。Air Zonkの初期黒画面は同じROMのPicoArchでも再現し、導入演出の途中だった | ゲーム中の映像・音声・操作・終了、IPUあり版との比較 |
+
+FBAの配布バイナリはhard float ABIだったため、そのまま使用しない。ビルドスクリプトは `scripts/build-rg280v-fba-softfloat.sh`。ソースと依存ヘッダーは `output/rg280v-apps/rg350-visual-tests` 内に隔離し、ソースタグに含まれるKung-Fu Masterの256×246描画処理を取り込んだ。ビルド時のpng++は0.2.9、AVIRは2.5、JSONは3.9.1、BoostヘッダーはDebian bookwormの1.74を利用した。`Tag_GNU_MIPS_ABI_FP: Soft float`をELFで確認した。
+
+Atari800の生ROMはカートリッジ種別が不明なため選択画面を出す。Caverns of MarsとMiner 2049erの16 KB試験ROMは、標準16 KB型を示す16バイトのCARTヘッダーを付けた。元ROMは変更していない。Food Fightの32 KB ROMには型を推測で指定していない。変換と試験用OPKの転送は `scripts/setup-rg350-visual-tests.py` で再現できる。
+
+Temperの比較ビルドは `patches/rg280v-temper-noipu.patch` を使用した。Air Zonkの黒い導入場面はPicoArchとTemperの両方で数秒続き、約25秒後にタイトルが表示された。黒画面の単一キャプチャだけで不具合判定しない。IPU設定を外すこと自体の有効性は、この時点では未判定。
+
+Atari800とTemperのパッチは上流ソースとの差分をゼロ行コンテキストで保存した。適用時は各ソースツリーで `git apply --unidiff-zero` を使う。元のソースツリーへ実際に戻せることを `git apply --unidiff-zero --reverse --check` で確認した。
+
+試験OPKのSHA-256はFBA `f4222aad3205054eb777fa3a4a932a3a4eeba45808faa0a5e30f521377f65a49b3d`、Atari800 `2eeb984c95cb4c57fc0096f4d571a95a9e8ceb26a2d199a167a9a930793020bc`、Temper `ca599af6011ef011ea1b41a17c4d7f8941f93007d9e7ab222bdc01ecf851d7b9`。試験用Appsの9件を再照合し、FEプロセス稼働を確認した。

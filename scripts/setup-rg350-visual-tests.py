@@ -17,20 +17,23 @@ REMOTE = "/media/data/local/rg350-visual-tests"
 APPS = "/media/data/plumos/config/frontend/apps.json"
 ADB = ["adb", "-P", "5041", "-s", "10.1.1.2:5555"]
 TESTS = [
-    ("atari_caverns", "Atari Caverns", "atari.opk", "atari/CavernsOfMars.rom", "ATARI/800/CavernsOfMars.rom"),
-    ("atari_miner", "Atari Miner 2049er", "atari.opk", "atari/Miner2049er.rom", "ATARI/800/Miner2049er.rom"),
-    ("atari_food", "Atari Food Fight", "atari.opk", "atari/FoodFight.rom", "ATARI/800/FoodFight.rom"),
-    ("fba_kungfum", "FBA Kung-Fu Master", "fba.opk", "fba/kungfum.zip", "fbneo/kungfum.zip"),
-    ("fba_bchopper", "FBA Battle Chopper", "fba.opk", "fba/bchopper.zip", "fbneo/bchopper.zip"),
-    ("fba_nspirit", "FBA Ninja Spirit", "fba.opk", "fba/nspirit.zip", "fbneo/nspirit.zip"),
-    ("temper_airzonk", "Temper Air Zonk", "temper.opk", "", "pcengine/AirZonk_U.pce"),
-    ("temper_blazing", "Temper Blazing Lazers", "temper.opk", "", "pcengine/BlazingLazers_U.pce"),
-    ("temper_bonk", "Temper Bonk Revenge", "temper.opk", "", "pcengine/BONKs_REVENGE.PCE"),
+    ("atari_caverns", "Atari Caverns", "atari-input.opk", "atari/CavernsOfMars.car", "ATARI/800/CavernsOfMars.rom"),
+    ("atari_miner", "Atari Miner 2049er", "atari-input.opk", "atari/Miner2049er.car", "ATARI/800/Miner2049er.rom"),
+    ("atari_food", "Atari Food Fight", "atari-input.opk", "atari/FoodFight.rom", "ATARI/800/FoodFight.rom"),
+    ("fba_kungfum", "FBA Kung-Fu Master", "fba-softfloat.opk", "fba/kungfum.zip", "fbneo/kungfum.zip"),
+    ("fba_bchopper", "FBA Battle Chopper", "fba-softfloat.opk", "fba/bchopper.zip", "fbneo/bchopper.zip"),
+    ("fba_nspirit", "FBA Ninja Spirit", "fba-softfloat.opk", "fba/nspirit.zip", "fbneo/nspirit.zip"),
+    ("temper_airzonk", "Temper Air Zonk", "temper-noipu.opk", "", "pcengine/AirZonk_U.pce"),
+    ("temper_blazing", "Temper Blazing Lazers", "temper-noipu.opk", "", "pcengine/BlazingLazers_U.pce"),
+    ("temper_bonk", "Temper Bonk Revenge", "temper-noipu.opk", "", "pcengine/BONKs_REVENGE.PCE"),
 ]
 OPKS = {
     "atari.opk": ROOT / "output/rg280v-apps/rg350-catalog/Atari800_2020-02-14.opk",
+    "atari-input.opk": ROOT / "output/rg280v-apps/rg350-visual-tests/atari800-rg280v-input.opk",
     "fba.opk": ROOT / "output/rg280v-apps/fba44-romarg-test.opk",
+    "fba-softfloat.opk": ROOT / "output/rg280v-apps/rg350-visual-tests/fba44-rg280v-softfloat.opk",
     "temper.opk": ROOT / "output/rg280v-apps/rg350-catalog/Temper_2016-10-20.opk",
+    "temper-noipu.opk": ROOT / "output/rg280v-apps/rg350-visual-tests/temper-rg280v-noipu.opk",
 }
 LIBS = ["libreadline.so.6", "libncurses.so.5", "libncursesw.so",
         "libcrypto.so.1.0.0", "libao.so.4"]
@@ -77,7 +80,18 @@ def main():
         files.update(("lib/" + name, ROOT / "output/rg280v-emulators/legacy-lib" / name) for name in LIBS)
         for ident, _, _, rom, source in TESTS:
             if rom:
-                files["rom/" + rom] = ROM_ROOT / source
+                source_path = ROM_ROOT / source
+                if ident in {"atari_caverns", "atari_miner"}:
+                    payload = source_path.read_bytes()
+                    if len(payload) != 16384:
+                        raise RuntimeError(f"expected 16 KB cartridge: {source_path}")
+                    cart = out / pathlib.PurePosixPath(rom).name
+                    cart.write_bytes(b"CART" + (2).to_bytes(4, "big")
+                                     + (sum(payload) & 0xffffffff).to_bytes(4, "big")
+                                     + bytes(4) + payload)
+                    files["rom/" + rom] = cart
+                else:
+                    files["rom/" + rom] = source_path
         for _, name, _, rom, source in TESTS:
             if not rom:
                 # Temper uses the already populated SD2 PC Engine collection.

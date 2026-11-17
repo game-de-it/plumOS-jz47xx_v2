@@ -1,0 +1,31 @@
+diff --git a/src/sdl/input.c b/src/sdl/input.c
+index 1df8818..380ba0d 100644
+--- a/src/sdl/input.c
++++ b/src/sdl/input.c
+@@ -70,5 +70,6 @@ int PLATFORM_kbd_joy_1_enabled = FALSE;	/* disabled, would steal normal keys */
+-static int KBD_TRIG_0 = SDLK_RCTRL;
+-static int KBD_STICK_0_LEFT = SDLK_KP4;
+-static int KBD_STICK_0_RIGHT = SDLK_KP6;
+-static int KBD_STICK_0_DOWN = SDLK_KP5;
+-static int KBD_STICK_0_UP = SDLK_KP8;
++/* RG280V's SDL keymap reports the physical D-pad and A this way. */
++static int KBD_TRIG_0 = SDLK_LCTRL;
++static int KBD_STICK_0_LEFT = SDLK_LEFT;
++static int KBD_STICK_0_RIGHT = SDLK_RIGHT;
++static int KBD_STICK_0_DOWN = SDLK_DOWN;
++static int KBD_STICK_0_UP = SDLK_UP;
+@@ -678,0 +680,2 @@ int PLATFORM_Keyboard(void)
++	if (kbhits[SDLK_RETURN])
++		INPUT_key_consol &= ~INPUT_CONSOL_START;
+@@ -687,0 +691,6 @@ int PLATFORM_Keyboard(void)
++	case SDLK_ESCAPE:
++		if (!UI_is_active) {
++			key_pressed = 0;
++			return AKEY_UI;
++		}
++		break;
+@@ -707,0 +717,4 @@ int PLATFORM_Keyboard(void)
++	if (UI_is_active && lastkey == SDLK_LCTRL)
++		return AKEY_RETURN;
++	if (UI_is_active && lastkey == SDLK_LALT)
++		return AKEY_ESCAPE;
