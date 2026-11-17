@@ -23,7 +23,11 @@ def push(source, target):
 subprocess.run(['adb', '-P', '5041', 'connect', '10.1.1.2:5555'], check=True)
 candidates = json.loads((ROOT / 'assets/rg280v-apps/source-repair-visual-candidates.json').read_text())
 assert len({c['id'] for c in candidates}) == len(candidates)
-assert all(c['review'] == 'machine-pass-physical-pending' for c in candidates)
+assert all(c['review'] in {'machine-pass-physical-pending', 'machine-pass-user-confirmed'}
+           for c in candidates)
+for c in candidates:
+    if c['review'] == 'machine-pass-user-confirmed':
+        assert c.get('physical_validation', {}).get('result') == 'passed'
 path = '/media/data/plumos/config/frontend/apps.json'
 apps = json.loads(shell('cat ' + path))
 backup = OUT / 'apps-before.json'
