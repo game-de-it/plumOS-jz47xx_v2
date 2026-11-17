@@ -1,13 +1,175 @@
 diff --git a/main.c b/main.c
-index 3176a10..c392594 100644
+index 3176a10..b8a80b0 100644
 --- a/main.c
 +++ b/main.c
 @@ -148 +148 @@ rcvar_t pcm_exports[] =
 -#define PCM_BUFFER 2048
 +#define PCM_BUFFER 8192
-@@ -1607 +1606,0 @@ void VideoExitGame() {
+@@ -1140,11 +1140,9 @@ void ohb_hardware_15x_scale(){
+-    /* Hardware scaling */
+-
+-	un16 *src = (un16 *) fb.ptr;
+-	un16 *dst = (un16*) vid_fb.ptr + 1688;
+-	int x=0, y=0;
+-
+-	for(y=0; y<144; y++){
+-		memcpy(dst, src, 2*160);
+-		src += 160;
+-		dst += 208;
+-	}
++ un16 *src = (un16 *) fb.ptr;
++ int stride = screen->pitch / sizeof(un16);
++ un16 *dst = (un16 *)vid_fb.ptr + ((screen->h - 144) / 2) * stride + (screen->w - 160) / 2;
++ int y;
++ for (y = 0; y < 144; ++y) {
++  memcpy(dst, src, 160 * sizeof(un16));
++  src += 160;
++  dst += stride;
++ }
+@@ -1154,11 +1152,9 @@ void ohb_hardware_1666x_scale(){
+-    /* Hardware scaling */
+-
+-	un16 *src = (un16 *) fb.ptr;
+-	un16 *dst = (un16*) vid_fb.ptr + 16;
+-	int x=0, y=0;
+-
+-	for(y=0; y<144; y++){
+-		memcpy(dst, src, 2*160);
+-		src += 160;
+-		dst += 192;
+-	}
++ un16 *src = (un16 *) fb.ptr;
++ int stride = screen->pitch / sizeof(un16);
++ un16 *dst = (un16 *)vid_fb.ptr + ((screen->h - 144) / 2) * stride + (screen->w - 160) / 2;
++ int y;
++ for (y = 0; y < 144; ++y) {
++  memcpy(dst, src, 160 * sizeof(un16));
++  src += 160;
++  dst += stride;
++ }
+@@ -1168,11 +1164,9 @@ void ohb_hardware_fullscreen_scale(){
+-    /* Hardware scaling */
+-
+-	un16 *src = (un16 *) fb.ptr;
+-	un16 *dst = (un16*) vid_fb.ptr + 0;
+-	int x=0, y=0;
+-
+-	for(y=0; y<144; y++){
+-		memcpy(dst, src, 2*160);
+-		src += 160;
+-		dst += 160;
+-	}
++ un16 *src = (un16 *) fb.ptr;
++ int stride = screen->pitch / sizeof(un16);
++ un16 *dst = (un16 *)vid_fb.ptr + ((screen->h - 144) / 2) * stride + (screen->w - 160) / 2;
++ int y;
++ for (y = 0; y < 144; ++y) {
++  memcpy(dst, src, 160 * sizeof(un16));
++  src += 160;
++  dst += stride;
++ }
+@@ -1240,11 +1234,9 @@ void blend_hardware_15x_scale(){
+-    /* Hardware scaling */
+-
+-	un16 *src = (un16 *) currframe_fb.ptr;
+-	un16 *dst = (un16*) vid_fb.ptr + 1688;
+-	int x=0, y=0;
+-
+-	for(y=0; y<144; y++){
+-		memcpy(dst, src, 2*160);
+-		src += 160;
+-		dst += 208;
+-	}
++ un16 *src = (un16 *) currframe_fb.ptr;
++ int stride = screen->pitch / sizeof(un16);
++ un16 *dst = (un16 *)vid_fb.ptr + ((screen->h - 144) / 2) * stride + (screen->w - 160) / 2;
++ int y;
++ for (y = 0; y < 144; ++y) {
++  memcpy(dst, src, 160 * sizeof(un16));
++  src += 160;
++  dst += stride;
++ }
+@@ -1254,11 +1246,9 @@ void blend_hardware_1666x_scale(){
+-    /* Hardware scaling */
+-
+-	un16 *src = (un16 *) currframe_fb.ptr;
+-	un16 *dst = (un16*) vid_fb.ptr + 16;
+-	int x=0, y=0;
+-
+-	for(y=0; y<144; y++){
+-		memcpy(dst, src, 2*160);
+-		src += 160;
+-		dst += 192;
+-	}
++ un16 *src = (un16 *) currframe_fb.ptr;
++ int stride = screen->pitch / sizeof(un16);
++ un16 *dst = (un16 *)vid_fb.ptr + ((screen->h - 144) / 2) * stride + (screen->w - 160) / 2;
++ int y;
++ for (y = 0; y < 144; ++y) {
++  memcpy(dst, src, 160 * sizeof(un16));
++  src += 160;
++  dst += stride;
++ }
+@@ -1268,11 +1258,9 @@ void blend_hardware_fullscreen_scale(){
+-    /* Hardware scaling */
+-
+-	un16 *src = (un16 *) currframe_fb.ptr;
+-	un16 *dst = (un16*) vid_fb.ptr + 0;
+-	int x=0, y=0;
+-
+-	for(y=0; y<144; y++){
+-		memcpy(dst, src, 2*160);
+-		src += 160;
+-		dst += 160;
+-	}
++ un16 *src = (un16 *) currframe_fb.ptr;
++ int stride = screen->pitch / sizeof(un16);
++ un16 *dst = (un16 *)vid_fb.ptr + ((screen->h - 144) / 2) * stride + (screen->w - 160) / 2;
++ int y;
++ for (y = 0; y < 144; ++y) {
++  memcpy(dst, src, 160 * sizeof(un16));
++  src += 160;
++  dst += stride;
++ }
+@@ -1590,12 +1578,13 @@ void VideoEnterGame() {
+-	if (upscaler < 5) {
+-		screen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
+-	}
+-	if (upscaler == 5) {
+-		screen = SDL_SetVideoMode(208, 160, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
+-	}
+-	if (upscaler == 6) {
+-		screen = SDL_SetVideoMode(192, 144, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
+-	}
+-	if (upscaler == 7) {
+-		screen = SDL_SetVideoMode(160, 144, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
+-	}
++ int width = 320, height = 240;
++ if (upscaler == 5) { width = 216; height = 162; }
++ if (upscaler == 6) { width = 192; height = 144; }
++ if (upscaler == 7) { width = 160; height = 144; }
++ screen = SDL_SetVideoMode(width, height, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
++ if (!screen) {
++  fprintf(stderr, "OhBoy video mode %dx%d failed: %s\n", width, height, SDL_GetError());
++  upscaler = 4;
++  screen = SDL_SetVideoMode(320, 240, 16, SDL_SWSURFACE);
++ }
++ if (!screen) { fprintf(stderr, "OhBoy video recovery failed\n"); exit(1); }
++ vid_fb.dirty = 1;
++ fprintf(stderr, "OhBoy video mode: %dx%d pitch=%d scaler=%d\n", screen->w, screen->h, screen->pitch, upscaler);
+@@ -1607,2 +1596,2 @@ void VideoExitGame() {
 -	screen = SDL_SetVideoMode(160, 120, 16, SDL_HWSURFACE | SDL_DOUBLEBUF); // Force a different resolution before changing from SDL_HWSURFACE|SDL_DOUBLEBUF to SDL_SWSURFACE to avoid screen not updating bug.
-@@ -1732,5 +1731,9 @@ static void audio_callback(void *d, byte *stream, int len) {
+-	screen = SDL_SetVideoMode(320, 240, 16, SDL_SWSURFACE);
++ screen = SDL_SetVideoMode(320, 240, 16, SDL_SWSURFACE);
++ if (!screen) { fprintf(stderr, "OhBoy menu mode failed\n"); exit(1); }
+@@ -1613,0 +1603 @@ void vid_end() {
++		if (!screen || SDL_LockSurface(screen) < 0) return;
+@@ -1615 +1605,3 @@ void vid_end() {
+-		SDL_LockSurface(screen);
++		vid_fb.w = screen->w;
++		vid_fb.h = screen->h;
++		vid_fb.pitch = screen->pitch;
+@@ -1732,5 +1724,9 @@ static void audio_callback(void *d, byte *stream, int len) {
 -	if(pcm_buffered==0) return;
 -	memcpy(stream, pcm_tail, len);
 -	pcm_tail += pcm.len;
@@ -22,7 +184,7 @@ index 3176a10..c392594 100644
 +  if (pcm_tail == pcm_buffer + pcm_bufferlen) pcm_tail = pcm_buffer;
 + }
 + pcm_buffered -= count;
-@@ -1771,41 +1774,25 @@ int pcm_submit(){
+@@ -1771,41 +1767,25 @@ int pcm_submit(){
 -	static int lastbuffer = 0;
 -	byte *src;
 -	n16 sample;
@@ -89,10 +251,10 @@ index 3176a10..c392594 100644
 + pcm.pos = 0;
 + SDL_UnlockAudio();
 + return 1;
-@@ -1933 +1920 @@ void ev_poll()
+@@ -1933 +1913 @@ void ev_poll()
 -			} else if(event.key.keysym.sym==SDLK_HOME){
 +			} else if(event.key.keysym.sym==SDLK_F12){
-@@ -1941 +1928 @@ void ev_poll()
+@@ -1941 +1921 @@ void ev_poll()
 -			} else if (alt_menu_combo == 1){
 +			} else {
 diff --git a/menu.c b/menu.c
