@@ -1,0 +1,17 @@
+diff --git a/src/sdl-dingux/sdl_input.cpp b/src/sdl-dingux/sdl_input.cpp
+index 3a1ca5f..bbf3b7f 100644
+--- a/src/sdl-dingux/sdl_input.cpp
++++ b/src/sdl-dingux/sdl_input.cpp
+@@ -229,0 +230,10 @@ void do_keypad()
++	// RG280V has no dedicated menu button. Reserve SELECT+START for the
++	// emulator menu, as on the other plumOS emulators.
++	if ((keypc & (BUTTON_SELECT | BUTTON_START)) == (BUTTON_SELECT | BUTTON_START)) {
++		keypc = keypad = 0;
++		SndPause(1);
++		gui_Run();
++		SndPause(0);
++		return;
++	}
++
+@@ -319 +328,0 @@ void do_keypad()
+-	else if ((keypc & BUTTON_START) && (keypc & BUTTON_SELECT)) P1P2Start = 1;

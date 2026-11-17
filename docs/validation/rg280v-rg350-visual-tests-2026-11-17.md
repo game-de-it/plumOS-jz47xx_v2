@@ -47,3 +47,14 @@ Temperの比較ビルドは `patches/rg280v-temper-noipu.patch` を使用した�
 Atari800とTemperのパッチは上流ソースとの差分をゼロ行コンテキストで保存した。適用時は各ソースツリーで `git apply --unidiff-zero` を使う。元のソースツリーへ実際に戻せることを `git apply --unidiff-zero --reverse --check` で確認した。
 
 試験OPKのSHA-256はFBA `f4222aad3205054eb777fa3a4a932a3a4eeba45808faa0a5e30f521377f65a49b3d`、Atari800 `2eeb984c95cb4c57fc0096f4d571a95a9e8ceb26a2d199a167a9a930793020bc`、Temper `ca599af6011ef011ea1b41a17c4d7f8941f93007d9e7ab222bdc01ecf851d7b9`。試験用Appsの9件を再照合し、FEプロセス稼働を確認した。
+
+## SELECT＋STARTメニュー修正
+
+FBA Kung-Fu Masterの映像・操作・音声はユーザーの目視で正常だったが、SELECT＋STARTではメニューを開けず終了できなかった。実行中のFBAはTERMに応答しなかったため、そのプロセスだけをKILLし、FEへ戻した。FBAの上流実装はSELECT＋STARTを2人同時スタートに使い、メニューは別のキーへ割り当てていた。`patches/rg280v-fba-menu.patch` でSELECT＋STARTを優先してGUIへ送るよう変更した。
+
+同じ操作で他の試験用エミュもメニューを開けるよう、Atari800はSELECT単独をコンソールSELECT、START単独をコンソールSTARTとして残し、同時押しだけをGUIに送るよう `patches/rg280v-atari800-input.patch` を更新した。TemperはSDLのSELECT・STARTキー状態を追跡し、同時押しを1回だけメニュー操作として送るよう `patches/rg280v-temper-noipu.patch` を更新した。電源ボタンはエミュメニューには使用しない。
+
+3本をsoft float ABIで再ビルドし、試験用Appsへ転送後、ホスト・端末のSHA-256を照合した。ADBから入力イベントのSELECT＋STARTを送って画面を取得し、FBA・Atari800・Temperの全てでメニューが表示された。画像はGit管理外の `output/rg280v-apps/rg350-visual-tests/{fba,atari,temper}-menu-chord.png` にある。自動試験では各プロセスを終了してFE起動を確認した。メニュー項目からの通常終了とゲーム復帰は、実機操作による確認が残る。
+
+更新後のOPK SHA-256はFBA `8b935db05bb4bf9b1dc9ae4058627a5381ca804d7cfd52af3f1998fdc20e5652`、Atari800 `921793d7873f687f911a251d974448319f8409ba444cfa20c6880c7a0e49e4bc`、Temper `34cabae61b5c44f61e31eb4c05e8474fef3ed41e7e5cda5f42f55ac4987e3c73`。差分はいずれもゼロ行コンテキストで、適用時は `git apply --unidiff-zero` を使う。
+TemperのSDLソースはCRLFなので、対応するパッチもCRLFを保持している。差分の空白検査には `git -c core.whitespace=cr-at-eol diff --check` を使った。

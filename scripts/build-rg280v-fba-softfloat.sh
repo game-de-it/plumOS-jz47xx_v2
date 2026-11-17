@@ -8,6 +8,7 @@ src="$work/fba-sdl-src"
 release="$work/fba-multi-od-beta-fix06.opk"
 output="$work/fba44-rg280v-softfloat.opk"
 stage="$work/fba-softfloat-stage"
+patch="$root/patches/rg280v-fba-menu.patch"
 
 for path in "$src/Makefile.dingux" "$release" \
     "$work/avir-2.5/avir.h" \
@@ -16,6 +17,11 @@ for path in "$src/Makefile.dingux" "$release" \
     "$work/boost_1_73_0/boost/algorithm/string/trim.hpp"; do
     [[ -e "$path" ]] || { echo "Missing build input: $path" >&2; exit 1; }
 done
+[[ -f "$patch" ]] || { echo "Missing source patch: $patch" >&2; exit 1; }
+if ! git -C "$src" apply --unidiff-zero --reverse --check "$patch" 2>/dev/null; then
+    git -C "$src" apply --unidiff-zero --check "$patch"
+    git -C "$src" apply --unidiff-zero "$patch"
+fi
 
 docker run --rm --platform linux/arm64 \
     -v "$root:/workspace" \
