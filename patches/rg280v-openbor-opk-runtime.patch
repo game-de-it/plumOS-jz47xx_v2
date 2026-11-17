@@ -1,0 +1,122 @@
+diff --git a/engine/engine/sdl/menu.c b/engine/engine/sdl/menu.c
+index cdd4b09..434063a 100644
+--- a/engine/engine/sdl/menu.c
++++ b/engine/engine/sdl/menu.c
+@@ -190,7 +190,7 @@ int findPaks(void)
+ #ifdef WII
+         dp = opendir("sd:/apps/OpenBOR/Paks");
+ #elif GCW0
+-        dp = opendir("/usr/local/share/OpenBOR/Paks");
++        dp = opendir(paksDir);
+ 
+ #else
+         dp = opendir(paksDir);
+@@ -220,7 +220,7 @@ int findPaks(void)
+ 		}
+ 		closedir(dp);
+    	}
+-#ifdef GCW0
++#if defined(GCW0) && !defined(PLUMOS_RG280V)
+ /*add SDCard support*/
+ //find the correct name of SD Card
+         DIR *mysd;
+diff --git a/engine/engine/sdl/sdlport.c b/engine/engine/sdl/sdlport.c
+index 9d438cc..eaaf5cd 100644
+--- a/engine/engine/sdl/sdlport.c
++++ b/engine/engine/sdl/sdlport.c
+@@ -33,10 +33,10 @@ char packfile[128] = {"bor.pak"};
+ char rootDir[128] = {"/mnt/sdcard/OpenBOR"};
+ #endif
+ #if GCW0
+-char paksDir[128] = {"/usr/local/share/OpenBOR/Paks"};
+-char savesDir[128] = {"/usr/local/home/.OpenBOR/Saves"};
+-char logsDir[128] = {"/usr/local/home/.OpenBOR/Logs"};
+-char screenShotsDir[128] = {"/usr/local/home/.OpenBOR/ScreenShots"};
++char paksDir[128] = {"Paks"};
++char savesDir[128] = {"Saves"};
++char logsDir[128] = {"Logs"};
++char screenShotsDir[128] = {"ScreenShots"};
+ #else
+ char paksDir[128] = {"Paks"};
+ char savesDir[128] = {"Saves"};
+@@ -71,6 +71,7 @@ void borExit(int reset)
+ 
+ int main(int argc, char *argv[])
+ {
++    setvbuf(stdout, NULL, _IOLBF, 0);
+ #ifndef SKIP_CODE
+ 	char pakname[256];
+ #endif
+diff --git a/engine/engine/sdl/video.c b/engine/engine/sdl/video.c
+index 9664cc5..e53a1e3 100644
+--- a/engine/engine/sdl/video.c
++++ b/engine/engine/sdl/video.c
+@@ -50,7 +50,7 @@ void initSDL()
+ 
+ 	if(SDL_Init(init_flags) < 0)
+ 	{
+-		printf("SDL Failed to Init!!!! (%s)\n", SDL_GetError());
++		fprintf(stderr,"SDL Failed to Init!!!! (%s)\n", SDL_GetError());
+ 		borExit(0);
+ 	}
+ 	SDL_ShowCursor(SDL_DISABLE);
+@@ -90,20 +90,16 @@ int SetVideoMode(int w, int h, int bpp, bool gl)
+ 	if(gl) flags |= SDL_WINDOW_OPENGL;
+ 	if(savedata.fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+ 
+-	if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP))
++	if(window && !(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP))
+ 		SDL_GetWindowPosition(window, &last_x, &last_y);
+ 
+-	if(window && gl != last_gl)
+-	{
+-		SDL_DestroyWindow(window);
+-		window = NULL;
+-	}
+-	last_gl = gl;
+-
+-	if(renderer) SDL_DestroyRenderer(renderer);
+-	if(texture)  SDL_DestroyTexture(texture);
+-	renderer = NULL;
+-	texture = NULL;
++    /* Software renderers own a window surface. Recreate it on mode changes,
++       and destroy textures before the renderer that owns them. */
++    if(texture) SDL_DestroyTexture(texture);
++    if(renderer) SDL_DestroyRenderer(renderer);
++    if(window) SDL_DestroyWindow(window);
++    texture = NULL; renderer = NULL; window = NULL;
++    last_gl = gl;
+ 
+ 	if(window)
+ 	{
+@@ -128,7 +124,7 @@ int SetVideoMode(int w, int h, int bpp, bool gl)
+ 		window = SDL_CreateWindow(windowTitle, last_x, last_y, w, h, flags);
+ 		if(!window)
+ 		{
+-			printf("Error: failed to create window: %s\n", SDL_GetError());
++			fprintf(stderr,"Error: failed to create window: %s\n", SDL_GetError());
+ 			return 0;
+ 		}
+ 		SDL_Surface* icon = (SDL_Surface*)pngToSurface((void*)openbor_icon_32x32_png.data);
+@@ -142,7 +138,7 @@ int SetVideoMode(int w, int h, int bpp, bool gl)
+ 		renderer = SDL_CreateRenderer(window, -1, 0);
+ 		if(!renderer)
+ 		{
+-			printf("Error: failed to create renderer: %s\n", SDL_GetError());
++			fprintf(stderr,"Error: failed to create renderer: %s\n", SDL_GetError());
+ 			return 0;
+ 		}
+ 	}
+diff --git a/engine/engine/source/utils.c b/engine/engine/source/utils.c
+index a202817..96ad746 100644
+--- a/engine/engine/source/utils.c
++++ b/engine/engine/source/utils.c
+@@ -71,7 +71,7 @@
+ #define READ_LOGFILE(type)   type ? fopen("/mnt/sdcard/OpenBOR/Logs/OpenBorLog.txt", "rt") : fopen("/mnt/sdcard/OpenBOR/Logs/ScriptLog.txt", "rt")
+ #define COPY_ROOT_PATH(buf, name) strncpy(buf, "/mnt/sdcard/OpenBOR/", 20); strncat(buf, name, strlen(name)); strncat(buf, "/", 1);
+ #define COPY_PAKS_PATH(buf, name) strncpy(buf, "/mnt/sdcard/OpenBOR/Paks/", 25); strncat(buf, name, strlen(name));
+-#elif GCW0
++#elif defined(GCW0) && !defined(PLUMOS_RG280V)
+ #define CHECK_LOGFILE(type)  type ? fileExists("/usr/local/home/.OpenBOR/Logs/OpenBorLog.txt") : fileExists("/usr/local/home/.OpenBOR/Logs/ScriptLog.txt")
+ #define OPEN_LOGFILE(type)   type ? fopen("/usr/local/home/.OpenBOR/Logs/OpenBorLog.txt", "wt") : fopen("/usr/local/home/.OpenBOR/Logs/ScriptLog.txt", "wt")
+ #define APPEND_LOGFILE(type) type ? fopen("/usr/local/home/.OpenBOR/Logs/OpenBorLog.txt", "at") : fopen("/usr/local/home/.OpenBOR/Logs/ScriptLog.txt", "at")

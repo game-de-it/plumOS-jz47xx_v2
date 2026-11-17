@@ -1,0 +1,123 @@
+diff --git a/src/audio_generic.cpp b/src/audio_generic.cpp
+index fdbea41..4451ebe 100644
+--- a/src/audio_generic.cpp
++++ b/src/audio_generic.cpp
+@@ -194,8 +194,10 @@ bool GenericAudio::PlayOnChannel(BgmChannel& chan, const std::string& file, int
+ 		return true;
+ 	} else {
+ 		Output::Warning("Couldn't play BGM %s. Format not supported", FileFinder::GetPathInsideGamePath(file).c_str());
++		// Create transfers FILE ownership to a decoder, even when its Open fails.
++		// Only an unrecognized format leaves the FILE owned by this caller.
++		if (!chan.decoder) fclose(filehandle);
+ 		chan.decoder.reset();
+-		fclose(filehandle);
+ 	}
+ 
+ 	return false;
+diff --git a/src/audio_resampler.cpp b/src/audio_resampler.cpp
+index 5e3607c..2d9af72 100644
+--- a/src/audio_resampler.cpp
++++ b/src/audio_resampler.cpp
+@@ -23,6 +23,7 @@
+ #include <cstring>
+ #include "audio_resampler.h"
+ #include "output.h"
++#include "output.h"
+ 
+ #define ERROR -1
+ #define STANDARD_PITCH 100
+@@ -240,6 +241,10 @@ bool AudioResampler::WasInited() const {
+ bool AudioResampler::Open(FILE* file) {
+ 	if (wrapped_decoder->Open(file)) {
+ 		wrapped_decoder->GetFormat(input_rate, input_format, nr_of_channels);
++		if (input_rate <= 0 || nr_of_channels <= 0) {
++			error_message = "Decoder returned an invalid audio rate/channel count";
++			return false;
++		}
+ 
+ 		//determine if the input format is supported by the resampler
+ 		switch (input_format) {
+@@ -258,6 +263,11 @@ bool AudioResampler::Open(FILE* file) {
+ 
+ 		#if defined(HAVE_LIBSPEEXDSP)
+ 			conversion_state = speex_resampler_init(nr_of_channels, input_rate, output_rate, sampling_quality, &lasterror);
++			if (!conversion_state) {
++				error_message = "speex resampler init failed: " + std::to_string(lasterror);
++				Output::Warning("Speex init failed: error=%d rate=%d output=%d channels=%d quality=%d", lasterror, input_rate, output_rate, nr_of_channels, sampling_quality);
++				return false;
++			}
+ 			conversion_data.ratio_num = input_rate;
+ 			conversion_data.ratio_denom = output_rate;
+ 			speex_resampler_skip_zeros(conversion_state);
+diff --git a/src/decoder_mpg123.cpp b/src/decoder_mpg123.cpp
+index da1daef..6fd1c47 100644
+--- a/src/decoder_mpg123.cpp
++++ b/src/decoder_mpg123.cpp
+@@ -36,8 +36,8 @@ static ssize_t custom_read(void* io, void* buffer, size_t nbyte) {
+ 
+ static off_t custom_seek(void* io, off_t offset, int seek_type) {
+ 	FILE* f = reinterpret_cast<FILE*>(io);
+-	fseek(f, offset, seek_type);
+-	return ftell(f);
++	if (fseeko(f, offset, seek_type) != 0) return -1;
++	return ftello(f);
+ }
+ 
+ static void custom_close(void* io) {
+@@ -64,13 +64,12 @@ Mpg123Decoder::Mpg123Decoder() :
+ 	}
+ 
+ 	handle.reset(mpg123_new(nullptr, &err));
+-	mpg123_replace_reader_handle(handle.get(), custom_read, custom_seek, custom_close);
+-
+ 	if (!handle) {
+ 		error_message = "mpg123: " + std::string(mpg123_plain_strerror(err));
+ 		return;
+ 	}
+ 
++	mpg123_replace_reader_handle(handle.get(), custom_read, custom_seek, custom_close);
+ 	init = true;
+ }
+ 
+@@ -97,7 +96,11 @@ bool Mpg123Decoder::Open(FILE* file) {
+ 	// Samplerate cached, regularly needed for Ticks function
+ 	int ch;
+ 	int fmt;
+-	mpg123_getformat(handle.get(), &samplerate, &ch, &fmt);
++	err = mpg123_getformat(handle.get(), &samplerate, &ch, &fmt);
++	if (err != MPG123_OK || samplerate <= 0 || ch <= 0) {
++		error_message = "mpg123 could not determine the audio format";
++		return false;
++	}
+ 
+ 	return true;
+ }
+@@ -160,9 +163,9 @@ static AudioDecoder::Format mpg123_format_to_format(int format) {
+ }
+ 
+ void Mpg123Decoder::GetFormat(int& frequency, AudioDecoder::Format& format, int& channels) const {
+-	long freq;
+-	int ch;
+-	int fmt;
++	long freq = 0;
++	int ch = 0;
++	int fmt = MPG123_ENC_SIGNED_16;
+ 
+ 	mpg123_getformat(handle.get(), &freq, &ch, &fmt);
+ 
+diff --git a/src/sdl2_ui.cpp b/src/sdl2_ui.cpp
+index 45ea8f5..a667c17 100644
+--- a/src/sdl2_ui.cpp
++++ b/src/sdl2_ui.cpp
+@@ -907,9 +907,9 @@ Input::Keys::InputKey SdlKey2InputKey(SDL_Keycode sdlkey) {
+ 		case SDL_SCANCODE_DELETE		: return Input::Keys::DEL;
+ 		case SDL_SCANCODE_LSHIFT		: return Input::Keys::LSHIFT;
+ 		case SDL_SCANCODE_RSHIFT		: return Input::Keys::RSHIFT;
+-		case SDL_SCANCODE_LCTRL			: return Input::Keys::LCTRL;
++		case SDL_SCANCODE_LCTRL			: return Input::Keys::Z; // RG280V A: confirm
+ 		case SDL_SCANCODE_RCTRL			: return Input::Keys::RCTRL;
+-		case SDL_SCANCODE_LALT			: return Input::Keys::LALT;
++		case SDL_SCANCODE_LALT			: return Input::Keys::X; // RG280V B: cancel/menu
+ 		case SDL_SCANCODE_RALT			: return Input::Keys::RALT;
+ 		case SDL_SCANCODE_0				: return Input::Keys::N0;
+ 		case SDL_SCANCODE_1				: return Input::Keys::N1;

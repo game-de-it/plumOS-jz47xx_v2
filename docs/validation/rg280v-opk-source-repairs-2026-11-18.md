@@ -52,3 +52,5 @@ python3 scripts/setup-rg350-source-repair-tests.py
 生ログとDRM画像は`output/rg280v-apps/rg350-device-audit-repair-final-*/`、追加診断は`*source-trace*`・`*path-fixed*`・`*video-repaired*`・`*potator-color-fixed*`。`smsplus-wonderboy`の最初の最終試行はパスワード画面だったため、Apps判定には本編を取得した`smsplus-wonderboy-game`を使用した。Apps登録前後のJSONと画面は`output/rg280v-apps/source-repair-apps/`。4パッケージとも実際のApps入口から起動し、START＋SELECT → Exit/Quitで終了コード0とApps画面への復帰も確認した。OswanのPuzzle BobbleはROMのチェックサム警告が出るが、本編表示と正常終了は確認できた。この警告だけでROMを不良と断定していない。
 
 EasyRPG、OpenBOR、UAE4All、GnGeo、ScummVM、openMSX、UnrealSpeccy等は今回の修正済み件数に含めない。ソースを取得しただけのものを「修正・検証済み」としない。残る起動問題は継続調査対象であり、異常終了だけを理由に恒久除外していない。
+
+追加の6実装のソース修正・未解決点は [継続作業ログ](rg280v-opk-source-repairs-continuation-2026-11-18.md) に記録。追加候補と起動修正の到達点を区別する。

@@ -51,6 +51,7 @@ def main():
     parser.add_argument("--screenshot-delay", type=float, default=3.0)
     parser.add_argument("--sdl-driver", default="kmsdrm", choices=("kmsdrm", "fbcon"))
     parser.add_argument("--trace", action="store_true", help="Collect file/process/signal syscalls for startup failures")
+    parser.add_argument("--health-library", default="/media/data/plumos/lib/libstandalone-health.so", help="Remote telemetry library; use the SDL2 variant for SDL2 OPKs")
     parser.add_argument("--preload", default="", help="Additional remote LD_PRELOAD library")
     parser.add_argument("--tag", default="", help="Suffix for the ignored evidence directory")
     parser.add_argument("--only", type=int, nargs="*", help="Catalog positions to retest")
@@ -123,7 +124,7 @@ def main():
         launch_env = ("PLUMOS_ROOT=/media/data/plumos HOME=/media/data/plumos/home "
                       "SDL_VIDEODRIVER=" + args.sdl_driver + " LD_LIBRARY_PATH=" +
                       shlex.quote(library_path) + " ") if not args.raw_env else "HOME=/media/data/local "
-        preloads = ["/media/data/plumos/lib/libstandalone-health.so"]
+        preloads = [args.health_library]
         if args.preload:
             preloads.append(args.preload)
         call = (launch_env + "PLUMOS_STANDALONE_HEALTH_LOG=" + shlex.quote(remote_log) +

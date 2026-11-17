@@ -1,0 +1,43 @@
+diff --git a/platform/sdl/sdl_keys_dingoo.cpp b/platform/sdl/sdl_keys_dingoo.cpp
+index 95bcb8c..e27e71e 100644
+--- a/platform/sdl/sdl_keys_dingoo.cpp
++++ b/platform/sdl/sdl_keys_dingoo.cpp
+@@ -76,16 +76,19 @@ namespace xPlatform
+ 		case DINGOO_BUTTON_X:		return '1';
+ 		case DINGOO_BUTTON_Y:		return ' ';
+ 	
+-		case DINGOO_BUTTON_SELECT:
+-			b_select = _flags&KF_DOWN;
+-			if(b_select && b_start)
+-				OpQuit(true);
+-			return 'm';
+-		case DINGOO_BUTTON_START:
+-			b_start = _flags&KF_DOWN;
+-			if(b_select && b_start)
+-				OpQuit(true);
+-			return 'k';
++        case DINGOO_BUTTON_SELECT:
++        case DINGOO_BUTTON_START:
++        {
++            static bool menu_chord = false;
++            if (_key == DINGOO_BUTTON_SELECT) b_select = (_flags & KF_DOWN) != 0;
++            else b_start = (_flags & KF_DOWN) != 0;
++            if (!b_select && !b_start) menu_chord = false;
++            if (b_select && b_start && !menu_chord) {
++                menu_chord = true;
++                return 'm';
++            }
++            return 0;
++        }
+ 
+ 		case DINGOO_BUTTON_L:
+ 			l_shift = _flags&KF_DOWN;
+@@ -118,8 +121,6 @@ namespace xPlatform
+ 		default:
+ 			break;
+ 		}
+-		if(b_select && b_start)
+-			OpQuit(true);
+ 		return 0;
+ 	}
+ 

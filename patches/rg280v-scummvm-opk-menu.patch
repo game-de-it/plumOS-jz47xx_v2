@@ -1,0 +1,26 @@
+diff --git a/backends/events/dinguxsdl/dinguxsdl-events.cpp b/backends/events/dinguxsdl/dinguxsdl-events.cpp
+index fa5f1d3..389f256 100644
+--- a/backends/events/dinguxsdl/dinguxsdl-events.cpp
++++ b/backends/events/dinguxsdl/dinguxsdl-events.cpp
+@@ -70,6 +70,21 @@
+ #endif
+ 
+ bool DINGUXSdlEventSource::remapKey(SDL_Event &ev, Common::Event &event) {
++#ifdef GCW0
++    static bool startHeld = false, selectHeld = false, menuChord = false;
++    if (ev.key.keysym.sym == SDLK_RETURN || ev.key.keysym.sym == SDLK_ESCAPE) {
++        bool down = ev.type == SDL_KEYDOWN;
++        if (ev.key.keysym.sym == SDLK_RETURN) startHeld = down;
++        else selectHeld = down;
++        event.type = Common::EVENT_INVALID;
++        if (startHeld && selectHeld && !menuChord) {
++            menuChord = true;
++            event.type = Common::EVENT_MAINMENU;
++        }
++        if (!startHeld && !selectHeld) menuChord = false;
++        return true;
++    }
++#endif
+ 	if (ev.key.keysym.sym == PAD_UP) {
+ 		if (ev.type == SDL_KEYDOWN) {
+ 			_km.y_vel = -1 * MULTIPLIER;

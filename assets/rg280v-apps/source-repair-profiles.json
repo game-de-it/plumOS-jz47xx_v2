@@ -65,5 +65,95 @@
     "binary": "potator-od.dge",
     "patch": "patches/rg280v-potator-opk-launch.patch",
     "build": "make -f makefile -j4 OSTYPE=odgcw CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CCP=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" LD=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" CFLAGS=\"-O2 -mips32r2 -msoft-float -fcommon -D_ODSDL_ -D_OPENDINGUX_ -DMAX__PATH=1024 -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL\" LDFLAGS=\"-lSDL -lm\""
+  },
+  "30": {
+    "slug": "uae4all",
+    "url": "https://github.com/goldmojo/uae4all.git",
+    "revision": "9988f9924a5da4d21fde414b8d531301f8b1076c",
+    "binary": "uae4all.elf",
+    "build": "make -f Makefile.gcw0 -j6 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" STRIP=\"$t/bin/mipsel-gcw0-linux-uclibc-strip\" DEFAULT_CFLAGS=\"-mips32r2 -msoft-float -fcommon -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DGCW0\"",
+    "prepare": "mkdir -p \"$HOME/.uae4all\"\nln -sfn /media/data/sd2/.plumos-rg350-tests-20261118/relocated/bios/home-30/.uae4all/kick.rom \"$HOME/.uae4all/kick.rom\""
+  },
+  "17": {
+    "slug": "openbor",
+    "url": "https://github.com/DavidKnight247/OpenBOR-for-the-GCW0.git",
+    "revision": "7b1aa82321709edfc1c7840109eeda457e17855e",
+    "binary": "engine/engine/OpenBOR",
+    "dependencies": [
+      {
+        "slug": "sdl2-gfx",
+        "url": "https://github.com/ferzkopp/SDL2_gfx.git",
+        "revision": "6521c55319b0db7a28f3e750d64f7927040eaeb9"
+      }
+    ],
+    "build": "find engine/engine -name \"*.o\" -delete\nsys=\"$t/mipsel-gcw0-linux-uclibc/sysroot/usr\"\ngfx=/workspace/output/rg280v-apps/source-repairs/sdl2-gfx\n\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" -O2 -mips32r2 -msoft-float -I\"$sys/include/SDL2\" -c \"$gfx/SDL2_framerate.c\" -o \"$gfx/SDL2_framerate.mips.o\"\n\"$t/bin/mipsel-gcw0-linux-uclibc-ar\" rcs \"$gfx/libSDL2_gfx.a\" \"$gfx/SDL2_framerate.mips.o\"\nmake -C engine/engine -j6 BUILD_OPENDINGUX=1 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" STRIP=\"$t/bin/mipsel-gcw0-linux-uclibc-strip OpenBOR.elf -o OpenBOR\" INCLUDES=\"$sys/include $sys/include/SDL2 $gfx source/webmlib\" ARCHFLAGS=\"-mips32r2 -msoft-float -fcommon -DPLUMOS_RG280V\" LIBS=\"$gfx/libSDL2_gfx.a -lSDL2 -lpthread -lvorbisfile -lvorbis -logg -lpng16 -lz -lm\"",
+    "prepare": "export SDL_RENDER_DRIVER=software\nexport XDG_CACHE_HOME=\"$HOME/cache\"\nmkdir -p \"$XDG_CACHE_HOME\" \"$HOME/runtime/Paks\" \"$HOME/runtime/Saves\" \"$HOME/runtime/Logs\" \"$HOME/runtime/ScreenShots\"\nln -sfn \"$1\" \"$HOME/runtime/Paks/test.pak\"\ncd \"$HOME/runtime\"",
+    "exec": "exec /opk/plumos-emulator",
+    "patch": "patches/rg280v-openbor-opk-runtime.patch"
+  },
+  "61": {
+    "slug": "unrealspeccy",
+    "url": "https://github.com/DavidKnight247/Unreal-Speccy-Emulator-GCW0-Edition.git",
+    "revision": "11b0980470e7c52cf77095f327085f31957d4818",
+    "binary": "build/dingux/gcw0-release/dist/unreal_speccy_portable0.0.59",
+    "build": "make -C build/dingux -j6 gcw0-release/dist/unreal_speccy_portable0.0.59 CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" C=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" SYSROOT=\"$t/mipsel-gcw0-linux-uclibc/sysroot/\" STD_OPTS=\"-O3 -mips32r2 -msoft-float -fcommon -c -fno-exceptions -fomit-frame-pointer\" LFLAGS=\"-lSDL -lpng16 -lz -lxml2 -lm\"",
+    "patch": "patches/rg280v-unrealspeccy-opk-menu.patch"
+  },
+  "56": {
+    "slug": "scummvm",
+    "url": "https://github.com/scummvm/scummvm.git",
+    "revision": "51bb9305a3c614d283bcab0eb735a47b4fae1e7c",
+    "binary": "scummvm",
+    "build": "sys=\"$t/mipsel-gcw0-linux-uclibc/sysroot/usr\"\nCC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" SDL_CONFIG=\"$sys/bin/sdl-config\" CXXFLAGS=\"-O2 -mips32r2 -msoft-float -fcommon\" LDFLAGS=\"-L$sys/lib\" ./configure --host=gcw0 --with-sdl-prefix=\"$sys\" --disable-all-engines --enable-engine=scumm,sky --disable-fluidsynth --disable-mt32emu --disable-timidity --disable-libcurl --disable-sdlnet\nmake -j6\n",
+    "exec": "case \"$1\" in *BASS*) game=sky ;; *Monkey*) game=monkey2 ;; *) exit 2 ;; esac\nexec /opk/plumos-emulator --extrapath=/opk/engine-data --themepath=/opk/themes --config=\"$HOME/scummvmrc\" --music-driver=adlib --path=\"$1\" --fullscreen \"$game\"",
+    "remove": [
+      "plugins",
+      "scummvm",
+      "GeneralUser GS FluidSynth v1.44.sf2"
+    ],
+    "libraries": [
+      "libmad.so.0"
+    ],
+    "patch": "patches/rg280v-scummvm-opk-menu.patch"
+  },
+  "39": {
+    "slug": "gngeo",
+    "url": "https://github.com/Apaczer/gngeo.git",
+    "revision": "6fa682e06b60df0ec42e99f00ffc196b52cfa780",
+    "binary": "src/gngeo",
+    "patch": "patches/rg280v-gngeo-opk-build.patch",
+    "build": "sys=\"$t/mipsel-gcw0-linux-uclibc/sysroot/usr\"\nexport ACLOCAL_PATH=/workspace/output/rg280v/build/sdl-97557d6bd\nsh bootstrap\nCC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" SDL_CONFIG=\"$sys/bin/sdl-config\" CFLAGS=\"-O3 -mips32r2 -msoft-float -fcommon -fno-strict-aliasing -I$sys/include/SDL\" LDFLAGS=\"-L$sys/lib\" ./configure --host=mipsel-gcw0-linux-uclibc --target=mipsel-gcw0-linux-uclibc --disable-i386asm --with-m68kcore=gen68k --with-z80core=mamez80 --disable-opengl --prefix=/media/data/local/rg350-source-repairs/home-39\nmake -j6\n",
+    "exec": "exec /opk/plumos-emulator --biospath=\"$(dirname \"$1\")\" --rompath=\"$(dirname \"$1\")\" \"$1\""
+  },
+  "10": {
+    "slug": "easyrpg",
+    "url": "https://github.com/EasyRPG/Player.git",
+    "revision": "4dd00a6e1ec4b12174019f39624d268619bb3776",
+    "binary": "build-rg280v/easyrpg-player",
+    "dependencies": [
+      {
+        "slug": "liblcf",
+        "url": "https://github.com/EasyRPG/liblcf.git",
+        "revision": "bb9f9e2fd745d9a60a6d226eb666c259d87720aa"
+      },
+      {
+        "slug": "pixman-0.42.2",
+        "archive_url": "https://www.cairographics.org/releases/pixman-0.42.2.tar.gz",
+        "sha256": "ea1480efada2fd948bc75366f7c349e1c96d3297d09a3fe62626e38e234a625e"
+      },
+      {
+        "slug": "speexdsp-1.2.1",
+        "archive_url": "https://downloads.xiph.org/releases/speex/speexdsp-1.2.1.tar.gz",
+        "sha256": "8c777343e4a6399569c72abc38a95b24db56882c83dbdb6c6424a5f4aeb54d3d"
+      }
+    ],
+    "build": "sys=\"$t/mipsel-gcw0-linux-uclibc/sysroot\"\nexport PKG_CONFIG_SYSROOT_DIR=\"$sys\" PKG_CONFIG_LIBDIR=\"$sys/usr/lib/pkgconfig\"\n( cd ../pixman-0.42.2\nCC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CFLAGS=\"-O2 -mips32r2 -msoft-float -fcommon\" ./configure --host=mipsel-gcw0-linux-uclibc --prefix=/workspace/output/rg280v-apps/source-repairs/easyrpg-deps --enable-static --disable-shared --disable-gtk --disable-libpng --disable-openmp --disable-mips-dspr2 --disable-loongson-mmi\nmake -j6\nmake install\n\n)\n( cd ../speexdsp-1.2.1\nCC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CFLAGS=\"-O2 -mips32r2 -msoft-float -fcommon\" ./configure --host=mipsel-gcw0-linux-uclibc --prefix=/workspace/output/rg280v-apps/source-repairs/easyrpg-deps --enable-static --disable-shared --enable-fixed-point\nmake -j6\nmake install\n\n)\nmkdir -p lib\nln -sfn ../../liblcf lib/liblcf\ncmake -S . -B build-rg280v -DCMAKE_TOOLCHAIN_FILE=/workspace/assets/rg280v-apps/source-repair-toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DPLAYER_BUILD_LIBLCF=ON -DDISABLE_ICU=ON -DPLAYER_WITH_HARFBUZZ=OFF -DPLAYER_AUDIO_BACKEND=SDL2 -DPLAYER_ENABLE_TESTS=OFF -DPLAYER_AUDIO_RESAMPLER=speexdsp -DSPEEXDSP_LIBRARY=/workspace/output/rg280v-apps/source-repairs/easyrpg-deps/lib/libspeexdsp.a -DSPEEXDSP_INCLUDE_DIR=/workspace/output/rg280v-apps/source-repairs/easyrpg-deps/include -DPIXMAN_LIBRARY=/workspace/output/rg280v-apps/source-repairs/easyrpg-deps/lib/libpixman-1.a -DPIXMAN_INCLUDE_DIR=/workspace/output/rg280v-apps/source-repairs/easyrpg-deps/include/pixman-1\ncmake --build build-rg280v -j6\n",
+    "prepare": "export SDL_RENDER_DRIVER=software\nexport XDG_CACHE_HOME=\"$HOME/cache\"\nmkdir -p \"$XDG_CACHE_HOME\" \"$HOME/saves\"\nexport SDL_NO_SIGNAL_HANDLERS=1",
+    "exec": "exec /opk/plumos-emulator --project-path \"$(dirname \"$1\")\" --save-path \"$HOME/saves\"",
+    "libraries": [
+      "libmpg123.so.0",
+      "libsndfile.so.1"
+    ],
+    "patch": "patches/rg280v-easyrpg-opk-input.patch"
   }
 }

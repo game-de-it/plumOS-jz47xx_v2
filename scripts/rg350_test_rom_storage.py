@@ -37,3 +37,27 @@ def stage_file(source, target):
             subprocess.run(ADB + ['push', str(source), target], capture_output=True, check=True)
             assert shell('sha256sum ' + shlex.quote(target)).split()[0] == digest
     return digest
+
+
+def stage_tree(source, target, manifest_path):
+    """Transfer a complete game once, then verify every file before restoring SD2."""
+    source = pathlib.Path(source)
+    dest = pathlib.PurePosixPath(target)
+    assert target.startswith(ROM_ROOT + '/'), target
+    assert source.is_dir() and source.name == dest.name, (source, target)
+    records = []
+    for path in sorted(source.rglob('*')):
+        if path.is_file():
+            relative = path.relative_to(source).as_posix()
+            assert '\n' not in relative and '\r' not in relative and '\\' not in relative
+            records.append(hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + relative)
+    assert records, source
+    manifest_path = pathlib.Path(manifest_path)
+    manifest_path.write_text('\n'.join(records) + '\n')
+    remote_manifest = '/tmp/rg350-stage-tree.sha256'
+    with writable_sd2():
+        shell('mkdir -p ' + shlex.quote(str(dest.parent)))
+        subprocess.run(ADB + ['push', str(source), str(dest.parent)], check=True, capture_output=True)
+        subprocess.run(ADB + ['push', str(manifest_path), remote_manifest], check=True, capture_output=True)
+        shell('cd ' + shlex.quote(target) + ' && sha256sum -c ' + remote_manifest + ' >/tmp/rg350-stage-tree.result')
+    return len(records)

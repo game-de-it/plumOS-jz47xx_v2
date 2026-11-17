@@ -1,0 +1,73 @@
+diff --git a/src/Makefile.am b/src/Makefile.am
+index b143318..4ac7d5d 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -5,7 +5,7 @@ SUBDIRS = effect blitter ym2610 $(m68k_subdir) $(z80_subdir)
+ bin_PROGRAMS = gngeo
+ gngeo_SOURCES = pd4990a.c gngeo_icon.h sound.h video.c profiler.c \
+                 main.c pd4990a.h video.h list.c memory.c profiler.h \
+-                list.h blitter.h font.h memory.h resfile.c timer.c \
++                list.h blitter.h font.h memory.h drv.c timer.c \
+                 effect.h frame_skip.c messages.c screen.c timer.h \
+                 emu.c frame_skip.h messages.h screen.h unzip.h emu.h \
+                 neocrypt.c sound.c unzip.c resfile.h debug.c debug.h \
+diff --git a/src/generator68k/Makefile.am b/src/generator68k/Makefile.am
+index bdc6c64..968a319 100644
+--- a/src/generator68k/Makefile.am
++++ b/src/generator68k/Makefile.am
+@@ -49,7 +49,7 @@ MOSTLYCLEANFILES = ${BUILT_SOURCES}
+ CLEANFILES = def68k.stamp gen68k.stamp
+ 
+ def68k.o gen68k.o tab68k2.o : %.o : %.c
+-	$(gcc_build_verbose)$(CC_FOR_BUILD) -c $< -o $@ -I .. -I ../.. -I . `sdl-config --cflags`
++	$(gcc_build_verbose)$(CC_FOR_BUILD) -c $< -o $@ -I .. -I ../.. -I . $(SDL_CFLAGS)
+ 
+ def68k$(EXEEXT) : def68k.o tab68k2.o
+ 	$(gcc_build_verbose)$(CC_FOR_BUILD) def68k.o tab68k2.o -o $@
+diff --git a/src/main.c b/src/main.c
+index 37aacce..9c55153 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -54,7 +54,7 @@ int main(int argc, char **argv)
+   if(rom_name) {
+     ext_name = strrchr(rom_name, '.');
+     printf("rom name: %s\n", rom_name);
+-    if(strcasecmp(ext_name, ".gno")) {
++    if(!ext_name || strcasecmp(ext_name, ".gno")) {
+       rom_name = remove_path_and_extension(rom_name, '.', '/');
+     }
+   }
+diff --git a/src/memory.c b/src/memory.c
+index bf30fcf..f59a961 100644
+--- a/src/memory.c
++++ b/src/memory.c
+@@ -300,14 +300,14 @@ Uint8 mem68k_fetch_video_byte(Uint32 addr)
+     Uint32 lpc = cpu_68k_getpc() + 2;
+     switch((lpc & 0xF00000) >> 20) {
+     case 0x0:
+-      return READ_WORD(&memory.rom.cpu_m68k.p + (lpc & 0xFFFFF));
++      return READ_WORD(memory.rom.cpu_m68k.p + (lpc & 0xFFFFF));
+       break;
+     case 0x2:
+-      return READ_WORD(&memory.rom.cpu_m68k.p + bankaddress + (lpc & 0xFFFFF));
++      return READ_WORD(memory.rom.cpu_m68k.p + bankaddress + (lpc & 0xFFFFF));
+       break;
+     case 0xC:
+       if(lpc <= 0xc1FFff) {
+-        return READ_WORD(&memory.rom.bios_m68k.p + (lpc & 0xFFFFF));
++        return READ_WORD(memory.rom.bios_m68k.p + (lpc & 0xFFFFF));
+       }
+       break;
+     }
+diff --git a/src/menu.c b/src/menu.c
+index 142fd41..63b8feb 100644
+--- a/src/menu.c
++++ b/src/menu.c
+@@ -430,6 +430,7 @@ int gn_init_skin(void)
+   sfont = load_font(0);
+   mfont = load_font(1);
+ 
++  if (!gngeo_logo) return GN_FALSE;
+   pbar_logo = SDL_CreateRGBSurface(SDL_SWSURFACE, gngeo_logo->w, gngeo_logo->h, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
+   SDL_SetAlpha(gngeo_logo, 0, 0);
+   init_back();

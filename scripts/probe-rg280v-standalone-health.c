@@ -1,4 +1,4 @@
-/* RG280V SDL 1.2 standalone video and audio telemetry. */
+/* RG280V SDL standalone video and audio telemetry. */
 #define _GNU_SOURCE
 #include <SDL/SDL.h>
 #include <dlfcn.h>
@@ -171,6 +171,35 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     return rc;
 }
 
+#ifdef HEALTH_SDL2
+/* SDL 1.2/2 share the SDL_AudioSpec layout. Keep the SDL2 device API
+ * separate, and never interpose SDL1 event signatures on SDL2. */
+uint32_t SDL_OpenAudioDevice(const char *device, int capture,
+                            const SDL_AudioSpec *desired, SDL_AudioSpec *obtained,
+                            int allowed_changes)
+{
+    static uint32_t (*real_open)(const char *, int, const SDL_AudioSpec *, SDL_AudioSpec *, int);
+    if (!real_open) real_open = dlsym(RTLD_NEXT, "SDL_OpenAudioDevice");
+    if (!real_open || !desired) return 0;
+    if (capture || !desired->callback || desired->callback == audio_callback) return real_open(device, capture, desired, obtained, allowed_changes);
+    SDL_AudioSpec hooked = *desired;
+    original_audio = desired->callback;
+    original_audio_data = desired->userdata;
+    hooked.callback = audio_callback;
+    hooked.userdata = NULL;
+    uint32_t rc = real_open(device, capture, &hooked, obtained, allowed_changes);
+    if (rc) {
+        const SDL_AudioSpec *actual = obtained ? obtained : desired;
+        audio_rate = actual->freq;
+        audio_channels = actual->channels;
+        audio_format = actual->format;
+        sdl_audio_active = 1;
+    }
+    return rc;
+}
+
+#endif /* HEALTH_SDL2 */
+
 void SDL_CloseAudio(void)
 {
     static void (*real_close)(void);
@@ -261,6 +290,7 @@ void SDL_UpdateRects(SDL_Surface *surface, int count, SDL_Rect *rects)
     if (!nested) record_video(start, now_ns() - start);
 }
 
+#ifndef HEALTH_SDL2
 static void init_autostart(void)
 {
     const char *value, *key, *pulses;
@@ -358,3 +388,5 @@ int SDL_PollEvent(SDL_Event *event)
     if (count || !event) return count;
     return synthetic_key(event);
 }
+
+#endif /* !HEALTH_SDL2 */
