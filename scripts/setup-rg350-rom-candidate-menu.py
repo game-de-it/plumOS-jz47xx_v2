@@ -6,7 +6,8 @@ ADB=['adb','-P','5041','-s','10.1.1.2:5555']
 BASE='/media/data/local/rg350-rom-candidates'
 CATALOG=json.loads((ROOT/'output/rg280v-apps/rg350-catalog-audit.json').read_text())
 GROUPS=json.loads((ROOT/'output/rg280v-apps/rg350-rom-candidates.json').read_text())
-LABELS={11:'FCEUX',12:'GenesisGX',21:'PokeMini',24:'Race Explorer',33:'CrocoDS',35:'Gambatte 2020',36:'Gambatte 2021',37:'Gambatte GB',38:'Gambatte GBC',49:'OhBoy'}
+# Catalog 20 PocketSNES and 36 Gambatte 2021 share the active SA binaries.
+LABELS={11:'FCEUX 2.2.3',12:'GenesisGX',21:'PokeMini',24:'Race Explorer',33:'CrocoDS',35:'Gambatte 2020',37:'Gambatte r572u3 GB',38:'Gambatte r572u3 GBC',49:'OhBoy'}
 def shell(s): return subprocess.check_output(ADB+['shell',s],text=True).strip()
 def push(p,d):
  shell('mkdir -p '+shlex.quote(str(pathlib.PurePosixPath(d).parent)))
