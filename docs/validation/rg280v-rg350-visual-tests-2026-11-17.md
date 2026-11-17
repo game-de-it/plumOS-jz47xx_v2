@@ -90,3 +90,9 @@ ALSA比較OPKのSHA-256は `685ce81a4f9388093c17375fac04315d54636cd38ac8ff75fb68
 計測コードを外したOPKを作成し、ゲーム中の画面をDRMから取得して色と配置を確認した。取得画像はGit管理外の `output/rg280v-apps/rg350-visual-tests/nspirit-clean-bench.png`。さらに汎用転送処理と同じパレット参照ポインタの設定を保持した最終版を作成し、ホストと端末の試験用FBA OPKのSHA-256 `357215645ba9f9a4ed8874acfa2afd83d96cf68e59ccec65060b184b5ba50e55` が一致した。試験後はNinja Spiritの設定を元に戻し、FBAプロセスの終了とFEの起動を確認した。実機の音質・メニュー復帰と他のM72タイトルへの影響は、更新版での確認が必要。
 
 ユーザーの最終版実機確認では約38 FPSで音飛びが発生した。したがってNinja Spiritは合格にせず、試験用Appsの候補として残す。画素変換の改善だけでは60 FPSに届かず、残るエミュレーション処理の高速化が必要。現在の計測では処理に約25 ms/フレームかかり、60 FPSに必要な約16.7 msを超える。音質とメニュー復帰も合格判定を保留する。
+
+## FBA Kung-Fu MasterとTemperの実機確認
+
+ユーザーはFBAのKung-Fu Masterが60 FPSで正常に動作すると確認した。これを試験Apps内の同タイトルの合格結果とする。FBAの他タイトルへは一般化しない。
+
+Temperもゲームは60 FPSで正常だが、SELECT＋STARTでメニューを一度開くと、その後SELECTまたはSTARTを単独で押しただけでメニューが再表示される不具合があった。原因はゲーム入力側の同時押し判定が押下状態を保持する一方、メニュー側がキーを離すイベントを消費するため、ゲーム側の状態が古くなることだった。メニューから戻る際に同時押し判定を初期化し、PC Engine側のRUN・SELECTも離した状態へ戻す修正を `patches/rg280v-temper-noipu.patch` に追加した。再ビルド手順は `scripts/build-rg280v-temper-test.sh`。soft float ABIを確認し、OPKのホスト・端末SHA-256 `82f5404834e161c8fb4fd0c3d2006447bd8ed28ee18248a719038cfdcebc5ee8` が一致した。自動試験ではSELECT＋STARTでメニュー表示を確認し、試験終了後にFEへ復帰した。メニュー復帰後の単独押しと再度の同時押しはユーザーの実機確認待ち。
