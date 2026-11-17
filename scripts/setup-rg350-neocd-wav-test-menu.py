@@ -40,7 +40,7 @@ if not backup.exists():
     backup.write_text(json.dumps(apps, ensure_ascii=False, indent=2))
 ident = 'rg350_missing_neo4all_wav'
 apps['apps'] = [a for a in apps['apps'] if a.get('id') != ident]
-apps['apps'].append(dict(id=ident, display_name='TEST 15 Neo4All BGM: Fatal Fury WAV',
+apps['apps'].insert(0, dict(id=ident, display_name='TEST 15 Neo4All BGM: Fatal Fury WAV',
     menu='apps', kind='shell', visible=True, launch_profile='shell:' + BASE + '/run-neo4all-wav'))
 result = OUT / 'apps-with-neo4all.json'
 result.write_text(json.dumps(apps, ensure_ascii=False, indent=2) + '\n')

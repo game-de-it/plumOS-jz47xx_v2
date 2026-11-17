@@ -45,9 +45,11 @@ if not backup.exists():
     backup.write_text(json.dumps(apps, ensure_ascii=False, indent=2))
 prefix = 'rg350_missing_stella_'
 apps['apps'] = [a for a in apps['apps'] if not a.get('id', '').startswith(prefix)]
+entries = []
 for i, title in enumerate(['Asteroids', 'Centipede', 'Breakout'], 4):
-    apps['apps'].append(dict(id=prefix + str(i), display_name=f'TEST 28 Stella {i-3}: {title}',
+    entries.append(dict(id=prefix + str(i), display_name=f'TEST 28 Stella {i-3}: {title}',
         menu='apps', kind='shell', visible=True, launch_profile=f'shell:{BASE}/run-stella {i}'))
+apps['apps'] = entries + apps['apps']
 result = OUT / 'apps-with-stella.json'
 result.write_text(json.dumps(apps, ensure_ascii=False, indent=2) + '\n')
 push(result, path + '.tmp')
