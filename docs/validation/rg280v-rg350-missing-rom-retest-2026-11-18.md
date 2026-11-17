@@ -1,6 +1,6 @@
 # ROM未指定だったRG350 OPKの再試験
 
-指定NASのROMセットを使用し、以前ROMを指定していなかった項目を再試験した。今回の新しい目視・聴取確認候補は **Stella**。さらに、NEO4ALLはBGM対応のある2020年ソースから試験版を作り、WAV音楽トラックの読み込みと連続PCMを確認した。後者は本体での聴取確認が残る。
+指定NASのROMセットを使用し、以前ROMを指定していなかった項目を再試験した。今回の新しい目視・聴取確認候補は **Stella**。さらに、NEO4ALLはBGM対応のある2020年ソースから試験版を作り、WAV音楽トラックの読み込みと連続PCMを確認した。ユーザーがFatal Fury WAVの画面・操作・音楽・メニューからの終了をすべて正常と確認したため、この組み合わせは実機確認済みのFE追加候補とする。
 
 ## 対象と判定
 
@@ -22,7 +22,7 @@
 | Stella 2015 | Asteroids | 約59.9～60.0 FPS | 正常なゲーム画面。非ゼロPCM、clip 0% | 目視・聴取候補 |
 | 同上 | Centipede | 約59.7～60.0 FPS | 色付きの本編を確認。非ゼロPCM、clip 0% | 目視・聴取候補 |
 | 同上 | Breakout | 約60.0 FPS | 色帯・ボール・得点を確認。非ゼロPCM、clip 0% | 目視・聴取候補 |
-| NEO4ALL BGM試験版 | Fatal Fury WAV | 約58.8～58.9 FPS | ゲーム画面、CUE認識、複数WAVトラック切替、連続PCM、clip 0% | 本体聴取待ち |
+| NEO4ALL BGM試験版 | Fatal Fury WAV | 約58.8～58.9 FPS（機械測定） | ユーザーが画面・操作・音楽・メニューからの終了を正常確認 | 実機確認済み・FE追加候補 |
 
 Stellaは3D Tic-Tac-Toe、Adventure、Adventure IIも約60 FPS。後二者の採取区間は無音だったので、音声確認用にはアクションゲーム3本を追加した。FEのSTART → Appsへ `TEST 28 Stella 1～3` を追加した。正式な機種別エミュ経路は変更していない。
 
@@ -34,7 +34,7 @@ Stellaは3D Tic-Tac-Toe、Adventure、Adventure IIも約60 FPS。後二者の採
 2. BGM対応版を `nicodanyan/neo4all` の `407dcb3a46ca326d74f4bde4da1eadc8287be2a4` からビルドした。RG280Vのsoft-float ABI、宣言の不一致、隔離HOME内のBIOS参照を調整した。音楽ファイルのロード失敗もログへ出す。
 3. NEO4ALLはISOと同名のCUEを探す。元セットの `Fatal Fury WAV.cue` に対し、試験側で `Fatal Fury.cue` を用意した。
 4. さらに `opkrun` がROMへのシンボリックリンクを実体パスへ解決していた。ISOだけがSD2の実体へ移り、隣のCUEを見失っていた。ISO約6 MBをSD1の隔離フォルダへ実コピーし、CUEと同居させた。WAVはSD2へのリンクで読める。
-5. 修正後は `Loaded CD Image ... [+cue]` と、`CD Play: ... Fatal Fury 13.wav` / `20.wav` / `04.wav` / `07.wav` / `02.wav` 等を確認。PCMが継続し、ピーク約14,741、clip 0%。本体での音楽聴取は別途確認する。
+5. 修正後は `Loaded CD Image ... [+cue]` と、`CD Play: ... Fatal Fury 13.wav` / `20.wav` / `04.wav` / `07.wav` / `02.wav` 等を確認。PCMが継続し、ピーク約14,741、clip 0%。その後、ユーザーが本体の画面・操作・音楽・メニューからの終了を正常確認した。FPS値は前段の機械測定値であり、今回ユーザーが新たに測定した値ではない。
 
 根拠: [BGM対応コミット](https://github.com/nicodanyan/neo4all/commit/94076dc4c210bb43401aafeb71f42ccbc6f07a5a)、[参照リビジョン](https://github.com/nicodanyan/neo4all/tree/407dcb3a46ca326d74f4bde4da1eadc8287be2a4)。この試験では修正版でのMP3再生までは確認していない。
 
