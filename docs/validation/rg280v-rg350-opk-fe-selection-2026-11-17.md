@@ -1,6 +1,6 @@
 # RG350 OPKエミュ一覧とFE追加候補（2026-11-17）
 
-**2026-11-18 実機確認:** FCEUX 2.2.3、PokeMini、Race Explorer、CrocoDS、Gambatteはユーザーが動作正常と確認。Genesis Plus GXはBare Knuckleで音声異常。OhBoyは音飛びがあり、メニューを開けず終了できない。詳細は [実機結果](rg280v-rg350-user-results-2026-11-18.md)。
+**2026-11-18 実機確認:** FCEUX 2.2.3、PokeMini、Race Explorer、CrocoDS、Gambatteはユーザーが動作正常と確認。Genesis Plus GXはALSA改修版のBare Knuckleを正常確認。OhBoyも最終改修版の音声・スケール・メニューを正常確認。詳細は [実機結果](rg280v-rg350-user-results-2026-11-18.md)。
 
 **重複確認後の更新:** [既存SAとの照合結果](rg280v-rg350-sa-duplicates-2026-11-17.md) に基づき、PocketSNESとGambatte 2021は別候補から除外。FCEUXは既存SA 2.6.6に対する2.2.3の比較として残す。現在の目視確認メニューは27項目。以下の全件一覧・30項目の記述は重複確認前の監査・配置履歴を含む。
 
@@ -20,7 +20,7 @@ ROM候補とソース対策の最新状況は [ROM・ソース再確認表](rg28
 | 実機確認済み・FE追加候補 | **Temper RG280V改修版** | 約60 FPS、映像・音・操作正常。メニュー復帰後の誤入力も修正確認済み | PC EngineのFE経路へ追加可能 |
 | ROMにより実機確認済み | **FBA44 RG280V改修版** | Kung-Fu Masterは60 FPSで正常。Ninja Spiritは約38 FPS・音飛び | Kung-Fu Masterは採用候補。ほかはROMごとの速度で選別 |
 | 目視確認候補・優先 | **Race Explorer** | Baseball Stars Colorの選択画面まで約60 FPS、画面とPCM信号を確認 | 本編を目視・聴取確認する |
-| 目視確認候補・優先 | **OhBoy** | GBタイトル約59 FPS、PCM信号あり | 本編の画面・音・操作を確認する |
+| 実機確認済み・FE追加候補 | **OhBoy RG280V改修版** | 音声・スケール・メニューをユーザーが正常確認 | 最終修正版をFE統合候補にする |
 | 目視確認候補・優先 | **Genesis Plus GX配布OPK** | Bare Knuckleのオープニング約60 FPS、PCM信号あり。クリップを記録 | 本編の速度・音質を確認する。既存PicoArch版とは別判定 |
 | 目視確認候補 | **PokeMini** | メニュー約55 FPS | ROMを動かし、本編の映像・音・速度を確認する |
 | 目視確認候補 | **CrocoDS** | 起動画面約50 FPS、採取音声はほぼ無音 | 本編の速度と音を確認する |
@@ -85,7 +85,7 @@ ROM候補とソース対策の最新状況は [ROM・ソース再確認表](rg28
 | 46 | `mednafen_pce.opk` | 起動不可: libintl.so.8（FPS未測定） | 未採用・検証不足 |
 | 47 | `mednafen_pcfx.opk` | 起動不可: libintl.so.8（FPS未測定） | 未採用・検証不足 |
 | 48 | `mupen64plus.opk` | 起動不可: libSDL2-2.0.so.0（FPS未測定） | 未採用・検証不足 |
-| 49 | `ohboy.opk` | GBタイトル（短時間側は本編未確認）（59.0 FPS） | 要修正。音飛びあり、メニューが開かず終了できない（2026-11-18）。 |
+| 49 | `ohboy.opk` | GBタイトル（短時間側は本編未確認）（59.0 FPS） | 改修版は実機確認済み・FE追加候補。音声・スケール・メニューをユーザーが正常確認（2026-11-18）。 |
 | 50 | `openMSX-0.15-remap.opk` | 起動不可: libtheoradec.so.1（FPS未測定） | 未採用・検証不足 |
 | 51 | `pcsx4all.opk` | 起動不可: libshake.so.1（FPS未測定） | 配布原版は低優先。後続試験で黒画面・約3 FPS。既存改修版は別判定。 |
 | 52 | `picodrive_gcw0(32X).opk` | 起動不可: SDLマウス初期化（FPS未測定） | 未採用・検証不足 |
@@ -104,6 +104,6 @@ ROM候補とソース対策の最新状況は [ROM・ソース再確認表](rg28
 
 - Atari800とTemperは正式なFE経路へ統合した後、ROM選択、設定保存、終了後FE復帰を再確認する。
 - FBA44はKung-Fu Master以外を汎用的に合格としない。Battle Chopperは実プレイと音質、Ninja Spiritは性能改善が残る。
-- Race Explorer、OhBoy、Genesis Plus GXを優先して目視確認する。PokeMini、CrocoDSも50 FPS以上の候補として本編を確認する。
+- 実機確認済み候補をFEへ統合する際は、正式な起動経路からの起動・終了を確認する。
 
 2026-11-18追記: Genesis Plus GXのBare KnuckleはALSA直接出力版でユーザーが正常動作を確認した。SDL版で生じた低速化は撤回し、[音声修正記録](rg280v-opk-audio-fixes-2026-11-18.md)のALSA版を比較候補に使う。
