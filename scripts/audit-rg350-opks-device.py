@@ -50,6 +50,7 @@ def main():
     parser.add_argument("--seconds", type=int, default=8)
     parser.add_argument("--screenshot-delay", type=float, default=3.0)
     parser.add_argument("--sdl-driver", default="kmsdrm", choices=("kmsdrm", "fbcon"))
+    parser.add_argument("--trace", action="store_true", help="Collect file/process/signal syscalls for startup failures")
     parser.add_argument("--preload", default="", help="Additional remote LD_PRELOAD library")
     parser.add_argument("--tag", default="", help="Suffix for the ignored evidence directory")
     parser.add_argument("--only", type=int, nargs="*", help="Catalog positions to retest")
@@ -123,6 +124,7 @@ def main():
             preloads.append(args.preload)
         call = (launch_env + "PLUMOS_STANDALONE_HEALTH_LOG=" + shlex.quote(remote_log) +
                 " LD_PRELOAD=" + shlex.quote(":".join(preloads)) + " " +
+                (("strace -f -e trace=file,process,signal -o /tmp/rg350-source-trace-" + str(number) + " ") if args.trace else "") +
                 "/media/data/local/rg280v-opk-timeout " + str(args.seconds) + " " +
                 shlex.quote(remote) + (" " + shlex.quote(rom) if rom else "") +
                 " >" + shlex.quote(remote_out) + " 2>&1; echo RC=$?")
@@ -156,6 +158,9 @@ def main():
         input_thread.join()
         output = shell("cat " + shlex.quote(remote_out) + "; cat " + shlex.quote(remote_log), env=env)
         log.write_text(output.stdout + "\n" + output.stderr)
+        if args.trace:
+            trace = shell("cat /tmp/rg350-source-trace-" + str(number), env=env)
+            (out / f"{number:02d}.strace").write_text(trace.stdout + trace.stderr)
         shell("/media/data/local/init.d/S95frontend start", env=env)
         time.sleep(1)
         check = shell("ps | grep plumos-controller | grep -v grep", env=env)
@@ -172,6 +177,7 @@ def main():
                 check = shell("ps | grep plumos-controller | grep -v grep", env=env)
         shell("rm -f " + shlex.quote(remote), env=env)
         telemetry = output.stdout
+        child_exits = [int(x) for x in re.findall(r"PLUMOS_EMULATOR_EXIT=(\d+)", output.stdout)]
         # Several old OPKs overwrite the health hook's state. Discard impossible rates.
         fps = [value for value in (float(raw) for raw in re.findall(r"fps_window=([0-9.]+)", telemetry))
                if 0 < value <= 240]
@@ -182,13 +188,17 @@ def main():
             audio_signal = audio_signal and any(int(high) - int(low) >= 128 for low, high in ranges)
         runtime_errors = [line for line in telemetry.splitlines()
                           if re.search(r"Segmentation fault|Signal 11|[Aa]ssertion .*failed|ALSA write failed|No available video device|No exec image found|Accessing a corrupted shared library", line)]
+        if re.search(r"RC=(10|11|13[459])$", stdout.decode(errors="replace").strip()):
+            runtime_errors.append("Abnormal process exit: " + stdout.decode(errors="replace").strip())
+        if any(child_exits):
+            runtime_errors.append("Emulator returned " + str(child_exits))
         signal = "signal" if audio_signal else ("silent callback" if audio else "none")
         if ranges and not audio_signal and any(int(low) == int(high) != 0 for low, high in ranges):
             signal = "constant/DC output"
         record = {"number": number, "name": name, "rom": rom, "elapsed_s": round(time.monotonic()-started, 1),
                   "tested_opk": str(path), "tested_opk_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
                   "exit": stdout.decode(errors="replace").strip(),
-                  "fps_windows": fps, "audio": audio[-1] if audio else None,
+                  "emulator_exits": child_exits, "fps_windows": fps, "audio": audio[-1] if audio else None,
                   "audio_signal": audio_signal,
                   "audio_assessment": signal,
                   "runtime_errors": runtime_errors,

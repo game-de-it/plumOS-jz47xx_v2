@@ -1,0 +1,76 @@
+diff --git a/src/drivers/main.cpp b/src/drivers/main.cpp
+index 6b228b0..0a02287 100644
+--- a/src/drivers/main.cpp
++++ b/src/drivers/main.cpp
+@@ -211,6 +211,7 @@ MDFNGI *CurGame=NULL;
+ 
+ void MDFND_PrintError(const char *s)
+ {
++    fprintf(stderr, "Mednafen: %s\n", s);
+ }
+ 
+ void MDFND_Message(const char *s)
+diff --git a/src/drivers/nongl.cpp b/src/drivers/nongl.cpp
+index 7b906f1..e20ffbf 100644
+--- a/src/drivers/nongl.cpp
++++ b/src/drivers/nongl.cpp
+@@ -24,26 +24,19 @@
+ #include "nongl.h"
+ 
+ 
+-template<typename T, int alpha_shift>
+-static void BlitStraight(const MDFN_Surface *src_surface, const MDFN_Rect *src_rect, MDFN_Surface *dest_surface, const MDFN_Rect *dest_rect)
++/* Respect both surface pitches and the active source rectangle. */
++void MDFN_StretchBlitSurface(const MDFN_Surface* src, const MDFN_Rect& sr,
++ MDFN_Surface* dst, const MDFN_Rect& dr, bool source_alpha, int scanlines,
++ const MDFN_Rect* original_src_rect, int rotated, int InterlaceField)
+ {
+-	const T* src_pixels = src_surface->pixels16;
+-	for(uint16_t y = 0; y < 232; y++)
+-	{
+-		memcpy(dest_surface->pixels16, src_pixels, 256 * 2);
+-		src_pixels += 256 * 4;
+-		dest_surface->pixels16 += 256;
+-	}
+-}
+-
+-extern SDL_Surface* screen;
+-
+-
+-void MDFN_StretchBlitSurface(const MDFN_Surface* src_surface, const MDFN_Rect& src_rect, MDFN_Surface* dest_surface, const MDFN_Rect& dest_rect, bool source_alpha, int scanlines, const MDFN_Rect* original_src_rect, int rotated, int InterlaceField)
+-{
+-	MDFN_Rect sr, dr, o_sr;
+-	sr = src_rect;
+-	o_sr = *original_src_rect;
+-	dr = dest_rect;
+-	BlitStraight<uint16_t, 0>(src_surface, &sr, dest_surface, &dr);
++    if (!src->pixels16 || !dst->pixels16 || sr.w <= 0 || sr.h <= 0 || dr.w <= 0 || dr.h <= 0) return;
++    for (int y = 0; y < dr.h; ++y) {
++        int dy = dr.y + y, sy = sr.y + (int64)y * sr.h / dr.h;
++        if (dy < 0 || dy >= (int)dst->h || sy < 0 || sy >= (int)src->h) continue;
++        for (int x = 0; x < dr.w; ++x) {
++            int dx = dr.x + x, sx = sr.x + (int64)x * sr.w / dr.w;
++            if (dx >= 0 && dx < (int)dst->w && sx >= 0 && sx < (int)src->w)
++                dst->pixels16[dy * dst->pitchinpix + dx] = src->pixels16[sy * src->pitchinpix + sx];
++        }
++    }
+ }
+diff --git a/src/drivers/video_drivers.cpp b/src/drivers/video_drivers.cpp
+index b16a925..adeb593 100644
+--- a/src/drivers/video_drivers.cpp
++++ b/src/drivers/video_drivers.cpp
+@@ -448,11 +448,13 @@ void Video_Init(MDFNGI *gi)
+ 
+ 	desbpp = 16;
+ 
+-	if(!(screen = SDL_SetVideoMode(256, 232, desbpp, SDL_HWSURFACE)))
++	if(!(screen = SDL_SetVideoMode(320, 240, desbpp, SDL_SWSURFACE)))
+ 	{
+ 		throw MDFN_Error(0, "%s", SDL_GetError());
+ 	}
+ 
++	screen_dest_rect.x = screen_dest_rect.y = 0;
++	screen_dest_rect.w = screen->w; screen_dest_rect.h = screen->h;
+ 	cur_xres = screen->w;
+ 	cur_yres = screen->h;
+ 	cur_flags = flags;

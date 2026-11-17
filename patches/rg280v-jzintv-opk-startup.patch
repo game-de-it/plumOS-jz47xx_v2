@@ -1,0 +1,180 @@
+diff --git a/src/Makefile.gcw0 b/src/Makefile.gcw0
+index 40fd822..acfe4ad 100644
+--- a/src/Makefile.gcw0
++++ b/src/Makefile.gcw0
+@@ -52,8 +52,8 @@ LFLAGS   = -L$(GCW_PATH)/lib \
+ 
+ 
+ OBJS=jzintv.o
+-PROG=$(B)/jzintv$
+-TOCLEAN=$(B)/jzintv$ core
++PROG=$(B)/jzintv
++TOCLEAN=$(B)/jzintv core
+ 
+ PROGS=$(PROG)
+ 
+diff --git a/src/bincfg/legacy.c b/src/bincfg/legacy.c
+index fd6ee24..38631a1 100644
+--- a/src/bincfg/legacy.c
++++ b/src/bincfg/legacy.c
+@@ -247,7 +247,7 @@ LOCAL int legacy_read_bincfg(const char *bin_fn, const char *cfg_fn,
+ char *cf;
+ cf=strrchr(cfg_fn,'/');
+ char *cf2;
+-cf2="/media/home/.jzintellivision/configfiles";
++cf2="/media/data/local/rg350-source-repairs/home-42/.jzintellivision/configfiles";
+ char *cf_final=NULL;
+ cf_final = CALLOC(char, 150);
+ int i=0;
+@@ -393,7 +393,7 @@ char *legacy_bincfg
+ #ifdef GCWZERO //save filename for later if config file not present
+     strcpy(romfilename, fname);
+     FILE *file;
+-    file=fopen("/media/home/.jzintellivision/.filename","w");
++    file=fopen("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/.filename","w");
+     fputs(romfilename, file);
+     fclose(file);
+ #endif
+@@ -555,7 +555,7 @@ char *legacy_bincfg
+ char *pc;
+ pc=strrchr(p_cfg1_fn,'/');
+ char *pd;
+-pd="/media/home/.jzintellivision/configfiles";
++pd="/media/data/local/rg350-source-repairs/home-42/.jzintellivision/configfiles";
+ char *finaloutput=NULL;
+ finaloutput = CALLOC(char, 150);
+ int i=0;
+@@ -565,7 +565,7 @@ finaloutput[i]='\0';
+ #ifdef GCWZERO //save filename for later if config file not present
+     strcpy(romfilename, finaloutput);
+     FILE *file;
+-    file=fopen("/media/home/.jzintellivision/.filename","w");
++    file=fopen("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/.filename","w");
+     fputs(romfilename, file);
+     fclose(file);
+ #endif
+diff --git a/src/cfg/cfg.c b/src/cfg/cfg.c
+index f88bfac..b563f74 100644
+--- a/src/cfg/cfg.c
++++ b/src/cfg/cfg.c
+@@ -533,10 +533,10 @@ void cfg_init(cfg_t *cfg, int argc, char * argv[])
+     cfg->start_dly  = -1;           /* No startup delay by default.         */
+ 
+ #ifdef GCWZERO
+-    cfg->fn_exec    = strdup("/media/home/.jzintellivision/bios/exec.bin");   /* Default name to look for     */
+-    cfg->fn_grom    = strdup("/media/home/.jzintellivision/bios/grom.bin");   /* ...                          */
+-    cfg->fn_game    = strdup("/media/home/.jzintellivision/bios/game.rom");   /* ...                          */
+-    cfg->fn_ecs     = strdup("/media/home/.jzintellivision/bios/ecs.bin");    /* ...                          */
++    cfg->fn_exec    = strdup("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/bios/exec.bin");   /* Default name to look for     */
++    cfg->fn_grom    = strdup("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/bios/grom.bin");   /* ...                          */
++    cfg->fn_game    = strdup("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/bios/game.rom");   /* ...                          */
++    cfg->fn_ecs     = strdup("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/bios/ecs.bin");    /* ...                          */
+ #else
+     cfg->fn_exec    = strdup("exec.bin");   /* Default name to look for     */
+     cfg->fn_grom    = strdup("grom.bin");   /* ...                          */
+diff --git a/src/jzintv.c b/src/jzintv.c
+index 08b9a45..d7eb38d 100644
+--- a/src/jzintv.c
++++ b/src/jzintv.c
+@@ -282,9 +282,9 @@ int main(int argc, char *argv[])
+ 
+ #ifdef GCWZERO //create directory structure
+ mkdir("/media/home/.jzintellivision",S_IRWXU);
+-mkdir("/media/home/.jzintellivision/bios",S_IRWXU);
+-mkdir("/media/home/.jzintellivision/overlays",S_IRWXU);
+-mkdir("/media/home/.jzintellivision/configfiles",S_IRWXU);
++mkdir("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/bios",S_IRWXU);
++mkdir("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/overlays",S_IRWXU);
++mkdir("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/configfiles",S_IRWXU);
+ #endif
+ 
+     /* -------------------------------------------------------------------- */
+@@ -515,7 +515,7 @@ jzp_printf("cpu.now = %-8d  stic.now = %-8d diff = %-8d step = %-8d\n", (int)int
+ 		jzp_printf("Looking for gcw0 .config file...\n");
+ 		foundconfig=1;
+ 		FILE *configuration;
+-		configuration=fopen("/media/home/.jzintellivision/.configuration","r");
++		configuration=fopen("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/.configuration","r");
+ 		if (!configuration) {
+ 			jzp_printf("None found, for now lets use default settings\n");
+ 			menu_sound=configurationsettings[0];
+@@ -620,7 +620,7 @@ jzp_printf("cpu.now = %-8d  stic.now = %-8d diff = %-8d step = %-8d\n", (int)int
+ 				menu_sound,menu_customoverlays,menu_transparency,menu_overlayposition); 
+ //now save new configuration
+ 			FILE *configuration;
+-			configuration=fopen("/media/home/.jzintellivision/.configuration","w");
++			configuration=fopen("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/.configuration","w");
+ 			fprintf(configuration, "%d%d%d%d", menu_sound, menu_customoverlays, menu_transparency, menu_overlayposition);
+ 			fclose(configuration);
+ 			}
+diff --git a/src/name/name.c b/src/name/name.c
+index 77e5889..781cf26 100644
+--- a/src/name/name.c
++++ b/src/name/name.c
+@@ -9,7 +9,7 @@
+ 
+ 	    char overlayname[1000];
+ 	    char overlay[999], pngextension[10], pathtopng[999];
+-	    int *resetflag=0;
++	    int resetflag=0;
+ #endif
+ const char *find_cart_name(uint_32 crc32, int *year, 
+                            int *default_ecs, int *default_ivc)
+@@ -28,7 +28,7 @@ if (!resetflag) {
+ 	    strcpy(overlay, name_list[i].name);
+ 	    strcat(pngextension, ".png");
+ //	    strcat(pathtopng, "./overlays/");
+-	    strcat(pathtopng, "/media/home/.jzintellivision/overlays/");
++	    strcat(pathtopng, "/media/data/local/rg350-source-repairs/home-42/.jzintellivision/overlays/");
+ 	    strcat(overlay, pngextension);
+ 	    strcat(pathtopng, overlay);
+ 	    strcpy(overlay, pathtopng);
+@@ -89,19 +89,20 @@ if (!resetflag) {
+ 	};
+ 	int j;
+ 	char cfgnumber[10];
+-	for (j=0; j<83; j++)
++	for (j=0; j<84; j+=2)
+ 	{
+ 		if (strcmp(name_list[i].name,cfgarray[j])==0)
+ 		{
+ /*NOW CREATE .cfg FILE THEN RESTART*/
+-			memcpy(cfgnumber, cfgarray[j+1], sizeof(cfgarray[j+1]));
++			snprintf(cfgnumber, sizeof(cfgnumber), "%s", cfgarray[j+1]);
+ 			jzp_printf("\nConfig file %s NEEDED\n",cfgnumber);
+ // read rom path
+ 			char configfilecontents[999];
+ 			FILE *file;
+-			file=fopen("/media/home/.jzintellivision/.filename","r");
++			file=fopen("/media/data/local/rg350-source-repairs/home-42/.jzintellivision/.filename","r");
++			if (!file) break;
+ 			if( fgets (configfilecontents, 999, file)!=NULL ) {
+-			}else jzp_printf("fgets didn't work, FILE EMPTY");
++			}else { fclose(file); break; }
+ 			fclose(file);
+ // replace extension with .cfg
+ //			char *ftowrite;
+@@ -122,9 +123,10 @@ if (!resetflag) {
+ 			} else {
+ //file empty, lock and load...
+ 				FILE *source, *target;
+-				char *ch;
++				int ch;
+ 				source = fopen(ftoread, "r");
+ 				target = fopen(configfilecontents, "w");
++				if (!source || !target) { if (source) fclose(source); if (target) fclose(target); break; }
+ 				while( ( ch = fgetc(source) ) != EOF )	fputc(ch, target);
+ 				jzp_printf("\nConfig file copied successfully.\n");
+ 				fclose(source);
+diff --git a/src/name/name.h b/src/name/name.h
+index 9fa9973..edcb751 100644
+--- a/src/name/name.h
++++ b/src/name/name.h
+@@ -11,6 +11,6 @@ const char *find_cart_name(uint_32 crc32, int *year, int *ecs, int *ivc);
+ extern const cart_name_t *name_list;
+ #ifdef GCWZERO
+ extern char overlayname[];
+-extern int *resetflag;
++extern int resetflag;
+ //extern char *configfile;
+ #endif

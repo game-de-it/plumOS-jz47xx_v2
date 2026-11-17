@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <alsa/asoundlib.h>
 
 static void (*original_audio)(void *, Uint8 *, int);
 static void *original_audio_data;
@@ -15,6 +16,8 @@ static uint64_t audio_frames, audio_zero, audio_clipped, audio_energy;
 static unsigned audio_peak;
 static int audio_min = 32767, audio_max = -32768;
 static unsigned audio_rate, audio_channels, audio_format;
+static int sdl_audio_active;
+static unsigned alsa_write_errors, alsa_underruns;
 static uint64_t audio_first, audio_last;
 static unsigned flips;
 static __thread int presenting;
@@ -50,13 +53,13 @@ static void report(const char *kind)
                 flips ? (double)flip_wait_ns / flips / 1e6 : 0.0,
                 (double)flip_max_ns / 1e6, flip_waits_8ms);
     } else {
-        fprintf(out, "audio\tcallbacks=%u\trate=%u\tchannels=%u\tformat=0x%x\tframes=%llu\tseconds=%.3f\tzero_frac=%.4f\tclipped_frac=%.4f\tpeak=%u\tenergy=%llu\tmin=%d\tmax=%d\n",
+        fprintf(out, "audio\tcallbacks=%u\trate=%u\tchannels=%u\tformat=0x%x\tframes=%llu\tseconds=%.3f\tzero_frac=%.4f\tclipped_frac=%.4f\tpeak=%u\tenergy=%llu\tmin=%d\tmax=%d\talsa_write_errors=%u\talsa_underruns=%u\n",
                 audio_callbacks, audio_rate, audio_channels, audio_format,
                 (unsigned long long)audio_frames,
                 audio_last > audio_first ? (double)(audio_last - audio_first) / 1e9 : 0.0,
                 audio_frames ? (double)audio_zero / (audio_frames * audio_channels) : 0.0,
                 audio_frames ? (double)audio_clipped / (audio_frames * audio_channels) : 0.0,
-                audio_peak, (unsigned long long)audio_energy, audio_min, audio_max);
+                audio_peak, (unsigned long long)audio_energy, audio_min, audio_max, alsa_write_errors, alsa_underruns);
     }
     fclose(out);
     if (kind[0] == 'v') {
@@ -65,11 +68,9 @@ static void report(const char *kind)
     }
 }
 
-static void audio_callback(void *ignored, Uint8 *stream, int len)
+static void measure_audio(const Uint8 *stream, int len)
 {
     unsigned samples, i;
-    (void)ignored;
-    if (original_audio) original_audio(original_audio_data, stream, len);
     audio_last = now_ns();
     if (!audio_first) audio_first = audio_last;
     audio_callbacks++;
@@ -102,6 +103,51 @@ static void audio_callback(void *ignored, Uint8 *stream, int len)
         report("audio");
 }
 
+static void audio_callback(void *ignored, Uint8 *stream, int len)
+{
+    (void)ignored;
+    if (original_audio) original_audio(original_audio_data, stream, len);
+    measure_audio(stream, len);
+}
+
+/* Some native ports write ALSA directly and never create an SDL callback. */
+snd_pcm_sframes_t snd_pcm_writei(snd_pcm_t *pcm, const void *buffer, snd_pcm_uframes_t frames)
+{
+    static snd_pcm_sframes_t (*real_write)(snd_pcm_t *, const void *, snd_pcm_uframes_t);
+    static snd_pcm_t *last_pcm;
+    if (!real_write) real_write = dlsym(RTLD_NEXT, "snd_pcm_writei");
+    if (!real_write) return -ENOSYS;
+    snd_pcm_sframes_t rc = real_write(pcm, buffer, frames);
+    if (rc < 0) {
+        ++alsa_write_errors;
+        if (rc == -EPIPE || rc == -ESTRPIPE) ++alsa_underruns;
+        report("audio");
+    }
+    if (rc > 0 && !sdl_audio_active) {
+        if (last_pcm != pcm || !audio_format) {
+            snd_pcm_hw_params_t *params;
+            snd_pcm_format_t format;
+            if (snd_pcm_hw_params_malloc(&params) < 0) return rc;
+            if (snd_pcm_hw_params_current(pcm, params) < 0) {
+                snd_pcm_hw_params_free(params);
+                return rc;
+            }
+            snd_pcm_hw_params_get_format(params, &format);
+            snd_pcm_hw_params_get_channels(params, &audio_channels);
+            snd_pcm_hw_params_get_rate(params, &audio_rate, NULL);
+            audio_format = snd_pcm_format_width(format);
+            if (snd_pcm_format_signed(format) > 0) audio_format |= 0x8000;
+            if (snd_pcm_format_big_endian(format) > 0) audio_format |= 0x1000;
+            snd_pcm_hw_params_free(params);
+            last_pcm = pcm;
+        }
+        unsigned width = (audio_format & 0xff) / 8;
+        if (width == 1 || width == 2)
+            measure_audio(buffer, (unsigned)rc * audio_channels * width);
+    }
+    return rc;
+}
+
 int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 {
     static int (*real_open)(SDL_AudioSpec *, SDL_AudioSpec *);
@@ -116,12 +162,21 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     desired->callback = audio_callback;
     desired->userdata = NULL;
     rc = real_open(desired, obtained);
+    if (rc == 0) sdl_audio_active = 1;
     if (rc == 0 && obtained) {
         audio_rate = obtained->freq;
         audio_channels = obtained->channels;
         audio_format = obtained->format;
     }
     return rc;
+}
+
+void SDL_CloseAudio(void)
+{
+    static void (*real_close)(void);
+    if (!real_close) real_close = dlsym(RTLD_NEXT, "SDL_CloseAudio");
+    if (real_close) real_close();
+    sdl_audio_active = 0;
 }
 
 static void record_video(uint64_t start, uint64_t elapsed)

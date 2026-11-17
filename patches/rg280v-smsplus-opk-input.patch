@@ -1,0 +1,287 @@
+diff --git a/source/ports/gcw0/smsplus.c b/source/ports/gcw0/smsplus.c
+index 54d054d..865ff6e 100644
+--- a/source/ports/gcw0/smsplus.c
++++ b/source/ports/gcw0/smsplus.c
+@@ -213,8 +213,24 @@ void system_manage_sram(uint8_t *sram, uint8_t slot_number, uint8_t mode)
+ 	}
+ }
+ 
++static int rg_start, rg_select, rg_menu_gate;
+ static uint32_t sdl_controls_update_input(SDLKey k, int32_t p)
+ {
++    if (k == SDLK_HOME || k == SDLK_END) return 1;
++    if (k == SDLK_ESCAPE || k == SDLK_RETURN) {
++        if (k == SDLK_ESCAPE) rg_select = p; else rg_start = p;
++        if (rg_menu_gate) {
++            if (!rg_start && !rg_select) rg_menu_gate = 0;
++            return 1;
++        }
++        if (rg_start && rg_select) {
++            selectpressed = 1;
++            rg_menu_gate = 1;
++            input.system &= (sms.console == CONSOLE_GG) ? ~INPUT_START : ~INPUT_PAUSE;
++            return 1;
++        }
++        if (k == SDLK_ESCAPE) return 1;
++    }
+ 	/* We can't use switch... case because we are not using constants */
+ 	if (sms.console == CONSOLE_COLECO)
+     {
+@@ -1110,10 +1126,19 @@ int main (int argc, char *argv[])
+ 			Clear_video();
+             input.system &= (IS_GG) ? ~INPUT_START : ~INPUT_PAUSE;
+             selectpressed = 0;
++            /* Menu loops consume releases: reconcile the chord and game controls. */
++            SDL_PumpEvents();
++            {
++                Uint8 *held = SDL_GetKeyState(NULL);
++                rg_start = held[SDLK_RETURN]; rg_select = held[SDLK_ESCAPE];
++                rg_menu_gate = rg_start || rg_select;
++            }
++            memset(input.pad, 0, sizeof(input.pad));
++            memset(dpad_input, 0, sizeof(dpad_input));
+             forcerefresh = 1;
+ 		}
+ 		
+-		if (SDL_PollEvent(&event)) 
++		while (SDL_PollEvent(&event)) 
+ 		{
+ 			switch(event.type) 
+ 			{
+diff --git a/source/sound_output/sdl12/sound_output_sdl.c b/source/sound_output/sdl12/sound_output_sdl.c
+index 7ff5ac6..8bc8940 100644
+--- a/source/sound_output/sdl12/sound_output_sdl.c
++++ b/source/sound_output/sdl12/sound_output_sdl.c
+@@ -1,168 +1,86 @@
+ #include <stdio.h>
+ #include <stdint.h>
++#include <string.h>
+ #include <SDL/SDL.h>
+ #include "smsplus.h"
+ #include "sound_output.h"
+ #include "shared.h"
+ 
+-/* Most of the sound code was taken from FBA-SDL by DmitrySmagin so many thanks to him ! */
++/* Bound every transfer in stereo frames. Only the producer may wait. */
++static int16_t ring[SOUND_FREQUENCY * 2 / 8];
++static unsigned read_pos, write_pos, queued;
++static SDL_mutex *audio_mutex;
++static SDL_cond *audio_ready;
++static int audio_open;
++#define CAPACITY (sizeof(ring) / sizeof(ring[0]) / 2)
+ 
+-static int16_t buffer_snd[SOUND_FREQUENCY * 2];
+-SDL_mutex *sound_mutex;
+-SDL_cond *sound_cv;
+-
+-/* Using Mutexes by default but allowing disabling them on compilation */
+-#ifdef SDLAUDIO_NOMUTEXES
+-#define mutex 0
+-#else
+-#define mutex 1
+-#endif
+-
+-static int32_t BUFFSIZE;
+-static uint8_t *buffer;
+-static uint32_t buf_read_pos = 0;
+-static uint32_t buf_write_pos = 0;
+-static int32_t buffered_bytes = 0;
+-
+-static int32_t sdl_write_buffer_m(uint8_t* data, int32_t len)
+-{
+-	SDL_LockMutex(sound_mutex);
+-	for(uint8_t i = 0; i < len; i += 4) 
+-	{
+-		while(buffered_bytes == BUFFSIZE) SDL_CondWait(sound_cv, sound_mutex);
+-
+-		*(int32_t*)((char*)(buffer + buf_write_pos)) = *(int32_t*)((char*)(data + i));
+-		//memcpy(buffer + buf_write_pos, data + i, 4);
+-		buf_write_pos = (buf_write_pos + 4) % BUFFSIZE;
+-		buffered_bytes += 4;
+-	}
+-	SDL_CondSignal(sound_cv);
+-	SDL_UnlockMutex(sound_mutex);
+-	return len;
+-}
+-
+-static void sdl_write_buffer(uint8_t* data, int32_t len)
+-{
+-	for(uint32_t i = 0; i < len; i += 4) 
+-	{
+-		if(buffered_bytes == BUFFSIZE) return; // just drop samples
+-		*(int32_t*)((char*)(buffer + buf_write_pos)) = *(int32_t*)((char*)(data + i));
+-		//memcpy(buffer + buf_write_pos, data + i, 4);
+-		buf_write_pos = (buf_write_pos + 4) % BUFFSIZE;
+-		buffered_bytes += 4;
+-	}
+-}
+-
+-static int32_t sdl_read_buffer(uint8_t* data, int32_t len)
+-{
+-	if (buffered_bytes >= len) 
+-	{
+-		if(buf_read_pos + len <= BUFFSIZE ) 
+-		{
+-			memcpy(data, buffer + buf_read_pos, len);
+-		} 
+-		else 
+-		{
+-			int32_t tail = BUFFSIZE - buf_read_pos;
+-			memcpy(data, buffer + buf_read_pos, tail);
+-			memcpy(data + tail, buffer, len - tail);
+-		}
+-		buf_read_pos = (buf_read_pos + len) % BUFFSIZE;
+-		buffered_bytes -= len;
+-	}
+-
+-	return len;
+-}
+-
+-void sdl_callback_m(void *unused, uint8_t *stream, int32_t len)
++static void callback(void *unused, Uint8 *stream, int len)
+ {
+-	SDL_LockMutex(sound_mutex);
+-
+-	sdl_read_buffer((uint8_t *)stream, len);
+-
+-	SDL_CondSignal(sound_cv);
+-	SDL_UnlockMutex(sound_mutex);
++    unsigned i, frames = len / 4;
++    int16_t *out = (int16_t *)stream;
++    (void)unused;
++    memset(stream, 0, len);
++    SDL_LockMutex(audio_mutex);
++    if (frames > queued) frames = queued;
++    for (i = 0; i < frames; ++i) {
++        out[2*i] = ring[2*read_pos];
++        out[2*i+1] = ring[2*read_pos+1];
++        read_pos = (read_pos + 1) % CAPACITY;
++    }
++    queued -= frames;
++    SDL_CondSignal(audio_ready);
++    SDL_UnlockMutex(audio_mutex);
+ }
+ 
+-void sdl_callback(void *unused, uint8_t *stream, int32_t len)
++void Sound_Init(void)
+ {
+-	sdl_read_buffer((uint8_t *)stream, len);
++    SDL_AudioSpec spec = {0};
++    option.sndrate = SOUND_FREQUENCY;
++    read_pos = write_pos = queued = 0;
++    if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) return;
++    audio_mutex = SDL_CreateMutex();
++    audio_ready = SDL_CreateCond();
++    if (!audio_mutex || !audio_ready) return;
++    spec.freq = SOUND_FREQUENCY;
++    spec.format = AUDIO_S16SYS;
++    spec.channels = 2;
++    spec.samples = SOUND_SAMPLES_SIZE;
++    spec.callback = callback;
++    if (SDL_OpenAudio(&spec, NULL) < 0) {
++        fprintf(stderr, "SDL audio: %s\n", SDL_GetError());
++        return;
++    }
++    audio_open = 1;
++    SDL_PauseAudio(0);
+ }
+ 
+-void Sound_Init()
++static int16_t amplify(int16_t sample)
+ {
+-	SDL_AudioSpec aspec, obtained;
+-	option.sndrate = SOUND_FREQUENCY;
+-
+-	BUFFSIZE = SOUND_SAMPLES_SIZE * 2 * 2 * 8;
+-	buffer = (uint8_t *) malloc(BUFFSIZE);
+-
+-	/* Add some silence to the buffer */
+-	buffered_bytes = 0;
+-	buf_read_pos = 0;
+-	buf_write_pos = 0;
+-
+-	aspec.format   = AUDIO_S16;
+-	aspec.freq     = SOUND_FREQUENCY;
+-	aspec.channels = 2;
+-	aspec.samples  = SOUND_SAMPLES_SIZE;
+-	aspec.callback = (mutex ? sdl_callback_m : sdl_callback);
+-	aspec.userdata = NULL;
+-
+-	/* initialize the SDL Audio system */
+-	if (SDL_InitSubSystem (SDL_INIT_AUDIO | SDL_INIT_NOPARACHUTE)) 
+-	{
+-		printf("SDL: Initializing of SDL Audio failed: %s.\n", SDL_GetError());
+-		return;
+-	}
+-
+-	/* Open the audio device and start playing sound! */
+-	if(SDL_OpenAudio(&aspec, &obtained) < 0) 
+-	{
+-		printf("SDL: Unable to open audio: %s\n", SDL_GetError());
+-		return;
+-	}
+-
+-	if (mutex) 
+-	{
+-		sound_mutex = SDL_CreateMutex();
+-		sound_cv = SDL_CreateCond();
+-		printf("Using mutexes for sync\n");
+-	}
+-	
+-	SDL_PauseAudio(0);
+-	
+-	return;
++    int n = sample * option.soundlevel;
++    if (n > 32767) n = 32767;
++    if (n < -32768) n = -32768;
++    return n;
+ }
+ 
+-void Sound_Update()
++void Sound_Update(void)
+ {
+-	int32_t i;
+-	for (i = 0; i < (4 * (SOUND_FREQUENCY / snd.fps)); i++) 
+-	{
+-		buffer_snd[i * 2] = snd.output[1][i] * option.soundlevel;
+-		buffer_snd[i * 2 + 1] = snd.output[0][i] * option.soundlevel;
+-	}
+-	
+-	SDL_LockAudio();
+-	sdl_write_buffer(buffer_snd, (SOUND_FREQUENCY / snd.fps));
+-	SDL_UnlockAudio();
++    int i;
++    if (!audio_open) return;
++    SDL_LockMutex(audio_mutex);
++    for (i = 0; i < snd.sample_count; ++i) {
++        while (queued == CAPACITY) SDL_CondWait(audio_ready, audio_mutex);
++        ring[2*write_pos] = amplify(snd.output[1][i]);
++        ring[2*write_pos+1] = amplify(snd.output[0][i]);
++        write_pos = (write_pos + 1) % CAPACITY;
++        ++queued;
++    }
++    SDL_UnlockMutex(audio_mutex);
+ }
+ 
+-void Sound_Close()
++void Sound_Close(void)
+ {
+-	SDL_PauseAudio(1);
+-	if (mutex) 
+-	{
+-		SDL_LockMutex(sound_mutex);
+-		buffered_bytes = BUFFSIZE;
+-		SDL_CondSignal(sound_cv);
+-		SDL_UnlockMutex(sound_mutex);
+-		SDL_Delay(100);
+-		SDL_DestroyCond(sound_cv);
+-		SDL_DestroyMutex(sound_mutex);
+-	}
+-	SDL_CloseAudio();
+-	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+-	buffer = NULL;
++    if (audio_open) { SDL_CloseAudio(); audio_open = 0; }
++    if (audio_ready) { SDL_DestroyCond(audio_ready); audio_ready = NULL; }
++    if (audio_mutex) { SDL_DestroyMutex(audio_mutex); audio_mutex = NULL; }
++    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+ }

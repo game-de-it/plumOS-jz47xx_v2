@@ -1,0 +1,48 @@
+diff --git a/platform/opendingux/main_od.c b/platform/opendingux/main_od.c
+index db4120a..38c00dc 100644
+--- a/platform/opendingux/main_od.c
++++ b/platform/opendingux/main_od.c
+@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
+ 
+ 	// Get init file directory & name
+ 	gethomedir(current_conf_app, "potator");
+-	sprintf(current_conf_app,"%s//potator.cfg",current_conf_app);
++	strncat(current_conf_app, "/potator.cfg", sizeof(current_conf_app) - strlen(current_conf_app) - 1);
+ 	
+ 	// Init graphics & sound
+ 	initSDL();
+@@ -193,18 +193,18 @@ int main(int argc, char *argv[]) {
+ 
+     //load rom file via args if a rom path is supplied
+ 	if(argc > 1) {
+-		strcpy(gameName,argv[1]);
++		snprintf(gameName, sizeof(gameName), "%s", argv[1]);
+ 		m_Flag = GF_GAMEINIT;
+ 	}
+ 
+ 	// Initialize the virtual console emulation 
+ 	supervision_init();
+ 
+-	m_Flag = GF_MAINUI;
++	m_Flag = argc > 1 ? GF_GAMEINIT : GF_MAINUI;
+ 	system_loadcfg(current_conf_app);
+ 
+ 	while (m_Flag != GF_GAMEQUIT) {
+-		SDL_PollEvent(&event);
++		while (SDL_PollEvent(&event)) { }
+ 		unsigned char *keys = SDL_GetKeyState(NULL);
+ 
+ 		switch (m_Flag) {
+diff --git a/platform/opendingux/sound_od.c b/platform/opendingux/sound_od.c
+index 97eb264..c02a4f0 100644
+--- a/platform/opendingux/sound_od.c
++++ b/platform/opendingux/sound_od.c
+@@ -41,7 +41,6 @@ void Ainit(void) {
+ 
+ void Aclose(void) {
+ 	SDL_PauseAudio(1);
+-	SDL_DestroyMutex(sndlock);
+-
+ 	SDL_CloseAudio();
++	SDL_DestroyMutex(sndlock);
+ }

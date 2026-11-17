@@ -1,0 +1,52 @@
+diff --git a/src/ports/input/sdl/handy_handling.cpp b/src/ports/input/sdl/handy_handling.cpp
+index 5144104..e4c9b92 100644
+--- a/src/ports/input/sdl/handy_handling.cpp
++++ b/src/ports/input/sdl/handy_handling.cpp
+@@ -93,8 +93,47 @@ uint32_t dpad_pressed[4] = {0, 0, 0, 0};
+ 
+ uint32_t Joystick_Down(uint32_t mask, SDL_Event event)
+ {
++#ifdef PLUMOS_RG280V
++    static bool startHeld = false, selectHeld = false, chord = false, pausePulse = false;
++    if (pausePulse) { mask &= ~BUTTON_PAUSE; pausePulse = false; }
++#endif
+ 	while (SDL_PollEvent(&event))
+ 	{
++#ifdef PLUMOS_RG280V
++        if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
++            const SDLKey key = event.key.keysym.sym;
++            const bool down = event.type == SDL_KEYDOWN;
++            if (key == SDLK_RETURN || key == SDLK_ESCAPE) {
++                if (key == SDLK_RETURN) startHeld = down; else selectHeld = down;
++                if (startHeld && selectHeld && !chord) {
++                    chord = true;
++#ifdef IPU_SCALE
++                    Handy_Change_Res(1);
++#endif
++                    gui_Run();
++#ifdef IPU_SCALE
++                    Handy_Change_Res(0);
++#endif
++                    mask = 0;
++                    pausePulse = false;
++#ifndef NOJOYSTICK
++                    x_move = y_move = 0;
++                    memset(dpad_pressed, 0, sizeof(dpad_pressed));
++#endif
++                    SDL_PumpEvents();
++                    const Uint8 *held = SDL_GetKeyState(NULL);
++                    startHeld = held[SDLK_RETURN]; selectHeld = held[SDLK_ESCAPE];
++                } else if (!down && key == SDLK_RETURN && !chord) {
++                    mask |= BUTTON_PAUSE;
++                    pausePulse = true;
++                }
++                if (!startHeld && !selectHeld) chord = false;
++                continue;
++            }
++            // Leave power handling to plumOS.
++            if (key == SDLK_HOME || key == SDLK_END || key == SDLK_RCTRL) continue;
++        }
++#endif
+ 		switch(event.type)
+ 		{
+ 			case SDL_KEYDOWN:

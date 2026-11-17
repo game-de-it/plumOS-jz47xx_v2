@@ -1,0 +1,69 @@
+{
+  "13": {
+    "slug": "handy",
+    "url": "https://github.com/gameblabla/handy-rs97.git",
+    "binary": "handy",
+    "build": "make -f Makefile.gcw0 -j8 PROFILE=NO HUGE_PAGES=0 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" CFLAGS=\"-O3 -mips32r2 -msoft-float -fcommon -DWANT_CRC32 -DANSI_GCC -DSDL_PATCH -DGCW0 -DPLUMOS_RG280V -DOPENDINGUX_GCD_16PIXELS_ISSUE -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -Isrc -Isrc/handy-libretro -Isrc/sdlemu -Isrc/ports -Isrc/ports/sound -Isrc/ports/input/sdl\" LDFLAGS=\"-lstdc++ -lSDL -lasound -lz -lm -lpthread\"",
+    "revision": "6fc52aebdb65865144ed01b7478bcbf7b3a2edaa",
+    "patch": "patches/rg280v-handy-opk-input.patch"
+  },
+  "18": {
+    "slug": "oswan",
+    "url": "https://github.com/gameblabla/oswan.git",
+    "binary": "oswan",
+    "build": "make -j4 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CFLAGS=\"-O3 -mips32r2 -msoft-float -fcommon -std=gnu99 -DHOME_SUPPORT -DSOUND_ON -DSOUND_EMULATION -DPOSIX -DJOYSTICK -Imain/emu -Imain/sdl -Imain/headers -Imain/menu -Imain/sound -Imain/scalers -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL\" LDFLAGS=\"-lSDL -lz -lm\"",
+    "revision": "efea1326dc4f0477a6a7b704f7f7f6f5a1cc6f33",
+    "patch": "patches/rg280v-oswan-opk-audio.patch"
+  },
+  "2": {
+    "slug": "arnold",
+    "url": "https://github.com/gameblabla/arnold_gcw0.git",
+    "binary": "arnold",
+    "build": "make -f Makefile.gcw -j4 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" SDLINC=\"-I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -D_REENTRANT\" ALSAINC=\"-msoft-float -fcommon\"",
+    "revision": "471227f2bd461ba816ae30342948f38a5afaf012",
+    "exec": "case \"$1\" in *.sna|*.SNA) exec /opk/plumos-emulator -frameskip 0 -snapshot \"$1\" ;; *.dsk|*.DSK) exec /opk/plumos-emulator -frameskip 0 -drivea \"$1\" ;; *.cpr|*.CPR) exec /opk/plumos-emulator -frameskip 0 -cart \"$1\" ;; *) exec /opk/plumos-emulator -frameskip 0 \"$1\" ;; esac"
+  },
+  "57": {
+    "slug": "smsplus",
+    "url": "https://github.com/gameblabla/sms_sdl.git",
+    "revision": "5554715689a41f58715f11cecfb885b7f5c29b51",
+    "binary": "sms_sdl",
+    "patch": "patches/rg280v-smsplus-opk-input.patch",
+    "build": "make -f Makefile.gcw0 -j4 SOUND_OUTPUT=sdl12 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CFLAGS=\"-O3 -mips32r2 -msoft-float -fcommon -std=gnu99 -DALIGN_DWORD -DNOBLANKING_LEFTCOLUM -DLSB_FIRST -DMAXIM_PSG -DSCALE2X_UPSCALER -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -Isource -Isource/cpu_cores/z80 -Isource/scalers -Isource/ports/gcw0 -Isource/sound -Isource/unzip -Isource/sound/maxim_sn76489 -Isource/sound_output -Isource/text/fb -Isource/scale2x\" LDFLAGS=\"-lSDL -lm -lz\""
+  },
+  "58": {
+    "slug": "smsplus",
+    "url": "https://github.com/gameblabla/sms_sdl.git",
+    "revision": "5554715689a41f58715f11cecfb885b7f5c29b51",
+    "binary": "sms_sdl",
+    "patch": "patches/rg280v-smsplus-opk-input.patch",
+    "build": "make -f Makefile.gcw0 -j4 SOUND_OUTPUT=sdl12 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CFLAGS=\"-O3 -mips32r2 -msoft-float -fcommon -std=gnu99 -DALIGN_DWORD -DNOBLANKING_LEFTCOLUM -DLSB_FIRST -DMAXIM_PSG -DSCALE2X_UPSCALER -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -Isource -Isource/cpu_cores/z80 -Isource/scalers -Isource/ports/gcw0 -Isource/sound -Isource/unzip -Isource/sound/maxim_sn76489 -Isource/sound_output -Isource/text/fb -Isource/scale2x\" LDFLAGS=\"-lSDL -lm -lz\""
+  },
+  "47": {
+    "slug": "pcfx",
+    "url": "https://github.com/gameblabla/pcfx-mednafen.git",
+    "revision": "444382d95ec86af00ef90a412bd7bb0f6fc00012",
+    "binary": "mednafen_gcw0.elf",
+    "build": "make -f Makefile.gcw0 -j6 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" LD=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" CC_OPTS=\"-O3 -mips32r2 -msoft-float -fcommon -I./include -I./src/thread -I. -Iconfigurations/GCW0 -DHAVE_CONFIG_H -DUSE_ALSA_DEFAULT -DDINGUX -Isrc/pcfx/input -Isrc/pcfx -Isrc/sound -Isrc/mpcdec -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT\" 'DEFINES=-DLOCALEDIR=\\\"/usr/share/locale\\\"' 'CXXFLAGS=$(CC_OPTS) $(DEFINES) -std=gnu++11' 'CFLAGS=$(CC_OPTS) $(DEFINES) -std=gnu99' LDFLAGS=\"-lSDL -lm -lz -lstdc++ -lintl -pthread -lasound -Wl,--gc-sections\"",
+    "prepare": "mkdir -p \"$HOME/.mednafen/firmware\"\nln -sfn /media/data/sd2/.plumos-rg350-tests-20261118/relocated/bios/home-47/.mednafen/firmware/pcfx.rom \"$HOME/.mednafen/firmware/pcfx.rom\"",
+    "patch": "patches/rg280v-pcfx-opk-errors.patch"
+  },
+  "42": {
+    "slug": "jzintv",
+    "url": "https://github.com/DavidKnight247/jzIntv.git",
+    "revision": "883a7f6f149254a274295aa4b54f61b655a8dce8",
+    "binary": "bin/jzintv",
+    "patch": "patches/rg280v-jzintv-opk-startup.patch",
+    "build": "find src -name \"*.o\" -delete && make -C src -f Makefile.gcw0 -j4 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" GCW_PATH=\"$t/mipsel-gcw0-linux-uclibc/sysroot/usr\" OPT_FLAGS=\"-O3 -mips32r2 -msoft-float -fcommon\" LFLAGS=\"-lSDL -lSDL_image -lSDL_ttf -lSDL_gfx -lpng16 -lz -lm -ldl -lpthread\"",
+    "exec": "exec /opk/plumos-emulator -e /media/data/sd2/.plumos-rg350-tests-20261118/relocated/bios/home-42/bios/exec.bin -g /media/data/sd2/.plumos-rg350-tests-20261118/relocated/bios/home-42/bios/grom.bin \"$1\"",
+    "prepare": "mkdir -p \"$HOME/.jzintellivision\""
+  },
+  "22": {
+    "slug": "potator",
+    "url": "https://github.com/alekmaul/potator.git",
+    "revision": "afa31c354290b41480a555530696132f26c9e58c",
+    "binary": "potator-od.dge",
+    "patch": "patches/rg280v-potator-opk-launch.patch",
+    "build": "make -f makefile -j4 OSTYPE=odgcw CC=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" CCP=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" LD=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" CFLAGS=\"-O2 -mips32r2 -msoft-float -fcommon -D_ODSDL_ -D_OPENDINGUX_ -DMAX__PATH=1024 -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL\" LDFLAGS=\"-lSDL -lm\""
+  }
+}
