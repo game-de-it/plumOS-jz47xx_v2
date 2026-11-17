@@ -8,6 +8,26 @@ index 6c4fe12..065142e 100644
 @@ -204 +204 @@ depobj += \
 -		sdl_audio.o sdl_input.o sdl_menu.o sdl_progress.o \
 +		alsa_audio.o sdl_audio.o sdl_input.o sdl_menu.o sdl_progress.o \
+diff --git a/src/burn/drv/irem/d_m72.cpp b/src/burn/drv/irem/d_m72.cpp
+index 2a6f4d8..cc2fb55 100644
+--- a/src/burn/drv/irem/d_m72.cpp
++++ b/src/burn/drv/irem/d_m72.cpp
+@@ -2050 +2050,14 @@ static INT32 DrvDraw()
+-	BurnTransferCopy(DrvPalette);
++	pBurnDrvPalette = DrvPalette;
++	if (nBurnBpp == 2) {
++		// The M72 palette has 512 entries. A 16-bit table avoids the costly
++		// 32-bit indexed read for each pixel on this MIPS target.
++		UINT16 fast_palette[0x200];
++		for (INT32 i = 0; i < 0x200; i++) fast_palette[i] = (UINT16)DrvPalette[i];
++		for (INT32 y = 0; y < nScreenHeight; y++) {
++			const UINT16 *src = pTransDraw + y * nScreenWidth;
++			UINT16 *dst = (UINT16 *)(pBurnDraw + y * nBurnPitch);
++			for (INT32 x = 0; x < nScreenWidth; x++) dst[x] = fast_palette[src[x] & 0x1ff];
++		}
++	} else {
++		BurnTransferCopy(DrvPalette);
++	}
 diff --git a/src/sdl-dingux/alsa_audio.cpp b/src/sdl-dingux/alsa_audio.cpp
 new file mode 100644
 index 0000000..625bcb9
@@ -147,6 +167,37 @@ index abef65e..fed2ddd 100644
 +	fprintf(stderr, "FBA menu: selection closed\n");
 @@ -609,0 +611 @@ void gui_Run()
 +	fprintf(stderr, "FBA menu: config saved\n");
+diff --git a/src/sdl-dingux/sdl_run.cpp b/src/sdl-dingux/sdl_run.cpp
+index 9f48202..506aa03 100644
+--- a/src/sdl-dingux/sdl_run.cpp
++++ b/src/sdl-dingux/sdl_run.cpp
+@@ -175 +175 @@ void RunEmulator(int drvnum)
+-		int now, done=0, timer = 0, ticks=0, tick=0, i=0, fps = 0;
++		int done=0, timer = 0, tick=0, fps = 0;
+@@ -188,16 +188,7 @@ void RunEmulator(int drvnum)
+-			now = timer;
+-			ticks=now-done;
+-			if(ticks<1) continue;
+-			if(ticks>10) ticks=10;
+-			for (i=0; i<ticks-1; i++)
+-			{
+-				RunOneFrame(false,fps);
+-				SndPlay();
+-			}
+-			if(ticks>=1)
+-			{
+-				RunOneFrame(true,fps);
+-				SndPlay();
+-			}
+-
+-			done = now;
++			if (timer <= done) continue;
++			/* If emulation is slower than the target rate, discard elapsed
++			 * wall-clock debt.  The old loop simulated up to ten frames and
++			 * drew only one, yielding 4 FPS for a ~44 FPS game. */
++			RunOneFrame(true, fps);
++			SndPlay();
++			done = timer;
 diff --git a/src/sdl-dingux/snd.cpp b/src/sdl-dingux/snd.cpp
 index 3642fa0..8461474 100644
 --- a/src/sdl-dingux/snd.cpp
