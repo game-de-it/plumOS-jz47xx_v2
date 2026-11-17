@@ -1,0 +1,69 @@
+diff --git a/Makefile.rg350 b/Makefile.rg350
+index 75c983d..7c281a0 100755
+--- a/Makefile.rg350
++++ b/Makefile.rg350
+@@ -53,3 +53,6 @@ opk: all
+ 	neo4all/data \
+ 	neo4all/$(NEO4ALL_OPK_NAME) \
+ 	-all-root -noappend -no-exports -no-xattrs
++
++# RG280V toolchain ABI
++CFLAGS += -msoft-float -fcommon
+diff --git a/src/cdaudio/cdaudio.cpp b/src/cdaudio/cdaudio.cpp
+index 90b33e7..ec48df4 100644
+--- a/src/cdaudio/cdaudio.cpp
++++ b/src/cdaudio/cdaudio.cpp
+@@ -120,7 +120,8 @@ int cdda_play(int track)
+ 			printf("CD Play: %s\n", cdda_track);
+ 
+ 			music = Mix_LoadMUS(cdda_track);
+-			Mix_PlayMusic(music, -1);
++			if (!music) { fprintf(stderr, "CDDA load failed: %s: %s\n", cdda_track, Mix_GetError()); return 0; }
++			if (Mix_PlayMusic(music, -1) < 0) { fprintf(stderr, "CDDA play failed: %s\n", Mix_GetError()); return 0; }
+ 
+ 			cdda_current_track = track;
+ 			cdda_loop_counter = 0;
+diff --git a/src/input/input.cpp b/src/input/input.cpp
+index 2fa24b1..93bb6f7 100644
+--- a/src/input/input.cpp
++++ b/src/input/input.cpp
+@@ -137,7 +137,7 @@ static void show_volumen(void)
+ static void inc_dingoo_mhz(void)
+ {
+ 	extern void dingoo_set_clock(unsigned int);
+-	extern unsigned int dingoo_get_clock(void);
++	extern int dingoo_get_clock(void);
+ 	dingoo_set_clock(dingoo_get_clock()+25);
+ 	show_mhz();
+ }
+@@ -145,7 +145,7 @@ static void inc_dingoo_mhz(void)
+ static void dec_dingoo_mhz(void)
+ {
+ 	extern void dingoo_set_clock(unsigned int);
+-	extern unsigned int dingoo_get_clock(void);
++	extern int dingoo_get_clock(void);
+ 	dingoo_set_clock(dingoo_get_clock()-25);
+ 	show_mhz();
+ }
+diff --git a/src/main.cpp b/src/main.cpp
+index abb8bc0..5edbbe9 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -393,7 +393,8 @@ int neo4all_load_bios(void)
+ 		fp = fopen("neocd.bin", "rb");
+ #else
+ 		// For RG350 handhelds, this is where it should be located
+-		fp = fopen("/media/data/local/home/.neo4all/neocd.bin", "rb");
++		snprintf(file, sizeof(file), "%s/.neo4all/neocd.bin", getenv("HOME"));
++		fp = fopen(file, "rb");
+ #endif //!RG350
+ 		if (fp) break;
+ 	} while(0);
+@@ -477,6 +478,7 @@ static void profiler_init(void)
+ //----------------------------------------------------------------------------
+ int	main(int argc, char* argv[])
+ {
++setvbuf(stdout, NULL, _IONBF, 0);
+ if (argc > 0) {
+ 	strncpy(neo4all_image_file,argv[1],1024);
+ 	sprintf(neo4all_image_dir, "%s", neo4all_image_file);

@@ -49,7 +49,9 @@ adb=['adb','-P','5041','-s','10.1.1.2:5555'];remote='/media/data/local/rg350-rom
 def shell(s):return subprocess.check_output(adb+['shell',s],text=True).strip()
 manifest=[];staged=[]
 for family,(ids,dirs,exts) in groups.items():
- matches=[f for f in files if any(f.startswith(d+'/') for d in dirs) and Path(f).suffix.lower()[1:] in exts]
+ matches=[f for f in files if '/bios/' not in f.lower()
+          and Path(f).name.upper() not in {'ATARIBAS.ROM','ATARIOSB.ROM','ATARIXL.ROM'}
+          and any(f.startswith(d+'/') for d in dirs) and Path(f).suffix.lower()[1:] in exts]
  def rank(f):
   name=Path(f).name
   return (next((i for i,p in enumerate(prefs.get(family,[])) if p.lower() in name.lower()),99),len(Path(f).parts),f.lower())

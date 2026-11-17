@@ -13,9 +13,11 @@ static void *original_audio_data;
 static unsigned audio_callbacks;
 static uint64_t audio_frames, audio_zero, audio_clipped, audio_energy;
 static unsigned audio_peak;
+static int audio_min = 32767, audio_max = -32768;
 static unsigned audio_rate, audio_channels, audio_format;
 static uint64_t audio_first, audio_last;
 static unsigned flips;
+static __thread int presenting;
 static uint64_t flip_first, flip_last, flip_wait_ns, flip_max_ns;
 static unsigned flip_waits_8ms;
 static unsigned flip_report_count;
@@ -48,13 +50,13 @@ static void report(const char *kind)
                 flips ? (double)flip_wait_ns / flips / 1e6 : 0.0,
                 (double)flip_max_ns / 1e6, flip_waits_8ms);
     } else {
-        fprintf(out, "audio\tcallbacks=%u\trate=%u\tchannels=%u\tformat=0x%x\tframes=%llu\tseconds=%.3f\tzero_frac=%.4f\tclipped_frac=%.4f\tpeak=%u\tenergy=%llu\n",
+        fprintf(out, "audio\tcallbacks=%u\trate=%u\tchannels=%u\tformat=0x%x\tframes=%llu\tseconds=%.3f\tzero_frac=%.4f\tclipped_frac=%.4f\tpeak=%u\tenergy=%llu\tmin=%d\tmax=%d\n",
                 audio_callbacks, audio_rate, audio_channels, audio_format,
                 (unsigned long long)audio_frames,
                 audio_last > audio_first ? (double)(audio_last - audio_first) / 1e9 : 0.0,
                 audio_frames ? (double)audio_zero / (audio_frames * audio_channels) : 0.0,
                 audio_frames ? (double)audio_clipped / (audio_frames * audio_channels) : 0.0,
-                audio_peak, (unsigned long long)audio_energy);
+                audio_peak, (unsigned long long)audio_energy, audio_min, audio_max);
     }
     fclose(out);
     if (kind[0] == 'v') {
@@ -66,17 +68,26 @@ static void report(const char *kind)
 static void audio_callback(void *ignored, Uint8 *stream, int len)
 {
     unsigned samples, i;
-    const int16_t *pcm;
     (void)ignored;
     if (original_audio) original_audio(original_audio_data, stream, len);
     audio_last = now_ns();
     if (!audio_first) audio_first = audio_last;
     audio_callbacks++;
-    if (audio_format == AUDIO_S16LSB && audio_channels) {
-        samples = (unsigned)len / sizeof(int16_t);
-        pcm = (const int16_t *)stream;
+    if (audio_channels && ((audio_format & 0xff) == 16 || (audio_format & 0xff) == 8)) {
+        unsigned width = (audio_format & 0xff) / 8;
+        samples = (unsigned)len / width;
         for (i = 0; i < samples; i++) {
-            int sample = pcm[i];
+            int sample;
+            if (width == 1) {
+                sample = (audio_format & 0x8000) ? (int)(int8_t)stream[i] : (int)stream[i] - 128;
+                sample *= 256;
+            } else {
+                unsigned lo = stream[2*i], hi = stream[2*i+1];
+                unsigned raw = (audio_format & 0x1000) ? (lo << 8) | hi : (hi << 8) | lo;
+                sample = (audio_format & 0x8000) ? (int)(int16_t)raw : (int)raw - 32768;
+            }
+            if (sample < audio_min) audio_min = sample;
+            if (sample > audio_max) audio_max = sample;
             unsigned magnitude = sample < 0 ? (unsigned)-sample : (unsigned)sample;
             audio_zero += magnitude < 64;
             audio_clipped += magnitude >= 32760;
@@ -94,6 +105,7 @@ static void audio_callback(void *ignored, Uint8 *stream, int len)
 int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
 {
     static int (*real_open)(SDL_AudioSpec *, SDL_AudioSpec *);
+    int rc;
     if (!real_open) real_open = dlsym(RTLD_NEXT, "SDL_OpenAudio");
     if (!real_open || !desired) return -1;
     original_audio = desired->callback;
@@ -103,7 +115,13 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained)
     audio_format = desired->format;
     desired->callback = audio_callback;
     desired->userdata = NULL;
-    return real_open(desired, obtained);
+    rc = real_open(desired, obtained);
+    if (rc == 0 && obtained) {
+        audio_rate = obtained->freq;
+        audio_channels = obtained->channels;
+        audio_format = obtained->format;
+    }
+    return rc;
 }
 
 static void record_video(uint64_t start, uint64_t elapsed)
@@ -123,13 +141,15 @@ int SDL_Flip(SDL_Surface *surface)
 {
     static int (*real_flip)(SDL_Surface *);
     uint64_t start, elapsed;
-    int rc;
+    int rc, nested;
     if (!real_flip) real_flip = dlsym(RTLD_NEXT, "SDL_Flip");
     if (!real_flip) return -1;
     start = now_ns();
+    nested = presenting++;
     rc = real_flip(surface);
+    presenting--;
     elapsed = now_ns() - start;
-    record_video(start, elapsed);
+    if (!nested) record_video(start, elapsed);
     return rc;
 }
 
@@ -137,13 +157,53 @@ int SDL_DisplayYUVOverlay(SDL_Overlay *overlay, SDL_Rect *dstrect)
 {
     static int (*real_display)(SDL_Overlay *, SDL_Rect *);
     uint64_t start;
-    int rc;
+    int rc, nested;
     if (!real_display) real_display = dlsym(RTLD_NEXT, "SDL_DisplayYUVOverlay");
     if (!real_display) return -1;
     start = now_ns();
+    nested = presenting++;
     rc = real_display(overlay, dstrect);
-    record_video(start, now_ns() - start);
+    presenting--;
+    if (!nested) record_video(start, now_ns() - start);
     return rc;
+}
+
+
+/* SDL2 frontends and SDL1 software surfaces do not necessarily call SDL_Flip. */
+void SDL_GL_SwapWindow(void *window)
+{
+    static void (*real_swap)(void *);
+    if (!real_swap) real_swap = dlsym(RTLD_NEXT, "SDL_GL_SwapWindow");
+    if (!real_swap) return;
+    uint64_t start = now_ns();
+    int nested = presenting++;
+    real_swap(window);
+    presenting--;
+    if (!nested) record_video(start, now_ns() - start);
+}
+
+void SDL_RenderPresent(void *renderer)
+{
+    static void (*real_present)(void *);
+    if (!real_present) real_present = dlsym(RTLD_NEXT, "SDL_RenderPresent");
+    if (!real_present) return;
+    uint64_t start = now_ns();
+    int nested = presenting++;
+    real_present(renderer);
+    presenting--;
+    if (!nested) record_video(start, now_ns() - start);
+}
+
+void SDL_UpdateRects(SDL_Surface *surface, int count, SDL_Rect *rects)
+{
+    static void (*real_update)(SDL_Surface *, int, SDL_Rect *);
+    if (!real_update) real_update = dlsym(RTLD_NEXT, "SDL_UpdateRects");
+    if (!real_update) return;
+    int nested = presenting++;
+    uint64_t start = now_ns();
+    real_update(surface, count, rects);
+    presenting--;
+    if (!nested) record_video(start, now_ns() - start);
 }
 
 static void init_autostart(void)

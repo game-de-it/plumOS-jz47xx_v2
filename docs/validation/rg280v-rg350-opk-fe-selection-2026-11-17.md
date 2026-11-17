@@ -1,5 +1,7 @@
 # RG350 OPKエミュ一覧とFE追加候補（2026-11-17）
 
+**ROM未指定項目の再試験:** [2026-11-18の結果](rg280v-rg350-missing-rom-retest-2026-11-18.md)。新しい確認候補はStellaの3 ROMと、BGM対応NEO4ALLのWAV試験版。Appsに独立した試験入口を追加。下記27項目という記述は追加前の履歴。
+
 **2026-11-18 実機確認:** FCEUX 2.2.3、PokeMini、Race Explorer、CrocoDS、Gambatteはユーザーが動作正常と確認。Genesis Plus GXはALSA改修版のBare Knuckleを正常確認。OhBoyも最終改修版の音声・スケール・メニューを正常確認。詳細は [実機結果](rg280v-rg350-user-results-2026-11-18.md)。
 
 **重複確認後の更新:** [既存SAとの照合結果](rg280v-rg350-sa-duplicates-2026-11-17.md) に基づき、PocketSNESとGambatte 2021は別候補から除外。FCEUXは既存SA 2.6.6に対する2.2.3の比較として残す。現在の目視確認メニューは27項目。以下の全件一覧・30項目の記述は重複確認前の監査・配置履歴を含む。
