@@ -51,6 +51,7 @@ def main():
     parser.add_argument("--screenshot-delay", type=float, default=3.0)
     parser.add_argument("--sdl-driver", default="kmsdrm", choices=("kmsdrm", "fbcon"))
     parser.add_argument("--trace", action="store_true", help="Collect file/process/signal syscalls for startup failures")
+    parser.add_argument("--environment", action="append", default=[], metavar="NAME=VALUE", help="Additional PLUMOS_ or SDL_ diagnostic environment")
     parser.add_argument("--health-library", default="/media/data/plumos/lib/libstandalone-health.so", help="Remote telemetry library; use the SDL2 variant for SDL2 OPKs")
     parser.add_argument("--preload", default="", help="Additional remote LD_PRELOAD library")
     parser.add_argument("--tag", default="", help="Suffix for the ignored evidence directory")
@@ -67,6 +68,14 @@ def main():
     parser.add_argument("--key-event", action="append", default=[],
                         help="Inject SECONDS:KEYCODE:DURATION_MS[:SECOND_KEYCODE]")
     args = parser.parse_args()
+    if not 1 <= args.seconds <= 300:
+        parser.error("--seconds must be 1..300 (device watchdog limit)")
+    diagnostic_environment = {}
+    for item in args.environment:
+        key, sep, value = item.partition("=")
+        if not sep or not re.fullmatch(r"(?:PLUMOS_|SDL_)[A-Z0-9_]+", key):
+            parser.error("--environment requires PLUMOS_NAME=value or SDL_NAME=value")
+        diagnostic_environment[key] = value
     key_events = [(3 * (i + 1), 28, 120, None) for i in range(args.start_presses)]
     for value in args.key_event:
         parts = value.split(":")
@@ -127,7 +136,7 @@ def main():
         preloads = [args.health_library]
         if args.preload:
             preloads.append(args.preload)
-        call = (launch_env + "PLUMOS_STANDALONE_HEALTH_LOG=" + shlex.quote(remote_log) +
+        call = (launch_env + " ".join(key + "=" + shlex.quote(value) for key, value in diagnostic_environment.items()) + " " + "PLUMOS_STANDALONE_HEALTH_LOG=" + shlex.quote(remote_log) +
                 " LD_PRELOAD=" + shlex.quote(":".join(preloads)) + " " +
                 (("strace -f -e trace=file,process,signal -o /tmp/rg350-source-trace-" + str(number) + " ") if args.trace else "") +
                 "/media/data/local/rg280v-opk-timeout " + str(args.seconds) + " " +

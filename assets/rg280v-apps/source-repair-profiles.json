@@ -71,8 +71,9 @@
     "url": "https://github.com/goldmojo/uae4all.git",
     "revision": "9988f9924a5da4d21fde414b8d531301f8b1076c",
     "binary": "uae4all.elf",
-    "build": "make -f Makefile.gcw0 -j6 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" STRIP=\"$t/bin/mipsel-gcw0-linux-uclibc-strip\" DEFAULT_CFLAGS=\"-mips32r2 -msoft-float -fcommon -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DGCW0\"",
-    "prepare": "mkdir -p \"$HOME/.uae4all\"\nln -sfn /media/data/sd2/.plumos-rg350-tests-20261118/relocated/bios/home-30/.uae4all/kick.rom \"$HOME/.uae4all/kick.rom\""
+    "build": "find src -name \"*.o\" -delete\nmake -f Makefile.gcw0 -j6 FAME_CORE=1 CC=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" STRIP=\"$t/bin/mipsel-gcw0-linux-uclibc-strip\" DEFAULT_CFLAGS=\"-mips32r2 -msoft-float -fcommon -fno-strict-aliasing -fwrapv -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include -I$t/mipsel-gcw0-linux-uclibc/sysroot/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DGCW0\"",
+    "prepare": "mkdir -p \"$HOME/.uae4all\"\nln -sfn /media/data/sd2/.plumos-rg350-tests-20261118/relocated/bios/home-30/.uae4all/kick.rom \"$HOME/.uae4all/kick.rom\"",
+    "patch": "patches/rg280v-uae4all-opk-runtime.patch"
   },
   "17": {
     "slug": "openbor",
@@ -97,7 +98,8 @@
     "revision": "11b0980470e7c52cf77095f327085f31957d4818",
     "binary": "build/dingux/gcw0-release/dist/unreal_speccy_portable0.0.59",
     "build": "make -C build/dingux -j6 gcw0-release/dist/unreal_speccy_portable0.0.59 CXX=\"$t/bin/mipsel-gcw0-linux-uclibc-g++\" C=\"$t/bin/mipsel-gcw0-linux-uclibc-gcc\" SYSROOT=\"$t/mipsel-gcw0-linux-uclibc/sysroot/\" STD_OPTS=\"-O3 -mips32r2 -msoft-float -fcommon -c -fno-exceptions -fomit-frame-pointer\" LFLAGS=\"-lSDL -lpng16 -lz -lxml2 -lm\"",
-    "patch": "patches/rg280v-unrealspeccy-opk-menu.patch"
+    "patch": "patches/rg280v-unrealspeccy-opk-menu.patch",
+    "prepare": "mkdir -p \"$HOME/states\""
   },
   "56": {
     "slug": "scummvm",

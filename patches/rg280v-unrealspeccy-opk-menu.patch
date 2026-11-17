@@ -1,8 +1,126 @@
+diff --git a/options_common.cpp b/options_common.cpp
+index f0fee2e..225d3a3 100755
+--- a/options_common.cpp
++++ b/options_common.cpp
+@@ -32,7 +32,15 @@ struct eOptionState : public xOptions::eOptionBool
+ 	const char* SnapshotName() const
+ 	{
+ 		static char name[xIo::MAX_PATH_LEN];
+-		strcpy(name, OpLastFile());
++		const char* home = getenv("HOME");
++        if (home && *home) {
++            unsigned hash = 2166136261U;
++            for (const unsigned char* p = (const unsigned char*)OpLastFile(); *p; ++p)
++                hash = (hash ^ *p) * 16777619U;
++            int n = snprintf(name, sizeof(name), "%s/states/%08x.sna", home, hash);
++            return n > 0 && n < (int)sizeof(name) ? name : NULL;
++        }
++        strcpy(name, OpLastFile());
+ 		int l = strlen(name);
+ 		if(!l || name[l - 1] == '/' || name[l - 1] == '\\')
+ 			return NULL;
+@@ -54,7 +62,13 @@ static struct eOptionSaveState : public eOptionState
+ 	{
+ 		const char* name = SnapshotName();
+ 		if(name)
+-			Set(Handler()->OnSaveFile(name));
++			{
++            char original[xIo::MAX_PATH_LEN];
++            snprintf(original, sizeof(original), "%s", OpLastFile());
++            bool ok = Handler()->OnSaveFile(name);
++            OpLastFile(original);
++            Set(ok);
++        }
+ 		else
+ 			Set(false);
+ 	}
+@@ -68,7 +82,13 @@ static struct eOptionLoadState : public eOptionState
+ 	{
+ 		const char* name = SnapshotName();
+ 		if(name)
+-			Set(Handler()->OnOpenFile(name));
++			{
++            char original[xIo::MAX_PATH_LEN];
++            snprintf(original, sizeof(original), "%s", OpLastFile());
++            bool ok = Handler()->OnOpenFile(name);
++            OpLastFile(original);
++            Set(ok);
++        }
+ 		else
+ 			Set(false);
+ 	}
+@@ -153,7 +173,7 @@ static struct eOptionJoy : public xOptions::eOptionInt
+ 	virtual const char* Name() const { return "joystick"; }
+ 	virtual const char** Values() const
+ 	{
+-		static const char* values[] = { "kempston", "cursor", "qaop", "sinclair2", NULL };
++		static const char* values[] = { "kempston", "cursor", "qaop", "qaop caps", "sinclair2", NULL };
+ 		return values;
+ 	}
+ 	virtual void Change(bool next = true)
+@@ -233,7 +253,8 @@ dword OpJoyKeyFlags()
+ 	{
+ 	case J_KEMPSTON:	return KF_KEMPSTON;
+ 	case J_CURSOR:		return KF_CURSOR;
+-	case J_QAOP:		return KF_QAOP;
++	case J_QAOP:
++	case J_QAOP_CAPS:	return KF_QAOP;
+ 	case J_SINCLAIR2:	return KF_SINCLAIR2;
+ 	}
+ 	return KF_QAOP;
+diff --git a/options_common.h b/options_common.h
+index bcf487b..9eb5cd3 100755
+--- a/options_common.h
++++ b/options_common.h
+@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ namespace xPlatform
+ {
+ 
+-enum eJoystick { J_FIRST, J_KEMPSTON = J_FIRST, J_CURSOR, J_QAOP, J_SINCLAIR2, J_LAST };
++enum eJoystick { J_FIRST, J_KEMPSTON = J_FIRST, J_CURSOR, J_QAOP, J_QAOP_CAPS, J_SINCLAIR2, J_LAST };
+ enum eSound { S_FIRST, S_BEEPER = S_FIRST, S_AY, S_TAPE, S_LAST };
+ enum eVolume { V_FIRST, V_MUTE = V_FIRST, V_10, V_20, V_30, V_40, V_50, V_60, V_70, V_80, V_90, V_100, V_LAST };
+ enum eDrive { D_FIRST, D_A = D_FIRST, D_B, D_C, D_D, D_LAST };
+diff --git a/platform/sdl/sdl.cpp b/platform/sdl/sdl.cpp
+index c0b0609..cfb8c73 100644
+--- a/platform/sdl/sdl.cpp
++++ b/platform/sdl/sdl.cpp
+@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
+ #include "../platform.h"
++#include "../io.h"
+ 
+ #ifdef USE_SDL
+ 
+@@ -48,6 +49,11 @@ static bool Init()
+ #define SDL_DEFAULT_FOLDER "/"
+ #endif//SDL_DEFAULT_FOLDER
+ 	OpLastFile(SDL_DEFAULT_FOLDER);
++    if (const char* home = getenv("HOME")) {
++        char path[xIo::MAX_PATH_LEN];
++        if (snprintf(path, sizeof(path), "%s/", home) < (int)sizeof(path))
++            xIo::SetProfilePath(path);
++    }
+ 	Handler()->OnInit();
+ 
+ 	Uint32 init_flags = SDL_INIT_VIDEO|SDL_INIT_AUDIO;
 diff --git a/platform/sdl/sdl_keys_dingoo.cpp b/platform/sdl/sdl_keys_dingoo.cpp
-index 95bcb8c..9a6e092 100644
+index 95bcb8c..dda3624 100644
 --- a/platform/sdl/sdl_keys_dingoo.cpp
 +++ b/platform/sdl/sdl_keys_dingoo.cpp
-@@ -76,16 +76,24 @@ namespace xPlatform
+@@ -71,21 +71,34 @@ namespace xPlatform
+ 		case DINGOO_BUTTON_LEFT:	return 'l';
+ 		case DINGOO_BUTTON_RIGHT:	return 'r';
+ 
+-		case DINGOO_BUTTON_A:		return 'f';
++		case DINGOO_BUTTON_A:
++            if (!ui_focused && OpJoystick() == J_QAOP_CAPS) {
++                if (_flags & KF_DOWN) _flags |= KF_SHIFT;
++                return 'c';
++            }
++            return 'f';
+ 		case DINGOO_BUTTON_B:		return 'e';
  		case DINGOO_BUTTON_X:		return '1';
  		case DINGOO_BUTTON_Y:		return ' ';
  	
@@ -37,7 +155,7 @@ index 95bcb8c..9a6e092 100644
  
  		case DINGOO_BUTTON_L:
  			l_shift = _flags&KF_DOWN;
-@@ -118,8 +126,6 @@ namespace xPlatform
+@@ -118,8 +131,6 @@ namespace xPlatform
  		default:
  			break;
  		}
@@ -46,12 +164,59 @@ index 95bcb8c..9a6e092 100644
  		return 0;
  	}
  
-@@ -146,7 +152,7 @@ namespace xPlatform
+@@ -136,6 +147,9 @@ namespace xPlatform
+ 					flags |= KF_ALT;
+ 				byte key = TranslateKey(e.key.keysym.sym, flags);
+ 				Handler()->OnKey(key, flags);
++                // UI actions are one-shot. Pair their release so eDesktop does
++                // not auto-repeat them and repeatedly open/close the dialog.
++                if (key == 'm') Handler()->OnKey(key, flags & ~KF_DOWN);
+ 			}
+ 			break;
+ 			case SDL_KEYUP:
+@@ -146,7 +160,8 @@ namespace xPlatform
  				if(r_shift)
  					flags |= KF_ALT;
  				byte key = TranslateKey(e.key.keysym.sym, flags);
 -				Handler()->OnKey(key, OpJoyKeyFlags());
 +				Handler()->OnKey(key, flags | OpJoyKeyFlags());
++                if (flags & KF_DOWN) Handler()->OnKey(key, (flags & ~KF_DOWN) | OpJoyKeyFlags());
  			}
  			break;
  			default:
+diff --git a/speccy.cpp b/speccy.cpp
+index bb6271f..6fb7997 100644
+--- a/speccy.cpp
++++ b/speccy.cpp
+@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ 
+ #include "std.h"
++#include <time.h>
+ 
+ #include "speccy.h"
+ #include "devices/device.h"
+@@ -119,4 +120,23 @@ void eSpeccy::Update(int* fetches)
+ 		devices.FrameEnd(fetches ? cpu->T() : cpu->FrameTacts() + cpu->T());
+ 	}
+ 	t_states += fetches ? cpu->T() : cpu->FrameTacts();
++    static const char* diagnostics = getenv("PLUMOS_UNREAL_CORE_LOG");
++    if (diagnostics) {
++        static unsigned frames = 0;
++        static double begin = 0;
++        struct timespec ts;
++        clock_gettime(CLOCK_MONOTONIC, &ts);
++        double now = ts.tv_sec + ts.tv_nsec * 1e-9;
++        if (!begin) begin = now;
++        ++frames;
++        if (now - begin >= 2.0) {
++            FILE* log = fopen(diagnostics, "a");
++            if (log) {
++                fprintf(log, "core frames=%u seconds=%.3f fps=%.3f\n", frames, now - begin, frames/(now-begin));
++                fclose(log);
++            }
++            frames = 0;
++            begin = now;
++        }
++    }
+ }

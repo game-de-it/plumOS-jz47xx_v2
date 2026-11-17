@@ -1,0 +1,13 @@
+diff --git a/src/gui.cpp b/src/gui.cpp
+index deaf077..b2a2541 100644
+--- a/src/gui.cpp
++++ b/src/gui.cpp
+@@ -704,7 +704,7 @@ void gui_handle_events (void)
+ 	if (( keystate[SDLK_F11] )
+ #ifdef EMULATED_JOYSTICK
+ #if defined(GCW0) || defined(RS97)
+-			||(keystate[SDLK_ESCAPE])
++			||((keystate[SDLK_RETURN])&&(keystate[SDLK_ESCAPE]))
+ #else
+ 			||((keystate[SDLK_RETURN])&&(keystate[SDLK_ESCAPE]))
+ #endif

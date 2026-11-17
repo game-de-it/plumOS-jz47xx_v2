@@ -24,6 +24,90 @@ index bdc6c64..968a319 100644
  
  def68k$(EXEEXT) : def68k.o tab68k2.o
  	$(gcc_build_verbose)$(CC_FOR_BUILD) def68k.o tab68k2.o -o $@
+diff --git a/src/generator68k/cpu68k.c b/src/generator68k/cpu68k.c
+index 6fee56d..e8bc16b 100644
+--- a/src/generator68k/cpu68k.c
++++ b/src/generator68k/cpu68k.c
+@@ -213,7 +213,7 @@ void cpu68k_ipc(uint32 addr68k, uint8 *addr, t_iib * iib, t_ipc * ipc)
+   if ((iib->mnemonic == i_Bcc) || (iib->mnemonic == i_BSR)) {
+     /* special case - we can calculate the offset now */
+     /* low 8 bits of current instruction are addr+1 */
+-    ipc->src = (sint32)(*(sint8 *)(addr + 1));
++    ipc->src = (sint32)(*(sint8 *)addr);
+     if (ipc->src == 0) {
+       ipc->src = (sint32)(sint16)LOCENDIAN16(*(uint16 *)(addr + 2));
+       ipc->wordlen++;
+@@ -246,8 +246,8 @@ void cpu68k_ipc(uint32 addr68k, uint8 *addr, t_iib * iib, t_ipc * ipc)
+       addr68k += 2;
+       break;
+     case dt_Aidx:
+-      *p = (sint32)(sint8)addr[1];
+-      *p = (*p & 0xFFFFFF) | (*addr) << 24;
++      *p = (sint32)(sint8)addr[0];
++      *p = (*p & 0xFFFFFF) | addr[1] << 24;
+       ipc->wordlen++;
+       addr += 2;
+       addr68k += 2;
+@@ -273,15 +273,15 @@ void cpu68k_ipc(uint32 addr68k, uint8 *addr, t_iib * iib, t_ipc * ipc)
+       addr68k += 2;
+       break;
+     case dt_Pidx:
+-      *p = ((sint32)(sint8)addr[1]) + addr68k;
+-      *p = (*p & 0xFFFFFF) | (*addr) << 24;
++      *p = ((sint32)(sint8)addr[0]) + addr68k;
++      *p = (*p & 0xFFFFFF) | addr[1] << 24;
+       ipc->wordlen++;
+       addr += 2;
+       addr68k += 2;
+       break;
+     case dt_ImmB:
+       /* low 8 bits of next 16 bit word is addr+1 */
+-      *p = (uint32)(*(uint8 *)(addr + 1));
++      *p = (uint32)(*(uint8 *)addr);
+       ipc->wordlen++;
+       addr += 2;
+       addr68k += 2;
+diff --git a/src/generator68k/generator.h b/src/generator68k/generator.h
+index 6167e5c..80edd57 100644
+--- a/src/generator68k/generator.h
++++ b/src/generator68k/generator.h
+@@ -46,11 +46,10 @@
+ #define LOCENDIAN32(y) (y)
+ #define BYTES_HIGHFIRST
+ #else
+-#define LOCENDIAN16(y) ((((y)>>8)&0x00FF)+((((y)<<8)&0xFF00)))
+-#define LOCENDIAN32(y) ( (((y)>>24) & 0x000000FF) + \
+-                         (((y)>>8)  & 0x0000FF00) + \
+-                         (((y)<<8)  & 0x00FF0000) + \
+-                         (((y)<<24) & 0xFF000000) )
++/* GnGeo stores 68000 memory as host-endian 16-bit words, including ROM.
++ * Keep host bitfield order independent of emulated memory byte order. */
++#define LOCENDIAN16(y) (y)
++#define LOCENDIAN32(y) (((uint32)(y) << 16) | ((uint32)(y) >> 16))
+ #endif
+ 
+ typedef enum {
+diff --git a/src/generator68k_interf.c b/src/generator68k_interf.c
+index b296802..e1a2f49 100644
+--- a/src/generator68k_interf.c
++++ b/src/generator68k_interf.c
+@@ -263,14 +263,8 @@ void cpu_68k_init(void)
+     
+ 	cpu68k_clearcache();
+ 
+-    if (!CF_BOOL(cf_get_item_by_name("dump"))) {
+-		swap_memory(memory.rom.cpu_m68k.p, memory.rom.cpu_m68k.size);
+-		if (memory.rom.bios_m68k.p[0]==0x10) {
+-			printf("BIOS BYTE1=%08x\n",memory.rom.bios_m68k.p[0]);
+-			swap_memory(memory.rom.bios_m68k.p, memory.rom.bios_m68k.size);
+-		}
+-		swap_memory(memory.game_vector, 0x80);
+-    }
++    /* The Miyoo ROM/BIOS loader already supplies native 16-bit words.
++     * Swapping them here again corrupts reset vectors and instructions. */
+     //#endif
+ 
+     cpu68k_ram = memory.ram;
 diff --git a/src/main.c b/src/main.c
 index 37aacce..9c55153 100644
 --- a/src/main.c

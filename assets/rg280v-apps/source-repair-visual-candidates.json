@@ -118,5 +118,23 @@
     "fe_restored": true,
     "evidence": "output/rg280v-apps/rg350-device-audit-repair-final-smsplus-wonderboy-game-20261118/results.jsonl",
     "notes": "Audio waveform/rate/errors checked; physical listening remains pending. Gameplay excludes startup and emulator menus."
+  },
+  {
+    "id": "rg350_source_repair_61_1",
+    "number": 61,
+    "display_name": "TEST 61 Unreal Speccy: 10th Frame",
+    "rom": "/media/data/sd2/.plumos-rg350-tests-20261118/relocated/rom-candidates/zx/01.tap",
+    "sha256": "d4c0a6649580a4db670a8f80c0c24686879240f796760a35804681ffa5b8bbd0",
+    "review": "machine-pass-physical-pending",
+    "gameplay_fps_min": 57.32,
+    "core_native_fps": 50.0,
+    "core_measured_mean_fps": 49.91,
+    "screen_reviewed": true,
+    "audio_signal_checked": true,
+    "clean_exit": true,
+    "fe_restored": true,
+    "evidence": "output/rg280v-apps/rg350-device-audit-unreal-release-final-20261118/results.jsonl",
+    "notes": "Real player (not DEMO), physical direction/fire injection, pin/score progression, SNA save/load and menu resume/exit checked. Core approx 50 Hz; SDL redraw 57-60/s. PCM rate/waveform/clipping/ALSA errors checked; speaker listening pending. START=virtual keyboard, START+SELECT=menu, A=fire with qaop caps, B=Enter, X=1, Y=Space, L/R=state save/load.",
+    "binary_sha256": "fe2e114806487b0a38bb822260d3794735ae6c25a165481270c1fc8013e87c5a"
   }
 ]
