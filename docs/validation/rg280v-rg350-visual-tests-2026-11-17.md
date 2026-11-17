@@ -23,3 +23,7 @@ AtariとFBAのROMは `<local-path>` から試験用ディレクトリへコピ�
 ユーザーはKung-Fu Masterで音声は正常だが、入力が効かず画面が二重に崩れると報告。DRM画像でも320×240の全面に走査線・色化け・重複表示を確認した。試験用ROMはOPKに読み込まれていた。旧FBA44の問題なので他の2 ROMだけで合格判定しない。TERMに応答しなかったため該当 `fbasdl.dge` にKILLを送り、FEのApps画面へ正常復帰した。キャプチャはGit管理外の `output/rg280v-apps/rg350-visual-tests/fba-kungfum-user-view.png`。
 
 配布元 `plrguez/fba-sdl` の `r19_2021-10-18-.44_od_beta-fix-06` はRG280Vを対象にし、先行修正にKung-Fu Masterの256×246解像度と表示面の扱いが含まれる。ただし配布バイナリのELF属性はMIPS hard floatで、このplumOS環境のsoft float ABIに一致しない。13.5 MBのOPKは比較用に隔離して保存し、通常のFEには登録しない。ソースは取得済みで、soft float再ビルドと入力割当の確認が必要。
+
+旧FBA44の `FBA_HWSCALING` を0から1にした短時間試験でもKung-Fu Masterの崩れは残った。設定は元に戻した。`scripts/probe-rg280v-fba-frame.c` でSDL_Flipの直前に320×240、RGB565、pitch 640の画素を保存したところ、既に画面が崩れていた。したがってこの画面の崩れはDRM転送後ではなく旧FBA44側の描画経路で発生する。
+
+残り2本を同じ旧FBA44で8秒ずつ機械試験した。Battle Chopperの画面は目視で正常なランキング画面を表示したが、計測時は約30 FPS。Ninja Spiritのタイトル画面も目視では色・配置とも正常で、計測時は約19 FPS。どちらもゲームプレイ中の速度、音、操作は未確認。Battle Chopper試験後にFE自動復帰が一度失敗したため `S95frontend restart` で復旧し、FE稼働を確認した。両スクリーンショットはGit管理外の `output/rg280v-apps/rg350-device-audit-fba-{bchopper,nspirit}-visual/34.png` に保存した。
