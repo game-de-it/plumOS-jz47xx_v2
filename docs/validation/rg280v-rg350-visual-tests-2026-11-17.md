@@ -79,4 +79,4 @@ TemperのSDLソースはCRLFなので、対応するパッチもCRLFを保持し
 
 次に `patches/rg280v-fba-input-audio.patch` でFBAの音声方式2をSDLコールバック式からALSA PCMの直接書き込みに変更した。PCMは非ブロックモードで開き、メニュー前後は `drop` / `prepare` でリセットする。書き込みエラーには `snd_pcm_recover` を試み、復旧できなければ次の音声フレーム以降に開き直す。旧SDL待機上限パッチはこの経路では使わないため除いた。ビルドはsoft float ABIで、`-lasound` を追加した。
 
-ALSA比較OPKのSHA-256は `685ce81a4f9388093c17375fac04315d54636cd38ac8ff75fb689296ee02e446`。端末の試験用FBAへ適用する前に旧版を `fba-sdl-previous.opk` に保存した。Ninja SpiritでSELECT＋STARTからB復帰を3回繰り返し、各回10秒後もFBAプロセスが生存し、ALSAエラーは記録されなかった。試験後にFEの再起動を確認した。ユーザーによる音質と操作の実機確認を待つ。ソースを整理した再ビルドOPKのホストSHA-256は `d9c31ee651bf002d3902bfa0995eeb594377385f26d5e722b8e053e40f6fca77` で、旧SDL修正コードは含まない。端末にはまだ転送していない。
+ALSA比較OPKのSHA-256は `685ce81a4f9388093c17375fac04315d54636cd38ac8ff75fb689296ee02e446`。端末の試験用FBAへ適用する前に旧版を `fba-sdl-previous.opk` に保存した。Ninja SpiritでSELECT＋STARTからB復帰を3回繰り返し、各回10秒後もFBAプロセスが生存し、ALSAエラーは記録されなかった。試験後にFEの再起動を確認した。ソースを整理した再ビルドOPKは旧SDL修正コードを含まない。SHA-256 `d9c31ee651bf002d3902bfa0995eeb594377385f26d5e722b8e053e40f6fca77` がホストと端末で一致し、試験用FBAへ反映した。ユーザーによる音質と操作の実機確認を待つ。
