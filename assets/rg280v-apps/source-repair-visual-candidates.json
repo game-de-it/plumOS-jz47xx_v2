@@ -184,5 +184,22 @@
     "fe_restored": true,
     "evidence": "output/rg280v-apps/rg350-device-audit-gngeo-aof3-gameplay-final-20261118/results.jsonl",
     "notes": "44.1 kHz stereo; sample-clock initialization repaired. START+SELECT menu, A confirm, B resume. Physical display and speaker listening pending."
+  },
+  {
+    "id": "rg350_source_repair_30_1",
+    "number": 30,
+    "display_name": "TEST 30 UAE4All: Baby Jo",
+    "rom": "/media/data/sd2/.plumos-rg350-tests-20261118/relocated/rom-candidates/amiga/02.adf",
+    "sha256": "406a6a174de4af5520eb2fb52b6861236128ee7748c0a559aa05bd93daa05f78",
+    "binary_sha256": "8b1b241350b1592153e9fee7e9b85d9e6b464079b01777f54219075f96220657",
+    "review": "machine-pass-physical-pending",
+    "native_fps": 50,
+    "gameplay_fps_min": 49.99,
+    "screen_reviewed": true,
+    "audio_signal_checked": true,
+    "clean_exit": true,
+    "fe_restored": true,
+    "evidence": "output/rg280v-apps/rg350-device-audit-uae-field-clock-babyjo-final-20261118/results.jsonl",
+    "notes": "PAL 50 Hz; window jitter 0.05 FPS allowed, not a lower speed target. Actual gameplay, movement/jump, non-silent 44.1 kHz mono PCM, no FIFO under/overflow. Floppy loading can take about two minutes. START+SELECT menu; A confirm, B resume. Physical speaker listening pending."
   }
 ]

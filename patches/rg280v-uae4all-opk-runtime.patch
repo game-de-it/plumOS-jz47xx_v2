@@ -1,8 +1,126 @@
+diff --git a/src/custom.cpp b/src/custom.cpp
+index a6f80c8..fe47de8 100644
+--- a/src/custom.cpp
++++ b/src/custom.cpp
+@@ -3232,7 +3232,16 @@ static void vsync_handler (void)
+     if (bplcon0 & 4)
+ 	lof ^= 0x8000;
+ 
++#if defined(GCW0) && defined(NO_THREADS)
++    /* LOF may add a 313th PAL line. Match the next field's sample clock. */
++    scaled_sample_evtime = ((unsigned long long)maxhpos *
++        (maxvpos + (lof != 0)) * vblank_hz * CYCLE_UNIT) / DEFAULT_SOUND_FREQ;
++#endif
+     vsync_handle_redraw (lof, lof_changed);
++#if defined(GCW0) && defined(NO_THREADS)
++    /* Pace every emulated field, including fields without a new SDL image. */
++    plumos_frame_pace(vblank_hz);
++#endif
+ 
+     if (quit_program > 0)
+     {
+diff --git a/src/drawing.cpp b/src/drawing.cpp
+index 6b238f3..9cf983d 100644
+--- a/src/drawing.cpp
++++ b/src/drawing.cpp
+@@ -202,6 +202,20 @@ extern double uae4all_framerate;
+ 
+ static Uint32 proximo_frameskip;
+ extern int *tabla_ajuste;
++#if defined(GCW0) && defined(NO_THREADS)
++void plumos_frame_pace(unsigned hz)
++{
++    static unsigned remainder;
++    if (!hz) hz = VBLANK_HZ_PAL;
++    proximo_frameskip += 1000 / hz;
++    remainder += 1000 % hz;
++    if (remainder >= hz) { ++proximo_frameskip; remainder -= hz; }
++    Sint32 ahead = (Sint32)(proximo_frameskip - SDL_GetTicks());
++    if (ahead > 0 && ahead < 100) SDL_Delay(ahead);
++    else if (ahead <= -100 || ahead >= 100) proximo_frameskip = SDL_GetTicks();
++}
++#endif
++
+ 
+ void reset_frameskip()
+ {
+@@ -280,6 +294,11 @@ static __inline__ void count_frame (void)
+     }
+ #endif
+ #endif
++#endif
++#if defined(GCW0) && defined(NO_THREADS)
++    framecnt++;
++    if (prefs_gfx_framerate < 0 || framecnt > prefs_gfx_framerate) framecnt = 0;
++    return;
+ #endif
+     if (prefs_gfx_framerate>=0)
+     {
 diff --git a/src/gui.cpp b/src/gui.cpp
-index deaf077..b2a2541 100644
+index deaf077..0e25dcd 100644
 --- a/src/gui.cpp
 +++ b/src/gui.cpp
-@@ -704,7 +704,7 @@ void gui_handle_events (void)
+@@ -388,6 +388,15 @@ static void dec_dingoo_volumen(void)
+ #define dec_dingoo_volumen()
+ #endif
+ 
++/* SD2 ROMs can be read-only. Keep state names private and path-unique on SD1. */
++static void plumos_state_path(char *dest, const char *image, int slot)
++{
++    unsigned hash = 2166136261u;
++    for (const unsigned char *p = (const unsigned char *)image; *p; ++p)
++        hash = (hash ^ *p) * 16777619u;
++    snprintf(dest, 1024, "%s/state-%08x-%d.asf", config_dir, hash, slot);
++}
++
+ int gui_update (void)
+ {
+     extern char *savestate_filename;
+@@ -397,20 +406,7 @@ int gui_update (void)
+ // SE EJECUTA DESPUES DE INICIAR EL CORE 68k
+     strcpy(changed_df[0],uae4all_image_file);
+     strcpy(changed_df[1],uae4all_image_file2);
+-    strcpy(savestate_filename,uae4all_image_file);
+-#ifndef NO_SAVE_MENU
+-    switch(saveMenu_n_savestate)
+-    {
+-	    case 1:
+-    		strcat(savestate_filename,"-1.asf");
+-	    case 2:
+-    		strcat(savestate_filename,"-2.asf");
+-	    case 3:
+-    		strcat(savestate_filename,"-3.asf");
+-	    default: 
+-    	   	strcat(savestate_filename,".asf");
+-    }
+-#endif
++    plumos_state_path(savestate_filename, uae4all_image_file, saveMenu_n_savestate);
+     real_changed_df[0]=1;
+     real_changed_df[1]=1;
+     show_mhz();
+@@ -463,20 +459,7 @@ static void goMenu(void)
+             	strcpy(changed_df[1],uae4all_image_file2);
+ 	    	real_changed_df[1]=1;
+ 	    }
+-    	    strcpy(savestate_filename,uae4all_image_file);
+-#ifndef NO_SAVE_MENU
+-	    switch(saveMenu_n_savestate)
+-    	    {
+-	    	case 1:
+-    			strcat(savestate_filename,"-1.asf");
+-	    	case 2:
+-    			strcat(savestate_filename,"-2.asf");
+-	    	case 3:
+-    			strcat(savestate_filename,"-3.asf");
+-	    	default: 
+-    	   		strcat(savestate_filename,".asf");
+-    	    }
+-#endif
++    	    plumos_state_path(savestate_filename, uae4all_image_file, saveMenu_n_savestate);
+     }
+     if (exitmode==2)
+     {
+@@ -704,7 +687,7 @@ void gui_handle_events (void)
  	if (( keystate[SDLK_F11] )
  #ifdef EMULATED_JOYSTICK
  #if defined(GCW0) || defined(RS97)
@@ -10,4 +128,171 @@ index deaf077..b2a2541 100644
 +			||((keystate[SDLK_RETURN])&&(keystate[SDLK_ESCAPE]))
  #else
  			||((keystate[SDLK_RETURN])&&(keystate[SDLK_ESCAPE]))
+ #endif
+@@ -737,6 +720,7 @@ void gui_handle_events (void)
+ 		}
+ 	}
+ #ifdef EMULATED_JOYSTICK
++#if !defined(GCW0)
+ 	if (keystate[SDLK_RETURN])
+ 	{
+ 		if (goingSuperThrottle<3)
+@@ -752,6 +736,8 @@ void gui_handle_events (void)
+ 	}
+ 	else
+ 		goingSuperThrottle=0;
++#endif /* START belongs to the menu chord on RG280V, never turbo. */
++
+ 	if (keystate[SDLK_TAB])
+ 	{
+ 		if (keystate[SDLK_ESCAPE])
+diff --git a/src/include/drawing.h b/src/include/drawing.h
+index c0296b7..a6a5034 100644
+--- a/src/include/drawing.h
++++ b/src/include/drawing.h
+@@ -231,3 +231,7 @@ extern int inhibit_frame;
+ void reset_frameskip(void);
+ void check_all_prefs(void);
+ void delay_frameskip(unsigned);
++
++#if defined(GCW0) && defined(NO_THREADS)
++extern void plumos_frame_pace(unsigned hz);
++#endif
+diff --git a/src/savestate.cpp b/src/savestate.cpp
+index 1d12f48..1be77ed 100644
+--- a/src/savestate.cpp
++++ b/src/savestate.cpp
+@@ -73,18 +73,7 @@
+ 
+ int savestate_state;
+ 
+-static char savestate_filename_default[]={
+-	'/', 't', 'm', 'p', '/', 'n', 'u', 'l', 'l', '.', 'a', 's', 'f', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-	'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 
+-};
++static char savestate_filename_default[1024] = "/tmp/null.asf";
+ char *savestate_filename=(char *)&savestate_filename_default[0];
+ FILE *savestate_file=NULL;
+ 
+diff --git a/src/sound.cpp b/src/sound.cpp
+index fb3d771..e11ba20 100644
+--- a/src/sound.cpp
++++ b/src/sound.cpp
+@@ -45,7 +45,7 @@ int changed_produce_sound=0;
+ #else
+ #define SOUND_EVTIME_SUPER_THROTTLE (MAXHPOS_PAL*240*VBLANK_HZ_PAL*CYCLE_UNIT/DEFAULT_SOUND_FREQ)
+ #define SOUND_EVTIME_THROTTLE	(MAXHPOS_PAL*256*VBLANK_HZ_PAL*CYCLE_UNIT/DEFAULT_SOUND_FREQ)
+-#define SOUND_EVTIME_NORMAL	(MAXHPOS_PAL*282 *VBLANK_HZ_PAL*CYCLE_UNIT/DEFAULT_SOUND_FREQ)
++#define SOUND_EVTIME_NORMAL	(MAXHPOS_PAL*312 *VBLANK_HZ_PAL*CYCLE_UNIT/DEFAULT_SOUND_FREQ)
+ #endif
+ 
+ static uae_u16 sndbuffer_all[(SNDBUFFER_LEN*8)+(32*8)] UAE4ALL_ALIGN;
+@@ -124,6 +124,20 @@ void uae4all_resume_music(void) { }
+ #include "thread.h"
+ #include <SDL.h>
+ 
++#if defined(GCW0) && defined(NO_THREADS)
++/* SDL's consumer must never move the emulation thread's write pointer. */
++#define PLUMOS_AUDIO_CAPACITY (SNDBUFFER_LEN * 8)
++static Uint8 plumos_audio_fifo[PLUMOS_AUDIO_CAPACITY];
++static unsigned plumos_audio_read, plumos_audio_write, plumos_audio_used;
++static unsigned plumos_audio_underflow, plumos_audio_overflow;
++static void plumos_audio_reset(void)
++{
++    SDL_LockAudio();
++    plumos_audio_read = plumos_audio_write = plumos_audio_used = 0;
++    SDL_UnlockAudio();
++}
++#endif
++
+ #ifdef USE_SOUND_SEMS
+ static uae_sem_t data_available_sem,callback_done_sem;
+ #endif
+@@ -202,6 +216,20 @@ unsigned sound_alcanza_render=0;
+ 
+ static void sound_callback (void *userdata, Uint8 *stream, int len)
+ {
++#if defined(GCW0) && defined(NO_THREADS)
++    memset(stream, 0, len);
++    if (closing_sound) return;
++    unsigned available = plumos_audio_used;
++    unsigned count = available < (unsigned)len ? available : (unsigned)len;
++    for (unsigned i = 0; i < count; ++i) {
++        stream[i] = plumos_audio_fifo[plumos_audio_read];
++        plumos_audio_read = (plumos_audio_read + 1) % PLUMOS_AUDIO_CAPACITY;
++    }
++    plumos_audio_used -= count;
++    if (count < (unsigned)len) ++plumos_audio_underflow;
++    return;
++#endif
++
+ #ifdef DEBUG_FRAMERATE
+     calcule_audio_ratio();
+ #endif
+@@ -254,6 +282,21 @@ static void sound_callback (void *userdata, Uint8 *stream, int len)
+ 
+ void finish_sound_buffer (void)
+ {
++#if defined(GCW0) && defined(NO_THREADS)
++    unsigned bytes = (Uint8 *)sndbufpt - (Uint8 *)render_sndbuff;
++    SDL_LockAudio();
++    if (bytes <= PLUMOS_AUDIO_CAPACITY - plumos_audio_used) {
++        for (unsigned i = 0; i < bytes; ++i) {
++            plumos_audio_fifo[plumos_audio_write] = ((Uint8 *)render_sndbuff)[i];
++            plumos_audio_write = (plumos_audio_write + 1) % PLUMOS_AUDIO_CAPACITY;
++        }
++        plumos_audio_used += bytes;
++    } else ++plumos_audio_overflow;
++    sndbufpt = render_sndbuff;
++    closing_sound = 0;
++    SDL_UnlockAudio();
++    return;
++#endif
+ #ifdef DEBUG_SOUND
+ 	dbg("sound.c : finish_sound_buffer");
+ #endif
+@@ -369,6 +412,9 @@ static int open_sound (void)
+     sound_available = 1;
+     write_log ("SDL sound driver found and configured for %d bits at %d Hz, buffer is %d samples\n",
+ 	       DEFAULT_SOUND_BITS, spec.freq, spec.samples);
++#if defined(GCW0) && defined(NO_THREADS)
++    plumos_audio_reset();
++#endif
+     n_callback_sndbuff=0;
+     callback_sndbuff=sndbuffer[n_callback_sndbuff];
+     n_render_sndbuff=4;
+@@ -391,6 +437,10 @@ void close_sound (void)
+ 	return;
+ 
+     SDL_PauseAudio (1);
++#if defined(GCW0) && defined(NO_THREADS)
++    printf("PLUMOS_AUDIO queue underflows=%u overflows=%u remaining=%u\n", plumos_audio_underflow, plumos_audio_overflow, plumos_audio_used);
++    fflush(stdout);
++#endif
+     if (in_callback) {
+ 	closing_sound = -1;
+ #ifdef USE_SOUND_SEMS
+@@ -428,7 +478,15 @@ void pause_sound (void)
+ #ifdef DEBUG_SOUND
+     dbg("sound.c : pause_sound");
+ #endif
++    #if defined(GCW0) && defined(NO_THREADS)
++    SDL_LockAudio();
+     closing_sound=-1;
++    printf("PLUMOS_AUDIO queue underflows=%u overflows=%u remaining=%u\n", plumos_audio_underflow, plumos_audio_overflow, plumos_audio_used);
++    fflush(stdout);
++    SDL_UnlockAudio();
++#else
++    closing_sound=-1;
++#endif
+ #ifdef USE_SOUND_SEMS
+     uae_sem_post (&data_available_sem);
  #endif

@@ -38,4 +38,24 @@ GnGeo最終パッケージ: `4147d4815405d31bc5e48c27a3b668139c86eb279a6828b07df
 
 `gngeo-aof-release-final-20261118`、`gngeo-aof2-release-20261118`、`gngeo-aof3-gameplay-final-20261118` の監査を参照。別試行の8秒PCMは352800フレーム、RMS3643.98、DC約48〜50、飽和0。長い試行の累積飽和は0.01%程度の一時的な値で、全体が飽和するPCM形式の誤りはない。スピーカーの聴感確認は未実施。
 
-UAE4Allの最終検証とApps反映は継続中。
+UAE4All最終パッケージ: `406a6a174de4af5520eb2fb52b6861236128ee7748c0a559aa05bd93daa05f78`。バイナリ: `8b1b241350b1592153e9fee7e9b85d9e6b464079b01777f54219075f96220657`。
+
+- `uae-field-clock-babyjo-final-20261118` でBaby Joを実プレイ。130秒の監査取得に加え、`uae-final-late.png` と `uae-final-play-after-input.png` で位置・ジャンプ・スクロールの変化、スコア200、残機表示を確認。
+- ゲーム中の5つの計測窓（flips 6000〜6960）は50.00、50.02、50.01、50.00、49.99fps。ロード・メニューを含む最後の窓46〜48fpsをゲーム性能として扱わない。
+- 44.1 kHz/16bit/mono。メニューを開く前、開閉後、終了時の全てでFIFO underflows=0 / overflows=0、残量2048バイト。音声周期の313ライン対応前はoverflowが増加していた。
+- 実プレイ付近の8秒PCMは352800フレーム、RMS4921.95、飽和0。`uae-babyjo-final.{pcm,wav,json}` に保存。長い監査でもALSAエラー・underrun・PCM飽和0。
+- START＋SELECT→Bでゲームへ復帰→再度START＋SELECT→Exit。実子プロセス終了0、FE復帰。ロード中の黒画面は継続ハングと誤認しやすく、今回の実プレイ到達は起動から約2分。Aはジョイスティックfire、Xは左マウスボタン。ロード待ちも含め物理キーで確認する。
+- NASの `_etc/amiga` にはBaby Joと3rd Day - The Ripperの2本のみ（後者の同名ディレクトリも存在）。`uae-third-day-disk-check-20261118` では3rd Dayの説明画面・音声・50Hz更新・通常終了まで確認したが、実プレイへの移行は確認していないためAppsへ追加しない。
+- ステートの保存先はソース上でSD1へ修正。実際のセーブ/ロード操作は今回の受入れ項目に含めていない。
+
+## Apps反映
+
+`source-repair-visual-candidates.json` にGnGeo 3入口とUAE4All/Baby Jo 1入口を追加。既存9入口を保ち、合計13入口/7パッケージ。ROM/BIOSはSD2の既存ファイルを参照し、通常Appsには計測ライブラリやPCM保存を設定しない。
+
+PALの真の50Hzは短い計測窓で49.99等になるため、導入スクリプトは明示したnative_fps=50の候補のみ0.05fpsまでの計測揺れを許可する。49fps台の性能不足を合格にする例外ではない。生の最小計測値49.99をmanifestに保存する。
+
+通常AppsのGnGeo入口をFE操作で起動し、対戦画面の移動・ジャンプ／攻撃を取得。START＋SELECTからExitし、`PLUMOS_EMULATOR_EXIT=0`、元のFE PID30656へ復帰。証拠: `gngeo-normal-apps-game.png`、`gngeo-normal-apps-result.log`。
+
+UAE4Allも通常Apps起動からSTART＋SELECT→Bで復帰→再度メニューからExitし、終了0/同じFEへ復帰。短い試行ではロード画面までだったため、追加で130秒進めて実プレイ画面と操作を取得。計測ライブラリなしでもFIFO underflows=0 / overflows=0、メニューから終了0、元のFEへ復帰。証拠: `uae-normal-apps-gameplay.png`、`uae-normal-apps-gameplay-result.log`。
+
+既存40個のAppsエントリは最初のバックアップと一致。従来のsource-repair 9入口は前コミット069bd33のmanifestと比較し、名前・ID・起動経路・OPKハッシュが一致。4入口のみ追加された。端末の30/39パッケージもSHA-256一致。SD2は引き続きread-only、CPUは996000 kHz。
