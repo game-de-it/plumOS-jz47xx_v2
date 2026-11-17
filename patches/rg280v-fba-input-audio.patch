@@ -1,37 +1,121 @@
-diff --git a/src/sdl-dingux/sdl_audio.cpp b/src/sdl-dingux/sdl_audio.cpp
-index 860ea01..1d5e10b 100644
---- a/src/sdl-dingux/sdl_audio.cpp
-+++ b/src/sdl-dingux/sdl_audio.cpp
-@@ -41,0 +42 @@ static int buffered_bytes=0;
-+static int audio_stalled=0;
-@@ -45,0 +47,4 @@ static int sdl_write_buffer_m(unsigned char* data, int len)
-+	if (audio_stalled) {
-+		SDL_UnlockMutex(sound_mutex);
-+		return len;
+diff --git a/Makefile.dingux b/Makefile.dingux
+index 6c4fe12..065142e 100644
+--- a/Makefile.dingux
++++ b/Makefile.dingux
+@@ -114 +114 @@ incdir	= $(foreach dir,$(alldir),-I$(srcdir)$(dir)) -I$(objdir)dep/generated -I.
+-lib = -lstdc++ -lSDL -lSDL_image -lz -lpng
++lib = -lstdc++ -lSDL -lSDL_image -lz -lpng -lasound
+@@ -204 +204 @@ depobj += \
+-		sdl_audio.o sdl_input.o sdl_menu.o sdl_progress.o \
++		alsa_audio.o sdl_audio.o sdl_input.o sdl_menu.o sdl_progress.o \
+diff --git a/src/sdl-dingux/alsa_audio.cpp b/src/sdl-dingux/alsa_audio.cpp
+new file mode 100644
+index 0000000..625bcb9
+--- /dev/null
++++ b/src/sdl-dingux/alsa_audio.cpp
+@@ -0,0 +1,87 @@
++#include <alsa/asoundlib.h>
++#include <errno.h>
++#include <stdio.h>
++#include <time.h>
++
++#include "alsa_audio.h"
++
++static snd_pcm_t *pcm;
++static unsigned int sample_rate;
++static unsigned int channel_count;
++static time_t next_open_attempt;
++
++static int open_pcm(void)
++{
++	int rc = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
++	if (rc < 0) {
++		fprintf(stderr, "FBA ALSA open failed: %s\n", snd_strerror(rc));
++		pcm = NULL;
++		return 0;
 +	}
-@@ -60 +65,13 @@ static int sdl_write_buffer_m(unsigned char* data, int len)
--		while(buffered_bytes == BUFFSIZE) SDL_CondWait(sound_cv, sound_mutex);
-+		if (buffered_bytes == BUFFSIZE) {
-+			/* A failed ALSA writer can stop SDL's callback permanently.
-+			 * Do not freeze emulation while waiting for an audio consumer. */
-+			SDL_CondWaitTimeout(sound_cv, sound_mutex, 30);
-+			if (buffered_bytes == BUFFSIZE) {
-+				fprintf(stderr, "FBA audio callback stalled; dropping audio until it resumes\n");
-+				audio_stalled = 1;
-+				buffered_bytes = 0;
-+				buf_read_pos = buf_write_pos;
-+				SDL_UnlockMutex(sound_mutex);
-+				return len;
-+			}
++	rc = snd_pcm_set_params(pcm, SND_PCM_FORMAT_S16_LE,
++		SND_PCM_ACCESS_RW_INTERLEAVED, channel_count, sample_rate, 1, 120000);
++	if (rc < 0) {
++		fprintf(stderr, "FBA ALSA parameters failed: %s\n", snd_strerror(rc));
++		snd_pcm_close(pcm);
++		pcm = NULL;
++		return 0;
++	}
++	fprintf(stderr, "FBA ALSA ready: %u Hz, %u channels\n", sample_rate, channel_count);
++	return 1;
++}
++
++int alsa_open(int rate, int channels, int format)
++{
++	if (format != 16 || rate <= 0 || channels <= 0) return 0;
++	sample_rate = rate;
++	channel_count = channels;
++	next_open_attempt = 0;
++	return open_pcm();
++}
++
++void alsa_close(void)
++{
++	if (pcm) {
++		snd_pcm_close(pcm);
++		pcm = NULL;
++	}
++}
++
++void alsa_pause(int pause)
++{
++	if (!pcm) return;
++	int rc = pause ? snd_pcm_drop(pcm) : snd_pcm_prepare(pcm);
++	if (rc < 0) {
++		fprintf(stderr, "FBA ALSA menu transition failed: %s\n", snd_strerror(rc));
++		alsa_close();
++	}
++}
++
++int alsa_play(unsigned char *data, int len)
++{
++	if (!pcm) {
++		time_t now = time(NULL);
++		if (now < next_open_attempt) return len;
++		next_open_attempt = now + 1;
++		if (!open_pcm()) return len;
++	}
++	const int bytes_per_frame = channel_count * 2;
++	if (bytes_per_frame <= 0 || len < bytes_per_frame) return len;
++	snd_pcm_sframes_t frames = len / bytes_per_frame;
++	snd_pcm_sframes_t written = snd_pcm_writei(pcm, data, frames);
++	if (written == -EAGAIN) return len;
++	if (written < 0) {
++		int rc = snd_pcm_recover(pcm, written, 1);
++		if (rc < 0) {
++			fprintf(stderr, "FBA ALSA write failed: %s\n", snd_strerror(rc));
++			alsa_close();
++			return len;
 +		}
-@@ -106,0 +124 @@ void sdl_callback_m(void *unused, Uint8 *stream, int len)
-+	audio_stalled = 0;
-@@ -107,0 +126 @@ void sdl_callback_m(void *unused, Uint8 *stream, int len)
-+	memset(stream, 0, len);
-@@ -115,0 +135 @@ void sdl_callback(void *unused, Uint8 *stream, int len)
-+	memset(stream, 0, len);
-@@ -142,0 +163 @@ static int sdl_open_common(int rate, int channels, int format, int mutex)
-+	audio_stalled = 0;
++		written = snd_pcm_writei(pcm, data, frames);
++		if (written < 0 && written != -EAGAIN) {
++			fprintf(stderr, "FBA ALSA retry failed: %s\n", snd_strerror(written));
++			alsa_close();
++		}
++	}
++	return len;
++}
+diff --git a/src/sdl-dingux/alsa_audio.h b/src/sdl-dingux/alsa_audio.h
+new file mode 100644
+index 0000000..c3d0e89
+--- /dev/null
++++ b/src/sdl-dingux/alsa_audio.h
+@@ -0,0 +1,9 @@
++#ifndef RG280V_FBA_ALSA_AUDIO_H
++#define RG280V_FBA_ALSA_AUDIO_H
++
++int alsa_open(int rate, int channels, int format);
++void alsa_close(void);
++int alsa_play(unsigned char *data, int len);
++void alsa_pause(int pause);
++
++#endif
 diff --git a/src/sdl-dingux/sdl_input.cpp b/src/sdl-dingux/sdl_input.cpp
 index 3a1ca5f..c63170b 100644
 --- a/src/sdl-dingux/sdl_input.cpp
@@ -63,3 +147,14 @@ index abef65e..fed2ddd 100644
 +	fprintf(stderr, "FBA menu: selection closed\n");
 @@ -609,0 +611 @@ void gui_Run()
 +	fprintf(stderr, "FBA menu: config saved\n");
+diff --git a/src/sdl-dingux/snd.cpp b/src/sdl-dingux/snd.cpp
+index 3642fa0..8461474 100644
+--- a/src/sdl-dingux/snd.cpp
++++ b/src/sdl-dingux/snd.cpp
+@@ -10,0 +11 @@
++#include "alsa_audio.h"
+@@ -53,2 +54,2 @@ SNDDRV SndDrvList[] =
+-	{	// SDL with mutexes
+-		&sdl_open_m, &sdl_close_m, &sdl_play_m, &sdl_pause
++	{	// RG280V: direct ALSA with bounded nonblocking writes
++		&alsa_open, &alsa_close, &alsa_play, &alsa_pause
