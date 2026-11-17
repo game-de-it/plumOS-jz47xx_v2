@@ -33,6 +33,12 @@ fi
 export PLUMOS_ROOT="$root" HOME="$root/home/opk/$id"
 export PLUMOS_OPK_HOME="$HOME" SDL_VIDEODRIVER=kmsdrm
 export LD_LIBRARY_PATH="$root/lib/opk-compat:$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Both GCW Zero builds expect HOME for their menu, reserved for OS power here.
+case "$id" in
+    fceux223|neo4all)
+        export LD_PRELOAD="$root/lib/libfceux-menu.so${LD_PRELOAD:+:$LD_PRELOAD}"
+        ;;
+esac
 mkdir -p "$HOME" "$root/Logs/standalone"
 sdcard=${PLUMOS_SDCARD_ROOT:-/media/data/sd2}
 case "$id" in
@@ -46,6 +52,12 @@ if [ -n "$bios" ] && [ ! -e "$root/bios/standalone/$id/$bios" ]; then
     ln -sfn "$sdcard/bios/opk/$id/$bios" "$root/bios/standalone/$id/$bios"
 fi
 case "$id" in
+    fceux223)
+        mkdir -p "$HOME/.fceux"
+        if [ ! -e "$HOME/.fceux/fceux.cfg" ]; then
+            cp "$root/config/standalone/fceux223.cfg" "$HOME/.fceux/fceux.cfg"
+        fi
+        ;;
     uae4all)
         mkdir -p "$HOME/.uae4all"
         if [ ! -e "$HOME/.uae4all/uae4all.cfg" ]; then
@@ -59,8 +71,19 @@ case "$id" in
         ;;
 esac
 # The frontend owns suspension and power handling; no power-key menu adapters.
+log="$root/Logs/standalone/$id.log"
+printf 'PLUMOS_OPK_ROUTE_BEGIN=%s\n' "$$" >>"$log"
 set +e
-/usr/bin/opkrun "$opk" "$rom" >>"$root/Logs/standalone/$id.log" 2>&1
+/usr/bin/opkrun "$opk" "$rom" >>"$log" 2>&1
 rc=$?
-printf 'PLUMOS_OPK_ROUTE_EXIT=%s\n' "$rc" >>"$root/Logs/standalone/$id.log"
+# Some opkrun builds return zero even when the application failed.
+child=$(awk -F= -v pid="$$" '
+    $1 == "PLUMOS_OPK_ROUTE_BEGIN" { active = ($2 == pid); result = "" }
+    active && $1 == "PLUMOS_EMULATOR_EXIT" { result = $2 }
+    END { print result }' "$log")
+case "$child" in
+    ''|*[!0-9]*) ;;
+    *) if [ "$child" -le 255 ]; then rc=$child; fi ;;
+esac
+printf 'PLUMOS_OPK_ROUTE_EXIT=%s\n' "$rc" >>"$log"
 exit "$rc"

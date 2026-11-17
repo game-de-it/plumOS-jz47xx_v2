@@ -52,6 +52,7 @@ assert free > sum(x['bytes'] for x in records)+16*1024**2,free
 stamp=time.strftime('%Y%m%d-%H%M%S')
 backup=BASE+'/backup/opk-integration-'+stamp
 shell('mkdir -p '+Q(backup))
+shell('cp -p /media/data/local/init.d/S95frontend '+Q(backup+'/S95frontend'))
 for relative in ['config/frontend/systems.json','state/frontend/core-overrides.json',
                  'state/frontend/library-index.json','bin/plumos-controller-ui','bin/plumos-text-ui',
                  'bin/plumos-standalone-launch']:
@@ -84,6 +85,12 @@ for record in records:
     if slug in private:
         source='/media/data/local/rg350-source-repairs/home-'+str(private[slug])
         shell('cp -a '+Q(source+'/.')+' '+Q(dest+'/'))
+    elif slug=='fceux223':
+        # 2.6.6 ROM profiles can crash 2.2.3 during video initialization.
+        shell('mkdir -p '+Q(dest+'/.fceux'))
+        for part in ['fcs','sav','cheats','gameinfo','movie','movies','snaps']:
+            source=BASE+'/home/.fceux/'+part
+            shell('if test -d '+Q(source)+'; then cp -a '+Q(source)+' '+Q(dest+'/.fceux/')+'; fi')
     elif slug=='neo4all':
         shell('cp -a /media/data/local/rg350-missing-rom-retest/home-15/. '+Q(dest+'/'))
     else:
@@ -149,6 +156,10 @@ p=OUT/'unreal_speccy_portable.xml';p.write_text(xml+'\n');push(p,home+'/unreal_s
 # Commit the UI/config update only after all runtime assets are ready.
 shell('/media/data/local/init.d/S95frontend stop')
 try:
+    service=shell('cat /media/data/local/init.d/S95frontend')
+    service=service.replace('nohup "$root/bin/plumos-fe-launch"', 'nohup setsid "$root/bin/plumos-fe-launch"')
+    service_file=OUT/'S95frontend-detached';service_file.write_text(service+'\n')
+    push(service_file,'/media/data/local/init.d/S95frontend','0755')
     for name in ['plumos-controller-ui','plumos-text-ui']:
         push(ROOT/'output/rg280v-fe'/name,BASE+'/bin/'+name,'0755')
     for default in (ROOT/'assets/frontend/standalone-defaults').iterdir():

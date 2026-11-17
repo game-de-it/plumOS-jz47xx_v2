@@ -5,6 +5,7 @@ import json
 import pathlib
 import re
 import subprocess
+import argparse
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORK = ROOT / 'output/rg280v-opk-integration'
@@ -18,9 +19,15 @@ for name in ('handy','oswan','smsplusgg','smsplusms','unrealspeccy','gngeo','uae
 TOOLS = ROOT / 'output/rg280v/host/bin'
 OUT = WORK / 'packages'
 OUT.mkdir(exist_ok=True)
-records = []
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--only', nargs='+')
+args = parser.parse_args()
+records = json.loads((WORK/'package-manifest.json').read_text()) if args.only else []
+
 for route in SOURCES:
     slug, source = route["id"], route["source"]
+    if args.only and slug not in args.only: continue
+    records = [r for r in records if r["id"] != slug]
     stage = WORK / 'stages' / slug
     source = ROOT / source
     assert hashlib.sha256(source.read_bytes()).hexdigest() == route['source_sha256'], slug
@@ -37,8 +44,12 @@ for route in SOURCES:
     prepare = ''
     if slug == 'unrealspeccy':
         prepare = 'mkdir -p "$HOME/states"\n'
+    elif slug == 'pokemini':
+        prepare = 'mkdir -p "$HOME/saves"\n'
+        body = 'exec /opk/pokemini -eeprom "$HOME/saves/$(basename "$1").eep" -eepromshare -state "$HOME/saves/$(basename "$1").sta" "$1"'
     elif slug == 'gngeo':
-        body = 'exec /opk/plumos-emulator --biospath="$root/bios/standalone/gngeo" --rompath="$(dirname "$1")" "$1"'
+        prepare = 'mkdir -p "$HOME/roms"\nln -sfn "$root/bios/standalone/gngeo/neogeo.zip" "$HOME/roms/neogeo.zip"\nln -sfn "$1" "$HOME/roms/$(basename "$1")"\n'
+        body = 'exec /opk/plumos-emulator --biospath="$root/bios/standalone/gngeo" --rompath="$HOME/roms" "$1"'
     elif slug == 'uae4all':
         prepare = 'mkdir -p "$HOME/.uae4all"\nln -sfn "$root/bios/standalone/uae4all/kick.rom" "$HOME/.uae4all/kick.rom"\n'
     elif slug == 'neo4all':

@@ -25,7 +25,7 @@ case "${1:-}" in
         if [ -c /dev/fb0 ]; then
             dd if=/dev/zero of=/dev/fb0 bs=4096 count=150 2>/dev/null || true
         fi
-        nohup "$root/bin/plumos-fe-launch" </dev/null >>"$root/Logs/frontend.log" 2>&1 &
+        nohup setsid "$root/bin/plumos-fe-launch" </dev/null >>"$root/Logs/frontend.log" 2>&1 &
         echo "$!" >"$pidfile"
         ;;
     stop)

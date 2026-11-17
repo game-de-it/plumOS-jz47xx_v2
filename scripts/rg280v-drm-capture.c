@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
         perror("drmSetClientCap atomic");
     drmModeRes *res = drmModeGetResources(fd);
     if (!res) { perror("drmModeGetResources"); return 1; }
-    uint32_t active_fb = 0;
+    uint32_t active_fb = 0, active_crtc = 0;
     drmModePlaneRes *planes = drmModeGetPlaneResources(fd);
     if (planes) {
         for (uint32_t i = 0; i < planes->count_planes; ++i) {
@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
                         p->crtc_id, p->fb_id);
                 if (p->crtc_id && p->fb_id) {
                     active_fb = p->fb_id;
+                    active_crtc = p->crtc_id;
                     drmModeObjectProperties *properties = drmModeObjectGetProperties(
                         fd, p->plane_id, DRM_MODE_OBJECT_PLANE);
                     if (properties) {
@@ -64,7 +65,9 @@ int main(int argc, char **argv) {
         if (!crtc) { perror("drmModeGetCrtc"); continue; }
         fprintf(stderr, "crtc=%u fb=%u mode=%ux%u\n", crtc->crtc_id, crtc->buffer_id,
                 crtc->width, crtc->height);
-        uint32_t fb_id = crtc->buffer_id ? crtc->buffer_id : active_fb;
+        /* Atomic page flips may leave the legacy CRTC buffer_id stale. */
+        uint32_t fb_id = active_fb && active_crtc == crtc->crtc_id
+                         ? active_fb : crtc->buffer_id;
         if (!fb_id) { drmModeFreeCrtc(crtc); continue; }
         drmModeFB *fb = drmModeGetFB(fd, fb_id);
         if (!fb) { perror("drmModeGetFB"); drmModeFreeCrtc(crtc); continue; }
