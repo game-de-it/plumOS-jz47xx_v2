@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "plumos_opk_route_labels.h"
 #include <strings.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -7807,6 +7808,8 @@ static const char *core_profile_display_name(const char *profile) {
   } else if (strncmp(profile, "standalone:", 11) == 0) {
     label = "SA";
     value = profile + 11;
+    const char *name = plumos_opk_route_label(value);
+    if (name) value = name;
   }
   if (label && value && value[0]) {
     snprintf(display, sizeof(display), "%s: %s", label, value);

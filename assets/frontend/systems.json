@@ -46,7 +46,8 @@
         "standalone:fceux",
         "picoarch:fceumm",
         "picoarch:nestopia",
-        "picoarch:quicknes"
+        "picoarch:quicknes",
+        "standalone:fceux223"
       ],
       "default_launch_profile": "standalone:fceux",
       "default_cpu_policy": "ondemand",
@@ -245,7 +246,9 @@
         "standalone:gambatte",
         "picoarch:gambatte",
         "picoarch:gearboy",
-        "picoarch:vbam"
+        "picoarch:vbam",
+        "standalone:gambatte2020",
+        "standalone:ohboy"
       ],
       "default_launch_profile": "standalone:gambatte",
       "default_cpu_policy": "ondemand",
@@ -311,7 +314,9 @@
         "standalone:gambatte",
         "picoarch:gambatte",
         "picoarch:gearboy",
-        "picoarch:vbam"
+        "picoarch:vbam",
+        "standalone:gambatte2020",
+        "standalone:ohboy"
       ],
       "default_launch_profile": "standalone:gambatte",
       "default_cpu_policy": "ondemand",
@@ -436,7 +441,8 @@
       },
       "launch_profiles": [
         "standalone:picodrive",
-        "picoarch:picodrive"
+        "picoarch:picodrive",
+        "standalone:genesisgx"
       ],
       "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
@@ -506,7 +512,8 @@
         "standalone:picodrive",
         "picoarch:genesis_plus_gx",
         "picoarch:picodrive",
-        "picoarch:gearsystem"
+        "picoarch:gearsystem",
+        "standalone:smsplusms"
       ],
       "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
@@ -578,7 +585,8 @@
         "standalone:picodrive",
         "picoarch:genesis_plus_gx",
         "picoarch:picodrive",
-        "picoarch:gearsystem"
+        "picoarch:gearsystem",
+        "standalone:smsplusgg"
       ],
       "default_launch_profile": "standalone:picodrive",
       "default_cpu_policy": "ondemand",
@@ -758,7 +766,8 @@
       },
       "launch_profiles": [
         "picoarch:mednafen_pce_fast",
-        "picoarch:mednafen_supergrafx"
+        "picoarch:mednafen_supergrafx",
+        "standalone:temper"
       ],
       "default_launch_profile": "picoarch:mednafen_pce_fast",
       "default_cpu_policy": "ondemand",
@@ -947,7 +956,7 @@
       "short_name": "NGPC",
       "sort_order": 210,
       "hardware": "portable",
-      "enabled": false,
+      "enabled": true,
       "pinned": false,
       "directory_aliases": [
         {
@@ -982,9 +991,9 @@
         ]
       },
       "launch_profiles": [
-        "retroarch:mednafen_ngp"
+        "standalone:race"
       ],
-      "default_launch_profile": "retroarch:mednafen_ngp",
+      "default_launch_profile": "standalone:race",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,
@@ -1046,7 +1055,8 @@
         ]
       },
       "launch_profiles": [
-        "picoarch:mednafen_wswan"
+        "picoarch:mednafen_wswan",
+        "standalone:oswan"
       ],
       "default_launch_profile": "picoarch:mednafen_wswan",
       "default_cpu_policy": "ondemand",
@@ -1184,6 +1194,460 @@
           "bulk": 6,
           "max": 6
         }
+      }
+    },
+    {
+      "id": "atari800",
+      "display_name": "Atari 800",
+      "short_name": "ATARI800",
+      "sort_order": 200,
+      "hardware": "computer",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "atari800",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "ATARI800",
+          "source": "plumos",
+          "priority": 20
+        },
+        {
+          "name": "ATARI/800",
+          "source": "plumos",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "car",
+        "atr",
+        "xex",
+        "rom",
+        "xfd",
+        "bin"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/atari800"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:atari800"
+      ],
+      "default_launch_profile": "standalone:atari800",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "atari2600",
+      "display_name": "Atari 2600",
+      "short_name": "ATARI2600",
+      "sort_order": 210,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "atari2600",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "ATARI2600",
+          "source": "plumos",
+          "priority": 20
+        }
+      ],
+      "extensions": [
+        "a26",
+        "bin",
+        "rom"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/atari2600"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:stella"
+      ],
+      "default_launch_profile": "standalone:stella",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "pokemini",
+      "display_name": "Pokemon Mini",
+      "short_name": "POKEMINI",
+      "sort_order": 220,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "pokemini",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "POKEMINI",
+          "source": "plumos",
+          "priority": 20
+        }
+      ],
+      "extensions": [
+        "min"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/pokemini"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:pokemini"
+      ],
+      "default_launch_profile": "standalone:pokemini",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "lynx",
+      "display_name": "Atari Lynx",
+      "short_name": "LYNX",
+      "sort_order": 230,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "lynx",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "LYNX",
+          "source": "plumos",
+          "priority": 20
+        }
+      ],
+      "extensions": [
+        "lnx",
+        "lyx"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/lynx"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:handy"
+      ],
+      "default_launch_profile": "standalone:handy",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "cpc",
+      "display_name": "Amstrad CPC",
+      "short_name": "CPC",
+      "sort_order": 240,
+      "hardware": "computer",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "cpc",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "CPC",
+          "source": "plumos",
+          "priority": 20
+        },
+        {
+          "name": "amstradcpc",
+          "source": "plumos",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "dsk",
+        "sna",
+        "bin",
+        "cpr"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/cpc"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:crocods"
+      ],
+      "default_launch_profile": "standalone:crocods",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "zxspectrum",
+      "display_name": "ZX Spectrum",
+      "short_name": "ZX",
+      "sort_order": 250,
+      "hardware": "computer",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "zxspectrum",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "ZXSPECTRUM",
+          "source": "plumos",
+          "priority": 20
+        },
+        {
+          "name": "ZX",
+          "source": "plumos",
+          "priority": 30
+        }
+      ],
+      "extensions": [
+        "tap",
+        "tzx",
+        "sna",
+        "z80",
+        "trd",
+        "scl"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/zxspectrum"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:unrealspeccy"
+      ],
+      "default_launch_profile": "standalone:unrealspeccy",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "neogeo",
+      "display_name": "Neo Geo",
+      "short_name": "NEOGEO",
+      "sort_order": 260,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "neogeo",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "NEOGEO",
+          "source": "plumos",
+          "priority": 20
+        }
+      ],
+      "extensions": [
+        "zip"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/neogeo"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:gngeo"
+      ],
+      "default_launch_profile": "standalone:gngeo",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "neogeocd",
+      "display_name": "Neo Geo CD",
+      "short_name": "NEOGEOCD",
+      "sort_order": 270,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "neogeocd",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "NEOGEOCD",
+          "source": "plumos",
+          "priority": 20
+        }
+      ],
+      "extensions": [
+        "m3u",
+        "cue",
+        "iso"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/neogeocd"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:neo4all"
+      ],
+      "default_launch_profile": "standalone:neo4all",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "amiga",
+      "display_name": "Amiga",
+      "short_name": "AMIGA",
+      "sort_order": 280,
+      "hardware": "computer",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "amiga",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "AMIGA",
+          "source": "plumos",
+          "priority": 20
+        }
+      ],
+      "extensions": [
+        "adf",
+        "adz"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/amiga"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:uae4all"
+      ],
+      "default_launch_profile": "standalone:uae4all",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
+      }
+    },
+    {
+      "id": "arcade",
+      "display_name": "Arcade",
+      "short_name": "ARCADE",
+      "sort_order": 290,
+      "hardware": "console",
+      "enabled": true,
+      "pinned": false,
+      "directory_aliases": [
+        {
+          "name": "arcade",
+          "source": "plumos",
+          "priority": 10
+        },
+        {
+          "name": "ARCADE",
+          "source": "plumos",
+          "priority": 20
+        },
+        {
+          "name": "fbneo",
+          "source": "plumos",
+          "priority": 30
+        },
+        {
+          "name": "FBNEO",
+          "source": "plumos",
+          "priority": 40
+        }
+      ],
+      "extensions": [
+        "zip"
+      ],
+      "artwork": {
+        "lookup": [
+          {
+            "root": "sdcard",
+            "path": "Images/arcade"
+          }
+        ]
+      },
+      "launch_profiles": [
+        "standalone:fba44"
+      ],
+      "default_launch_profile": "standalone:fba44",
+      "default_cpu_policy": "ondemand",
+      "scraper": {
+        "enabled": false,
+        "reason": "not_configured"
       }
     }
   ]

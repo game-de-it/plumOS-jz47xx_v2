@@ -55,6 +55,11 @@ cp /workspace/output/rg280v-fe/plumos-controller-ui /workspace/output/rg280v-fe/
     /workspace/output/rg280v-fe/plumos-text-ui /workspace/output/rg280v-fe/plumos-rg280v-hotkeys \
     /workspace/output/rg280v-fe/plumos-rg280v-power-menu "$data_root/plumos/bin/"
 cp /workspace/assets/frontend/bin/* "$data_root/plumos/bin/"
+mkdir -p "$data_root/plumos/emulators/opk" "$data_root/plumos/lib/opk-compat" "$data_root/plumos/config/standalone"
+cp /workspace/output/rg280v-opk-integration/packages/*.opk "$data_root/plumos/emulators/opk/"
+cp /workspace/output/rg280v-opk-integration/compat/* "$data_root/plumos/lib/opk-compat/"
+cp /workspace/assets/frontend/standalone-defaults/* "$data_root/plumos/config/standalone/"
+
 cp /workspace/output/rg280v-apps/input-test-rg280v.opk "$data_root/apps/"
 cp /workspace/output/rg280v-apps/input-test-rg280v-source.tar.gz \
     "$data_root/plumos/licenses/"

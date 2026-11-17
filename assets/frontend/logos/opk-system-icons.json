@@ -1,0 +1,45 @@
+{
+  "source": "plumOS-RK2020/vendor/plumos-frontend/seed/themes/default/logos/systems",
+  "icons": [
+    {
+      "file": "atari800.png",
+      "sha256": "28d4272495d19d6c5512556b5a0c1fa6e63e4d0ab864f4e0a660c9d9f0727c35"
+    },
+    {
+      "file": "atari2600.png",
+      "sha256": "d2b22da88acebc830ae6fa57e481dd6eb17b4f0a3622c1244495a68eb4ec3e41"
+    },
+    {
+      "file": "pokemini.png",
+      "sha256": "a5836bb4ad068de9e0d45e3ea9be0cd2acf24775898a5ce86a64b4ac470c9728"
+    },
+    {
+      "file": "lynx.png",
+      "sha256": "42a6aebfed3164e6f486132479b8a10bdfc178887ff0442f2424784b454cf7dc"
+    },
+    {
+      "file": "cpc.png",
+      "sha256": "ae605078c1f36f3a3b79f76e8a1372f3f41155b3ddb839246e7fca909330b845"
+    },
+    {
+      "file": "zxspectrum.png",
+      "sha256": "7168b6ce3daeefd489bdb6d404e17d7744870dabd90789f0b92bf0f890f5d4b7"
+    },
+    {
+      "file": "neogeo.png",
+      "sha256": "be8fbacdcfc005f8409597432cd55dd339d9bd159a418fa3b339801637beb48d"
+    },
+    {
+      "file": "neogeocd.png",
+      "sha256": "a70244bec9d1e5b3cf8909d8a2cdebb3539fab0c0101f1c4dda2c69859fb5319"
+    },
+    {
+      "file": "amiga.png",
+      "sha256": "6dd6db03c19dd4eb7462645df9f4537389426a047b28b0823177695f932c7cb3"
+    },
+    {
+      "file": "arcade.png",
+      "sha256": "549ee1a8f1b9ac0fb51d5a33967f920c229f17df8dbe7e29150ff29b81e4db6d"
+    }
+  ]
+}

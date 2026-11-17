@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "plumos_opk_route_labels.h"
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -1436,6 +1437,8 @@ static void format_launch_profile_display(const char *profile, char *out, size_t
   } else if (strncmp(profile, "standalone:", 11) == 0) {
     label = "SA";
     value = profile + 11;
+    const char *name = plumos_opk_route_label(value);
+    if (name) value = name;
   }
   if (label && value && value[0]) {
     snprintf(out, out_size, "%s: %s", label, value);

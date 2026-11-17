@@ -1,0 +1,175 @@
+[
+  {
+    "id": "atari800",
+    "name": "Atari800",
+    "systems": [
+      "atari800"
+    ],
+    "source": "output/rg280v-apps/rg350-visual-tests/atari800-rg280v-input.opk",
+    "source_sha256": "12b3d15309e984bfc9744ec30ecb11e0aed8d8413db1c49a3f5517d606eb4b43"
+  },
+  {
+    "id": "fba44",
+    "name": "FBA44",
+    "systems": [
+      "arcade"
+    ],
+    "source": "output/rg280v-apps/rg350-visual-tests/fba44-rg280v-softfloat.opk",
+    "source_sha256": "357215645ba9f9a4ed8874acfa2afd83d96cf68e59ccec65060b184b5ba50e55"
+  },
+  {
+    "id": "temper",
+    "name": "Temper",
+    "systems": [
+      "pcengine"
+    ],
+    "source": "output/rg280v-apps/rg350-visual-tests/temper-rg280v-noipu.opk",
+    "source_sha256": "82f5404834e161c8fb4fd0c3d2006447bd8ed28ee18248a719038cfdcebc5ee8"
+  },
+  {
+    "id": "fceux223",
+    "name": "FCEUX 2.2.3",
+    "systems": [
+      "nes"
+    ],
+    "source": "output/rg280v-apps/rg350-catalog/FCEUX_2019-11-15.opk",
+    "source_sha256": "bf5d600a9dc194cacdb30a87719e4b09eb88cc72abaadf2bb2583e400c76c027"
+  },
+  {
+    "id": "genesisgx",
+    "name": "Genesis Plus GX",
+    "systems": [
+      "megadrive"
+    ],
+    "source": "output/rg280v-apps/rg350-audio-fixed-12.opk",
+    "source_sha256": "7bf31a03ae96dbafb94f1b6751ad346b2df5c1ebaf583186fb7856af0df798bf"
+  },
+  {
+    "id": "pokemini",
+    "name": "PokeMini",
+    "systems": [
+      "pokemini"
+    ],
+    "source": "output/rg280v-apps/rg350-catalog/PokeMini_2015-07-05.opk",
+    "source_sha256": "988f46228e4c6ef66d0bd5d10ec0a40557330900c80bc6f93d032211b0c89cf2"
+  },
+  {
+    "id": "race",
+    "name": "Race Explorer",
+    "systems": [
+      "ngpc"
+    ],
+    "source": "output/rg280v-apps/rg350-catalog/Race(Explorer)_2019-12-11.opk",
+    "source_sha256": "d0b2f06c357222843d11db1ca9a4ac2910b5e19ae9884a566d00a95168553f08"
+  },
+  {
+    "id": "crocods",
+    "name": "CrocoDS",
+    "systems": [
+      "cpc"
+    ],
+    "source": "output/rg280v-apps/rg350-catalog/crocods_20200115.opk",
+    "source_sha256": "ddfee15a8c0ab25ae3894bcd477329dae98a4ce6f0526cfffc113b330d9c1ab4"
+  },
+  {
+    "id": "gambatte2020",
+    "name": "Gambatte 2020",
+    "systems": [
+      "gb",
+      "gbc"
+    ],
+    "source": "output/rg280v-apps/rg350-catalog/gambatte-dms-multi-r572u4-20200628.opk",
+    "source_sha256": "b649561aaabdff526713730f6a472a2f0444f5eda80b62161d0d2fe6fa814a56"
+  },
+  {
+    "id": "ohboy",
+    "name": "OhBoy",
+    "systems": [
+      "gb",
+      "gbc"
+    ],
+    "source": "output/rg280v-apps/rg350-audio-fixed-49.opk",
+    "source_sha256": "5add87b15837cb0a09a24db5098c55bbf7be92655a4a7b611ba45458ae880a3a"
+  },
+  {
+    "id": "stella",
+    "name": "Stella",
+    "systems": [
+      "atari2600"
+    ],
+    "source": "output/rg280v-apps/stella-rg280v-menu.opk",
+    "source_sha256": "a343df29e2af4e94d8ce72a948f39933f3bc8cd10fab0a2b667ab9fca1b1cbb6"
+  },
+  {
+    "id": "neo4all",
+    "name": "NEO4ALL",
+    "systems": [
+      "neogeocd"
+    ],
+    "source": "output/rg280v-apps/neo4all-rg280v-bgm-test.opk",
+    "source_sha256": "79a4ad15f4e76b90216585f18e9ade47902eb1b3927c2ae3d97625a0e7798045"
+  },
+  {
+    "id": "handy",
+    "name": "Handy",
+    "systems": [
+      "lynx"
+    ],
+    "source": "output/rg280v-apps/source-repair-opks/13.opk",
+    "source_sha256": "de4d9e64ecef951de295aa9f6e0452441bea2c544c445239deab03381ffa62c9"
+  },
+  {
+    "id": "oswan",
+    "name": "Oswan",
+    "systems": [
+      "wonderswan"
+    ],
+    "source": "output/rg280v-apps/source-repair-opks/18.opk",
+    "source_sha256": "7307b83ad9406a2ebf756771f9c3b37b2e347c5450d478282931c21cb5f4a0f4"
+  },
+  {
+    "id": "smsplusgg",
+    "name": "SMS Plus GG",
+    "systems": [
+      "gamegear"
+    ],
+    "source": "output/rg280v-apps/source-repair-opks/57.opk",
+    "source_sha256": "0145f05614b82b6ce8d5f1618b8638f8d851d67d69a55c3f7932fb22f44dfe19"
+  },
+  {
+    "id": "smsplusms",
+    "name": "SMS Plus MS",
+    "systems": [
+      "mastersystem"
+    ],
+    "source": "output/rg280v-apps/source-repair-opks/58.opk",
+    "source_sha256": "859cb167fa659cf075608ae718f5b550f746bb3933226a4f30135351bf214d63"
+  },
+  {
+    "id": "unrealspeccy",
+    "name": "Unreal Speccy",
+    "systems": [
+      "zxspectrum"
+    ],
+    "source": "output/rg280v-apps/source-repair-opks/61.opk",
+    "source_sha256": "d4c0a6649580a4db670a8f80c0c24686879240f796760a35804681ffa5b8bbd0"
+  },
+  {
+    "id": "gngeo",
+    "name": "GnGeo",
+    "systems": [
+      "neogeo"
+    ],
+    "source": "output/rg280v-apps/source-repair-opks/39.opk",
+    "source_sha256": "4147d4815405d31bc5e48c27a3b668139c86eb279a6828b07df836aadcdc4aaf"
+  },
+  {
+    "id": "uae4all",
+    "name": "UAE4All",
+    "systems": [
+      "amiga"
+    ],
+    "source": "output/rg280v-apps/source-repair-opks/30.opk",
+    "source_sha256": "406a6a174de4af5520eb2fb52b6861236128ee7748c0a559aa05bd93daa05f78"
+  }
+]

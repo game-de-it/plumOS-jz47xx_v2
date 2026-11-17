@@ -1,0 +1,66 @@
+#!/bin/sh
+# Production routes for accepted standalone OPK builds.
+set -eu
+[ "$#" -eq 2 ] || { echo 'usage: plumos-opk-emulator-launch EMULATOR ROM' >&2; exit 2; }
+root=${PLUMOS_ROOT:-/media/data/plumos}
+id=$1
+rom=$2
+case "$id" in
+    atari800|fba44|temper|fceux223|genesisgx|pokemini|race|crocods|gambatte2020|ohboy|stella|neo4all|handy|oswan|smsplusgg|smsplusms|unrealspeccy|gngeo|uae4all) ;;
+    *) echo "unsupported OPK emulator: $id" >&2; exit 2 ;;
+esac
+opk="$root/emulators/opk/$id.opk"
+[ -r "$opk" ] || { echo "emulator missing: $opk" >&2; exit 1; }
+[ -f "$rom" ] || { echo "ROM missing: $rom" >&2; exit 1; }
+if [ "$id" = neo4all ]; then
+    case "$rom" in
+        *.m3u|*.M3U)
+            first=$(awk '!/^[[:space:]]*(#|$)/ { sub(/\r$/, ""); print; exit }' "$rom")
+            [ -n "$first" ] || { echo 'empty Neo Geo CD playlist' >&2; exit 1; }
+            case "$first" in /*) rom=$first ;; *) rom="$(dirname "$rom")/$first" ;; esac
+            ;;
+    esac
+    case "$rom" in
+        *.cue|*.CUE)
+            image=$(sed -n 's/^[[:space:]]*FILE[[:space:]]*"\([^"]*\)".*/\1/p' "$rom" | head -n 1)
+            [ -n "$image" ] || { echo 'CUE has no quoted FILE entry' >&2; exit 1; }
+            case "$image" in /*) rom=$image ;; *) rom="$(dirname "$rom")/$image" ;; esac
+            ;;
+    esac
+    [ -f "$rom" ] || { echo "CD image missing: $rom" >&2; exit 1; }
+fi
+"$root/bin/plumos-prepare-opk-input"
+export PLUMOS_ROOT="$root" HOME="$root/home/opk/$id"
+export PLUMOS_OPK_HOME="$HOME" SDL_VIDEODRIVER=kmsdrm
+export LD_LIBRARY_PATH="$root/lib/opk-compat:$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+mkdir -p "$HOME" "$root/Logs/standalone"
+sdcard=${PLUMOS_SDCARD_ROOT:-/media/data/sd2}
+case "$id" in
+    gngeo) bios=neogeo.zip ;;
+    neo4all) bios=neocd.bin ;;
+    uae4all) bios=kick.rom ;;
+    *) bios= ;;
+esac
+if [ -n "$bios" ] && [ ! -e "$root/bios/standalone/$id/$bios" ]; then
+    mkdir -p "$root/bios/standalone/$id"
+    ln -sfn "$sdcard/bios/opk/$id/$bios" "$root/bios/standalone/$id/$bios"
+fi
+case "$id" in
+    uae4all)
+        mkdir -p "$HOME/.uae4all"
+        if [ ! -e "$HOME/.uae4all/uae4all.cfg" ]; then
+            cp "$root/config/standalone/uae4all.cfg" "$HOME/.uae4all/uae4all.cfg"
+        fi
+        ;;
+    unrealspeccy)
+        if [ ! -e "$HOME/unreal_speccy_portable.xml" ]; then
+            cp "$root/config/standalone/unreal_speccy_portable.xml" "$HOME/"
+        fi
+        ;;
+esac
+# The frontend owns suspension and power handling; no power-key menu adapters.
+set +e
+/usr/bin/opkrun "$opk" "$rom" >>"$root/Logs/standalone/$id.log" 2>&1
+rc=$?
+printf 'PLUMOS_OPK_ROUTE_EXIT=%s\n' "$rc" >>"$root/Logs/standalone/$id.log"
+exit "$rc"

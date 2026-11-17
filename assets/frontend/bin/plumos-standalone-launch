@@ -8,6 +8,9 @@ fi
 
 root=${PLUMOS_ROOT:-/media/data/plumos}
 case "$1" in
+    atari800|fba44|temper|fceux223|genesisgx|pokemini|race|crocods|gambatte2020|ohboy|stella|neo4all|handy|oswan|smsplusgg|smsplusms|unrealspeccy|gngeo|uae4all)
+        exec "$root/bin/plumos-opk-emulator-launch" "$@"
+        ;;
     pcsx4all) binary="$root/bin/pcsx4all" ;;
     fceux)
         opk="$root/emulators/fceux_gcw0-2.6.6-2023-08-30.opk"

@@ -42,8 +42,12 @@ copy_checked "$repo_root/output/rg280v-fe/plumos-library-scan" "$remote/bin/plum
 copy_checked "$repo_root/output/rg280v-fe/plumos-text-ui" "$remote/bin/plumos-text-ui" 0755
 copy_checked "$repo_root/output/rg280v-fe/plumos-rg280v-hotkeys" "$remote/bin/plumos-rg280v-hotkeys" 0755
 copy_checked "$repo_root/output/rg280v-fe/plumos-rg280v-power-menu" "$remote/bin/plumos-rg280v-power-menu" 0755
-for name in plumos-fe-launch plumos-volume-control plumos-display-control plumos-safe-shutdown plumos-standalone-launch plumos-prepare-opk-input plumos-opk-app-launch; do
+for name in plumos-fe-launch plumos-volume-control plumos-display-control plumos-safe-shutdown plumos-standalone-launch plumos-prepare-opk-input plumos-opk-app-launch plumos-opk-emulator-launch; do
     copy_checked "$repo_root/assets/frontend/bin/$name" "$remote/bin/$name" 0755
+done
+for source in "$repo_root"/assets/frontend/standalone-defaults/*; do
+    "${adb[@]}" shell "mkdir -p $remote/config/standalone"
+    copy_checked "$source" "$remote/config/standalone/$(basename "$source")" 0644
 done
 copy_checked "$repo_root/board/rg280v/overlay/etc/udev/rules.d/70-plumos-gpio-keys.rules" \
     "$remote/config/70-plumos-gpio-keys.rules" 0644
