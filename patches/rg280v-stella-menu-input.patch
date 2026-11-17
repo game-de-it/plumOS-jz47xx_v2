@@ -1,0 +1,141 @@
+diff --git a/src/emucore/EventHandler.cxx b/src/emucore/EventHandler.cxx
+index 3c73660..a246d90 100644
+--- a/src/emucore/EventHandler.cxx
++++ b/src/emucore/EventHandler.cxx
+@@ -67,6 +67,9 @@ EventHandler::EventHandler(OSystem* osystem)
+     myJoysticks(NULL),
+     myNumJoysticks(0)
+ {
++#ifdef PLUMOS_RG280V
++  myRGStartHeld = myRGSelectHeld = myRGMenuChord = myRGResetPulse = false;
++#endif
+   // Erase the key mapping array
+   for(int i = 0; i < KBDK_LAST; ++i)
+   {
+@@ -320,6 +323,13 @@ void EventHandler::toggleSAPortOrder()
+ // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ void EventHandler::poll(uInt64 time)
+ {
++#ifdef PLUMOS_RG280V
++  // A single SELECT release pulses Reset for one emulated frame.
++  if(myRGResetPulse) {
++    handleEvent(Event::ConsoleReset, 0);
++    myRGResetPulse = false;
++  }
++#endif
+   // Synthesize events for platform-specific hardware
+   myOSystem->pollEvent();
+ 
+@@ -356,6 +366,30 @@ void EventHandler::poll(uInt64 time)
+         // Immediately store the key state
+         myEvent.setKey(key, state);
+ 
++#ifdef PLUMOS_RG280V
++        if(key == KBDK_RETURN || key == KBDK_ESCAPE) {
++          if(key == KBDK_RETURN) myRGStartHeld = state;
++          else myRGSelectHeld = state;
++          if(state && myRGStartHeld && myRGSelectHeld && !myRGMenuChord) {
++            myRGMenuChord = true;
++            if(myState == S_EMULATE) enterMenuMode(S_MENU);
++            else if(myState == S_MENU || myState == S_CMDMENU) leaveMenuMode();
++          } else if(!state && key == KBDK_ESCAPE && !myRGMenuChord && myState == S_EMULATE) {
++            handleEvent(Event::ConsoleReset, 1);
++            myRGResetPulse = true;
++          }
++          if(!myRGStartHeld && !myRGSelectHeld) myRGMenuChord = false;
++          break;
++        }
++        // Physical A/B are Ctrl/Alt keycodes, not desktop modifier shortcuts.
++        // In menus they are keyboard selection/cancel, never mouse clicks.
++        if(myState != S_EMULATE && myOverlay != NULL) {
++          myOverlay->handleKeyEvent(key, KMOD_NONE,
++                                   event.key.keysym.unicode & 0x7f, state);
++          break;
++        }
++#endif
++
+ #ifdef GCW0
+         //emulate mouse button press in menus
+  	if(myState != S_EMULATE && key == KBDK_LCTRL)
+@@ -1481,6 +1515,16 @@ void EventHandler::setKeymap()
+     setDefaultKeymap(Event::NoType, kEmulationMode);
+     setDefaultKeymap(Event::NoType, kMenuMode);
+   }
++#ifdef PLUMOS_RG280V
++  // Keep hardware navigation valid when loading a legacy mouse-only keymap.
++  myKeyTable[KBDK_UP][kMenuMode] = Event::UIUp;
++  myKeyTable[KBDK_DOWN][kMenuMode] = Event::UIDown;
++  myKeyTable[KBDK_LEFT][kMenuMode] = Event::UILeft;
++  myKeyTable[KBDK_RIGHT][kMenuMode] = Event::UIRight;
++  myKeyTable[KBDK_LCTRL][kMenuMode] = Event::UISelect;
++  myKeyTable[KBDK_LALT][kMenuMode] = Event::UICancel;
++  myKeyTable[KBDK_RETURN][kEmulationMode] = Event::NoType;
++#endif
+ }
+ 
+ // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+diff --git a/src/emucore/EventHandler.hxx b/src/emucore/EventHandler.hxx
+index a286ad2..0d0a468 100644
+--- a/src/emucore/EventHandler.hxx
++++ b/src/emucore/EventHandler.hxx
+@@ -399,6 +399,9 @@ class EventHandler
+ 
+     // Indicates the current state of the system (ie, which mode is current)
+     State myState;
++#ifdef PLUMOS_RG280V
++    bool myRGStartHeld, myRGSelectHeld, myRGMenuChord, myRGResetPulse;
++#endif
+ 
+     // Indicates whether the joystick emulates 'impossible' directions
+     bool myAllowAllDirectionsFlag;
+diff --git a/src/gui/Dialog.cxx b/src/gui/Dialog.cxx
+index fed0552..93ef06c 100644
+--- a/src/gui/Dialog.cxx
++++ b/src/gui/Dialog.cxx
+@@ -336,6 +336,34 @@ void Dialog::handleKeyDown(StellaKey key, StellaMod mod, char ascii)
+   // Shift-Tab sets previous widget in current tab
+   Event::Type e = Event::NoType;
+ 
++#ifdef PLUMOS_RG280V
++  // Widgets such as lists/sliders consume directions. Buttons do not, so
++  // fall back to focus navigation without requiring an analog mouse.
++  if(_focusedWidget && !_focusedWidget->wantsRaw()) {
++    Event::Type direction = Event::NoType;
++    if(key == KBDK_UP) direction = Event::UIUp;
++    else if(key == KBDK_DOWN) direction = Event::UIDown;
++    else if(key == KBDK_LEFT) direction = Event::UILeft;
++    else if(key == KBDK_RIGHT) direction = Event::UIRight;
++    if(direction != Event::NoType) {
++      if(!_focusedWidget->handleEvent(direction))
++        handleNavEvent(key == KBDK_UP || key == KBDK_LEFT
++                       ? Event::UINavPrev : Event::UINavNext);
++      return;
++    }
++    // L/R move focus even when a list or slider consumes the D-pad.
++    if(key == KBDK_TAB || key == KBDK_BACKSPACE) {
++      handleNavEvent(key == KBDK_TAB ? Event::UINavPrev : Event::UINavNext);
++      return;
++    }
++    // X/Y select tabs without desktop Shift shortcuts.
++    if(key == KBDK_SPACE || key == KBDK_LSHIFT) {
++      cycleTab(key == KBDK_SPACE ? 1 : -1);
++      return;
++    }
++  }
++#endif
++
+   // Detect selection of previous and next tab headers and objects
+   // For some strange reason, 'tab' needs to be interpreted as keycode,
+   // not ascii??
+diff --git a/src/gui/OptionsDialog.cxx b/src/gui/OptionsDialog.cxx
+index 0918932..656373e 100644
+--- a/src/gui/OptionsDialog.cxx
++++ b/src/gui/OptionsDialog.cxx
+@@ -55,6 +55,7 @@ OptionsDialog::OptionsDialog(OSystem* osystem, DialogContainer* parent,
+     myUIDialog(NULL),
+     mySnapshotDialog(NULL),
+     myConfigPathDialog(NULL),
++    myRomAuditDialog(NULL),
+     myGameInfoDialog(NULL),
+     myCheatCodeDialog(NULL),
+     myLoggerDialog(NULL),

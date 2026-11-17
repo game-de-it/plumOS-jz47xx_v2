@@ -21,7 +21,7 @@ def push(source, target):
     assert shell('sha256sum ' + shlex.quote(target)).split()[0] == hashlib.sha256(source.read_bytes()).hexdigest()
 
 shell('mkdir -p ' + BASE + '/opk ' + BASE + '/log')
-opk = ROOT / 'output/rg280v-apps/rg350-catalog/Stella_2015-10-06.opk'
+opk = ROOT / 'output/rg280v-apps/stella-rg280v-menu.opk'
 push(opk, BASE + '/opk/28.opk')
 wrapper = OUT / 'run-stella'
 wrapper.write_text('''#!/bin/sh
