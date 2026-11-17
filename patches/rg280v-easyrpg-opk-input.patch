@@ -50,10 +50,21 @@ index 5e3607c..2d9af72 100644
  			conversion_data.ratio_denom = output_rate;
  			speex_resampler_skip_zeros(conversion_state);
 diff --git a/src/decoder_mpg123.cpp b/src/decoder_mpg123.cpp
-index da1daef..6fd1c47 100644
+index da1daef..f82f7a4 100644
 --- a/src/decoder_mpg123.cpp
 +++ b/src/decoder_mpg123.cpp
-@@ -36,8 +36,8 @@ static ssize_t custom_read(void* io, void* buffer, size_t nbyte) {
+@@ -15,6 +15,10 @@
+  * along with EasyRPG Player. If not, see <http://www.gnu.org/licenses/>.
+  */
+ 
++// Use mpg123's explicit large-file ABI and matching stdio callbacks on MIPS32.
++#ifndef _FILE_OFFSET_BITS
++#define _FILE_OFFSET_BITS 64
++#endif
+ #include "system.h"
+ 
+ #ifdef HAVE_MPG123
+@@ -36,8 +40,8 @@ static ssize_t custom_read(void* io, void* buffer, size_t nbyte) {
  
  static off_t custom_seek(void* io, off_t offset, int seek_type) {
  	FILE* f = reinterpret_cast<FILE*>(io);
@@ -64,7 +75,7 @@ index da1daef..6fd1c47 100644
  }
  
  static void custom_close(void* io) {
-@@ -64,13 +64,12 @@ Mpg123Decoder::Mpg123Decoder() :
+@@ -64,13 +68,12 @@ Mpg123Decoder::Mpg123Decoder() :
  	}
  
  	handle.reset(mpg123_new(nullptr, &err));
@@ -79,7 +90,7 @@ index da1daef..6fd1c47 100644
  	init = true;
  }
  
-@@ -97,7 +96,11 @@ bool Mpg123Decoder::Open(FILE* file) {
+@@ -97,7 +100,11 @@ bool Mpg123Decoder::Open(FILE* file) {
  	// Samplerate cached, regularly needed for Ticks function
  	int ch;
  	int fmt;
@@ -92,7 +103,7 @@ index da1daef..6fd1c47 100644
  
  	return true;
  }
-@@ -160,9 +163,9 @@ static AudioDecoder::Format mpg123_format_to_format(int format) {
+@@ -160,9 +167,9 @@ static AudioDecoder::Format mpg123_format_to_format(int format) {
  }
  
  void Mpg123Decoder::GetFormat(int& frequency, AudioDecoder::Format& format, int& channels) const {
@@ -106,10 +117,20 @@ index da1daef..6fd1c47 100644
  	mpg123_getformat(handle.get(), &freq, &ch, &fmt);
  
 diff --git a/src/sdl2_ui.cpp b/src/sdl2_ui.cpp
-index 45ea8f5..a667c17 100644
+index 45ea8f5..61c06a7 100644
 --- a/src/sdl2_ui.cpp
 +++ b/src/sdl2_ui.cpp
-@@ -907,9 +907,9 @@ Input::Keys::InputKey SdlKey2InputKey(SDL_Keycode sdlkey) {
+@@ -370,7 +370,8 @@ bool Sdl2Ui::RefreshDisplayMode() {
+ 		SDL_RenderClear(sdl_renderer);
+ 		SDL_RenderPresent(sdl_renderer);
+ 
+-		SDL_RenderSetLogicalSize(sdl_renderer, SCREEN_TARGET_WIDTH, SCREEN_TARGET_HEIGHT);
++		// RG280V scans 320x480 for a physical 4:3 panel (each 240p row twice).
++		SDL_RenderSetLogicalSize(sdl_renderer, SCREEN_TARGET_WIDTH, SCREEN_TARGET_HEIGHT * 2);
+ 
+ 
+ 		sdl_texture = SDL_CreateTexture(sdl_renderer,
+@@ -907,9 +908,9 @@ Input::Keys::InputKey SdlKey2InputKey(SDL_Keycode sdlkey) {
  		case SDL_SCANCODE_DELETE		: return Input::Keys::DEL;
  		case SDL_SCANCODE_LSHIFT		: return Input::Keys::LSHIFT;
  		case SDL_SCANCODE_RSHIFT		: return Input::Keys::RSHIFT;

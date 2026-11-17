@@ -10,8 +10,8 @@
 | GnGeo #39 | 古い汎用Makefileを現行の埋込driver配列へ合わせ、host用コード生成器のSDLヘッダを修正。拡張子なし引数のNULL参照、skinロード失敗時のNULL参照、メモリ読取りのポインタ変数アドレス誤参照を修正。親BIOS zipをSD2の実ROMディレクトリへ配置 | Art of Fighting 1/2のROM・BIOS読込みを通過するが、GEN68kのinvalid instructionで子プロセス1。ローダーGUIのFPSが50を超えた試行も本編の合格としていない。CPUコア互換性の調査が必要 |
 | ScummVM #56 | v2.2.0のSCUMM/Skyを再ビルド。旧OPKのpluginを外し、必要なlibmadをOPK内へ同梱。START＋SELECTをmain menuイベントへ変更 | Monkey Island 2の正しいイントロ画面と変化するPCM出力、ALSAエラーなしを確認。約6更新/秒はこのイントロの描画頻度であり、処理能力不足と断定しない。本編・修正後メニューと正常終了は未完了。全エンジン対応ではない |
 | UAE4All #30 | GCW0版を現SDKで再ビルドし、private HOMEにSD2上のKickstartを参照させる | 起動処理は進むが画像が崩れ、音声無音。本編50 FPS以上未確認。追加なし |
-| Unreal Speccy #61 | ソースが入手できたGCW0版0.0.59を再ビルド。START＋SELECTの即終了をメニュー表示へ変更 | 10th Frameのタイトルからボウリングのデモ画面へ進み、約59〜60更新/秒、PCM変化・クリッピング0・ALSAエラー0。START＋SELECT → メニュー → Quitの実終了0・FE復帰も確認。取得した本編はDEMO表示で、実プレイ入力の確証がないため追加保留。元のカタログ0.0.86.12と同じ版ではない |
-| EasyRPG #10 | Player 0.6.2.3 / liblcf、pixman、固定小数点speexdspを再ビルド。SDKのmpg123 / sndfileをOPK内へ同梱。Aを決定、Bをキャンセルへ対応。保存先をSD1のprivate HOMEへ分離 | ゲーム構成を読み込めるがMP3読込みエラー後にSIGSEGV・実終了139。停止命令を採取し、`speex_resampler_skip_zeros(NULL)`と特定。作成失敗の検査、MP3形式取得エラー処理、seek失敗伝播を追加して再試験。音声正常がまだ未確認なのでApps追加なし |
+| Unreal Speccy #61 | ソースが入手できたGCW0版0.0.59を再ビルド。START＋SELECTの即終了をメニュー表示へ変更。START単独の仮想キーボードは離した時に開き、同時押しと競合させない | 10th Frameのタイトルからボウリングのデモ画面へ進み、約59〜60更新/秒、PCM変化・クリッピング0・ALSAエラー0。START＋SELECT → メニュー → Quitの実終了0・FE復帰も確認。取得した本編はDEMO表示で、実プレイ入力の確証がないため追加保留。元のカタログ0.0.86.12と同じ版ではない |
+| EasyRPG #10 | Player 0.6.2.3 / liblcf、pixman、固定小数点speexdspを再ビルド。SDKのmpg123 / sndfileをOPK内へ同梱。Aを決定、Bをキャンセルへ対応。保存先をSD1のprivate HOMEへ分離 | ゲーム構成を読み込めるがMP3読込みエラー後にSIGSEGV・実終了139。停止命令を採取し、`speex_resampler_skip_zeros(NULL)`と特定。作成失敗の検査、MP3形式取得エラー処理、seek失敗伝播とFILE二重解放を修正。mpg123のAPIとstdio callbackを64bitファイル位置で統一するとMP3エラーが消え、Map0018からMap0007へ進む。約28〜37更新/秒で50以上に未達のためApps追加なし |
 
 これらは専用試験用OPKであり、通常FEのコアや本体共有ライブラリを置換していない。CPUは996,000 kHzのまま。カーネル、スリープ、電源、既存の受入れ済みエミュは今回の変更対象外。
 
@@ -45,3 +45,18 @@ scripts/build-rg280v-standalone-health.sh
 - `output/rg280v-apps/rg350-device-audit-uae-source-first-20261118/`
 
 openMSXはTclのprivate cross-buildまで進めたが、エミュレータ本体のビルド・動作修正は未完了であり、上の6実装の実機試験件数へ含めない。XMAME、Game & Watch等の残件も修正完了とはしていない。
+
+## EasyRPGのクラッシュ位置と追試
+
+SDLのsignal parachuteを外して採取した停止位置は `pc=0x734f2c`, `ra=0x573634`, fault address `0x14`。同じ非strip ELFのaddr2line / 逆アセンブルで `speex_resampler_skip_zeros` と `AudioResampler::Open(FILE*)` に対応し、NULL+0x14の参照と確認した。NULL検査だけを加えた中間版では、失敗後にdecoderとcallerが同じFILEを閉じて実終了134になった。FILEの所有者を一つにして、この二次停止も修正した。
+
+`easyrpg-ownership-fixed-20261118` はMP3エラーを出しながらMap0018まで進行。`easyrpg-mpg123-lfs-20261118` はMP3エラーなしでMap0007まで進み、PCMの変化・クリッピング率0・ALSAエラー0、終了139/134なしで監査時間45秒を完走した。ただし終了124はwatchdogであり、これを正常メニュー終了とはしていない。スクリーンショットで320×240の内容が320×480の中央へ等倍配置されていたため、RG280Vの縦2倍走査に合わせた表示修正も追加し、別途追試する。
+
+既存の目視候補8入口と端末上の4パッケージSHA-256は継続作業後にも元の候補manifestと一致。EasyRPGゲーム全体の照合結果は722行。
+
+### 最終追試
+
+- `easyrpg-display-lfs-final-20261118`: 上下の黒帯を除き320×480全体へ縦2倍表示したDRM画像を取得。MP3のseekエラー・SIGSEGV・abortなしでMap0007を表示し、PCMは44.1 kHz stereo、クリッピング率0、ALSAエラー0。約28〜31更新/秒で条件未達。監査watchdogによる終了後FEへ復旧。実機スピーカーの聴取承認とメニューからの正常終了は未確認。
+- `unreal-keyboard-and-exit-20261118`: START単独の試行を挟んでもSTART＋SELECT → Quitで実終了0、FEへ戻る。約60更新/秒。仮想キーボードの取得画像では表示を確証できず、キーボード／実プレイ入力は残件。追加候補なし。
+
+今回の新規Apps追加は0件。性能と画面・音声の条件を満たしたことにせず、既存8入口を維持する。修正済みソースと未解決事項を保存し、未合格項目を「恒久除外」にはしない。

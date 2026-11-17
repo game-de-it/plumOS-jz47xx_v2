@@ -1,8 +1,8 @@
 diff --git a/platform/sdl/sdl_keys_dingoo.cpp b/platform/sdl/sdl_keys_dingoo.cpp
-index 95bcb8c..e27e71e 100644
+index 95bcb8c..9a6e092 100644
 --- a/platform/sdl/sdl_keys_dingoo.cpp
 +++ b/platform/sdl/sdl_keys_dingoo.cpp
-@@ -76,16 +76,19 @@ namespace xPlatform
+@@ -76,16 +76,24 @@ namespace xPlatform
  		case DINGOO_BUTTON_X:		return '1';
  		case DINGOO_BUTTON_Y:		return ' ';
  	
@@ -20,8 +20,13 @@ index 95bcb8c..e27e71e 100644
 +        case DINGOO_BUTTON_START:
 +        {
 +            static bool menu_chord = false;
++            const bool start_released = _key == DINGOO_BUTTON_START && b_start && !(_flags & KF_DOWN);
 +            if (_key == DINGOO_BUTTON_SELECT) b_select = (_flags & KF_DOWN) != 0;
 +            else b_start = (_flags & KF_DOWN) != 0;
++            if (start_released && !menu_chord) {
++                _flags |= KF_DOWN; // keyboard is a one-shot action, delayed until release
++                return 'k';
++            }
 +            if (!b_select && !b_start) menu_chord = false;
 +            if (b_select && b_start && !menu_chord) {
 +                menu_chord = true;
@@ -32,7 +37,7 @@ index 95bcb8c..e27e71e 100644
  
  		case DINGOO_BUTTON_L:
  			l_shift = _flags&KF_DOWN;
-@@ -118,8 +121,6 @@ namespace xPlatform
+@@ -118,8 +126,6 @@ namespace xPlatform
  		default:
  			break;
  		}
@@ -41,3 +46,12 @@ index 95bcb8c..e27e71e 100644
  		return 0;
  	}
  
+@@ -146,7 +152,7 @@ namespace xPlatform
+ 				if(r_shift)
+ 					flags |= KF_ALT;
+ 				byte key = TranslateKey(e.key.keysym.sym, flags);
+-				Handler()->OnKey(key, OpJoyKeyFlags());
++				Handler()->OnKey(key, flags | OpJoyKeyFlags());
+ 			}
+ 			break;
+ 			default:
