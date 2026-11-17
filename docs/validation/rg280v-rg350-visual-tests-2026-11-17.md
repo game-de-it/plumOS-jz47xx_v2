@@ -17,3 +17,9 @@ AtariとFBAのROMは `<local-path>` から試験用ディレクトリへコピ�
 ## Atari800の目視結果
 
 ユーザーが3項目を選んだところ、ボタン操作でいずれも終了した。端末の `runs.tsv` ではCavernsが3秒、Minerが3秒、Food Fightが1秒で終了し、全て終了コード10。各 `atari_*.log` は0バイトで、標準出力・標準エラーに説明はない。直後のカーネルログにAtari800のページフォルトやOOMは見当たらなかった。OPKのdesktopは `Exec=atari800 %f` であり、ROM引数の指定はある。OPK付属の説明書ではSELECTがメニュー、Aが発射、十字キーが移動となっているが、このRG280V試験ではその動作まで進めていない。3 ROMで同じ終了コードのため、ROM個別の合否を判断せず、起動・入力経路を調べる。
+
+## FBA44の目視結果と後続ビルド
+
+ユーザーはKung-Fu Masterで音声は正常だが、入力が効かず画面が二重に崩れると報告。DRM画像でも320×240の全面に走査線・色化け・重複表示を確認した。試験用ROMはOPKに読み込まれていた。旧FBA44の問題なので他の2 ROMだけで合格判定しない。TERMに応答しなかったため該当 `fbasdl.dge` にKILLを送り、FEのApps画面へ正常復帰した。キャプチャはGit管理外の `output/rg280v-apps/rg350-visual-tests/fba-kungfum-user-view.png`。
+
+配布元 `plrguez/fba-sdl` の `r19_2021-10-18-.44_od_beta-fix-06` はRG280Vを対象にし、先行修正にKung-Fu Masterの256×246解像度と表示面の扱いが含まれる。ただし配布バイナリのELF属性はMIPS hard floatで、このplumOS環境のsoft float ABIに一致しない。13.5 MBのOPKは比較用に隔離して保存し、通常のFEには登録しない。ソースは取得済みで、soft float再ビルドと入力割当の確認が必要。
