@@ -105,3 +105,5 @@ ROM候補とソース対策の最新状況は [ROM・ソース再確認表](rg28
 - Atari800とTemperは正式なFE経路へ統合した後、ROM選択、設定保存、終了後FE復帰を再確認する。
 - FBA44はKung-Fu Master以外を汎用的に合格としない。Battle Chopperは実プレイと音質、Ninja Spiritは性能改善が残る。
 - Race Explorer、OhBoy、Genesis Plus GXを優先して目視確認する。PokeMini、CrocoDSも50 FPS以上の候補として本編を確認する。
+
+2026-11-18追記: Genesis Plus GXのBare KnuckleはALSA直接出力版でユーザーが正常動作を確認した。SDL版で生じた低速化は撤回し、[音声修正記録](rg280v-opk-audio-fixes-2026-11-18.md)のALSA版を比較候補に使う。

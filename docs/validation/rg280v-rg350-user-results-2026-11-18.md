@@ -17,3 +17,5 @@
 OhBoyの残存プロセス `ohboy.gcw0` を確認した時点では、カーネルの `drm_atomic_helper_wait_for_vblanks.part.0` で画面更新同期を待っていた。標準ログは `Default Settings restored` とSDL Joystick初期化成功のみで、音声エラーやメニュー操作の記録はなかった。TERMを送り、その後残存していないことを確認してFEを再起動した。最終的にFEプロセスの稼働とOhBoyプロセスの不在を確認した。この時点ではOhBoy本体・Genesis Plus GX本体のソース修正・再ビルドは未実施で、両問題を解決済みとはしない。
 
 後続のソース修正・試験・端末反映は [音声・メニュー修正記録](rg280v-opk-audio-fixes-2026-11-18.md) を参照。両方を再ビルドして比較Appsへ反映し、機械試験を通過。実機聴取での解消は確認待ち。
+
+Genesis Plus GXの後続ALSA版について、ユーザーが正常動作を確認した。SDL版での異音・低速化はALSA版での正常結果へ更新。OhBoyは別の確認結果が届くまで音声改善を確定しない。

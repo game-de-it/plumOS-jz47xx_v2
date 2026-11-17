@@ -6,10 +6,19 @@ index 71dd509..68c8c79 100644
 -    gzFile *gd = gzopen(filename, "rb");
 +    gzFile gd = gzopen(filename, "rb");
 diff --git a/gcw0/main.c b/gcw0/main.c
-index 5724ce0..4aad686 100644
+index 5724ce0..054c89a 100644
 --- a/gcw0/main.c
 +++ b/gcw0/main.c
-@@ -81,18 +81,10 @@ static void sdl_sound_callback(void *userdata, Uint8 *stream, int len)
+@@ -0,0 +1,2 @@
++#include <alsa/asoundlib.h>
++#include <errno.h>
+@@ -79 +81,4 @@ static short soundframe[SOUND_SAMPLES_SIZE];
+-static void sdl_sound_callback(void *userdata, Uint8 *stream, int len)
++static snd_pcm_t *plum_pcm;
++static Uint32 plum_retry;
++
++static int sdl_sound_init(void)
+@@ -81,18 +86,11 @@ static void sdl_sound_callback(void *userdata, Uint8 *stream, int len)
 -    if(sdl_sound.current_emulated_samples < len)
 -    {
 -        memset(stream, 0, len);
@@ -28,34 +37,137 @@ index 5724ce0..4aad686 100644
 -               sdl_sound.current_emulated_samples);
 -        sdl_sound.current_pos = sdl_sound.buffer + sdl_sound.current_emulated_samples;
 -    }
-+ int used = sdl_sound.current_emulated_samples;
-+ int count = used < len ? used : len;
-+ memset(stream, 0, len);
-+ if (count) {
-+  memcpy(stream, sdl_sound.buffer, count);
-+  used -= count;
-+  memmove(sdl_sound.buffer, sdl_sound.buffer + count, used);
-+  sdl_sound.current_emulated_samples = used;
-+  sdl_sound.current_pos = sdl_sound.buffer + used;
++ int rc = snd_pcm_open(&plum_pcm, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
++ if (rc >= 0) rc = snd_pcm_set_params(plum_pcm, SND_PCM_FORMAT_S16_LE,
++   SND_PCM_ACCESS_RW_INTERLEAVED, 2, SOUND_FREQUENCY, 1, 120000);
++ if (rc < 0) {
++  fprintf(stderr, "Genesis ALSA open: %s\n", snd_strerror(rc));
++  if (plum_pcm) snd_pcm_close(plum_pcm);
++  plum_pcm = NULL;
++  return 0;
 + }
-@@ -104,0 +97 @@ static int sdl_sound_init()
-+    memset(&as_desired, 0, sizeof(as_desired));
-@@ -143 +136 @@ static int sdl_sound_init()
++ fprintf(stderr, "Genesis ALSA ready: %d Hz stereo\n", SOUND_FREQUENCY);
++ return 1;
+@@ -101 +99 @@ static void sdl_sound_callback(void *userdata, Uint8 *stream, int len)
+-static int sdl_sound_init()
++static void sdl_sound_close(void)
+@@ -103,38 +101,2 @@ static int sdl_sound_init()
+-    int n;
+-    SDL_AudioSpec as_desired, as_obtained;
+-
+-    if(SDL_Init(SDL_INIT_AUDIO) < 0)
+-    {
+-        MessageBox(NULL, "SDL Audio initialization failed", "Error", 0);
+-        return 0;
+-    }
+-
+-    as_desired.freq     = SOUND_FREQUENCY;
+-    as_desired.format   = AUDIO_S16LSB;
+-    as_desired.channels = 2;
+-    as_desired.samples  = SOUND_SAMPLES_SIZE;
+-    as_desired.callback = sdl_sound_callback;
+-
+-    if(SDL_OpenAudio(&as_desired, &as_obtained) == -1)
+-    {
+-        MessageBox(NULL, "SDL Audio open failed", "Error", 0);
+-        return 0;
+-    }
+- 
+-    if(as_desired.samples != as_obtained.samples)
+-    {
+-        MessageBox(NULL, "SDL Audio wrong setup", "Error", 0);
+-        return 0;
+-    }
+- 
+-    sdl_sound.current_emulated_samples = 0;
+-    n = SOUND_SAMPLES_SIZE * 2 * sizeof(short) * 20;
+-    sdl_sound.buffer = (char*)malloc(n);
+-    if(!sdl_sound.buffer)
+-    {
+-        MessageBox(NULL, "Can't allocate audio buffer", "Error", 0);
+-        return 0;
+-    }
+-    memset(sdl_sound.buffer, 0, n);
+-    sdl_sound.current_pos = sdl_sound.buffer;
+-    return 1;
++ if (plum_pcm) snd_pcm_close(plum_pcm);
++ plum_pcm = NULL;
+@@ -142,2 +104,2 @@ static int sdl_sound_init()
+- 
 -static void sdl_sound_update(enabled)
-+static void sdl_sound_update(int enabled)
-@@ -152 +145,8 @@ static void sdl_sound_update(enabled)
++
++static void sdl_sound_pause(int pause)
+@@ -145,17 +107,3 @@ static void sdl_sound_update(enabled)
+-    int size = audio_update(soundframe) * 2;
+- 
+-    if (enabled)
+-    {
+-        int i;
+-        short *out;
+- 
 -        SDL_LockAudio();
-+        Uint32 started = SDL_GetTicks();
-+        for (;;) {
-+            SDL_LockAudio();
-+            if (sdl_sound.current_emulated_samples + size * (int)sizeof(short) <= SOUND_SAMPLES_SIZE * 2 * (int)sizeof(short) * 20) break;
-+            SDL_UnlockAudio();
-+            if (SDL_GetTicks() - started > 200) return;
-+            SDL_Delay(1);
-+        }
-@@ -997 +997 @@ static int gcw0menu(void)
+-        out = (short*)sdl_sound.current_pos;
+-        for(i = 0; i < size; i++)
+-        {
+-            *out++ = soundframe[i];
+-        }
+-        sdl_sound.current_pos = (char*)out;
+-        sdl_sound.current_emulated_samples += size * sizeof(short);
+-        SDL_UnlockAudio();
+-    }
++ if (!plum_pcm) return;
++ int rc = pause ? snd_pcm_drop(plum_pcm) : snd_pcm_prepare(plum_pcm);
++ if (rc < 0) sdl_sound_close();
+@@ -163,2 +111,2 @@ static void sdl_sound_update(enabled)
+- 
+-static void sdl_sound_close()
++
++static void sdl_sound_update(int enabled)
+@@ -166,4 +114,28 @@ static void sdl_sound_close()
+-    SDL_PauseAudio(1);
+-    SDL_CloseAudio();
+-    if (sdl_sound.buffer)
+-        free(sdl_sound.buffer);
++ int frames = audio_update(soundframe);
++ if (!enabled) return;
++ if (!plum_pcm) {
++  Uint32 now = SDL_GetTicks();
++  if ((int)(now - plum_retry) < 0) return;
++  plum_retry = now + 1000;
++  if (!sdl_sound_init()) return;
++ }
++ static unsigned int calls, missed, recovered;
++ static Uint32 since;
++ if (!since) since = SDL_GetTicks();
++ snd_pcm_sframes_t written = snd_pcm_writei(plum_pcm, soundframe, frames);
++ if (written < 0) missed += frames;
++ else if (written < frames) missed += frames - written;
++ if (++calls == 300) {
++  fprintf(stderr, "Genesis ALSA frames=300 elapsed_ms=%u missed_samples=%u recoveries=%u\n",
++    SDL_GetTicks() - since, missed, recovered);
++  calls = missed = recovered = 0;
++  since = SDL_GetTicks();
++ }
++ if (written < 0 && written != -EAGAIN) {
++  recovered++;
++  int rc = snd_pcm_recover(plum_pcm, written, 1);
++  if (rc < 0) {
++   fprintf(stderr, "Genesis ALSA write: %s\n", snd_strerror(rc));
++   sdl_sound_close();
++  }
++ }
+@@ -837 +809 @@ static int gcw0menu(void)
+-    SDL_PauseAudio(1);
++    sdl_sound_pause(1);
+@@ -997 +969 @@ static int gcw0menu(void)
 -            tempbgSurface = IMG_Load( "./MD.png" );
 +            tempbgSurface = IMG_Load( "./md.png" );
+@@ -1828 +1800 @@ static int gcw0menu(void)
+-    SDL_PauseAudio(0);
++    sdl_sound_pause(0);
+@@ -2510 +2482 @@ int main (int argc, char **argv)
+-    if(use_sound) SDL_PauseAudio(0);
++    if(use_sound) sdl_sound_pause(0);
 diff --git a/gcw0/utils.c b/gcw0/utils.c
 index a350aef..d90669c 100644
 --- a/gcw0/utils.c

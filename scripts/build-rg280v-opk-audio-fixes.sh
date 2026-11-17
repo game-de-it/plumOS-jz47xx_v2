@@ -28,7 +28,7 @@ docker run --rm --platform linux/arm64 -v "$root:/workspace" \
  cd ../genesis-gx-src/gcw0
  make -j8 CC="$t/mipsel-gcw0-linux-uclibc-gcc" \
  CFLAGS="-O3 -mips32r2 -msoft-float -fcommon -I$inc -D_GNU_SOURCE=1 -D_REENTRANT -std=gnu99" \
- LIBS="-lSDL -lSDL_ttf -lSDL_image -lz -lm -lvorbisfile" \
+ LIBS="-lSDL -lSDL_ttf -lSDL_image -lz -lm -lvorbisfile -lasound" \
  INCLUDES="-I../core -I../core/z80 -I../core/m68k -I../core/sound -I../core/sound/minimp3 -I../core/input_hw -I../core/cart_hw -I../core/cart_hw/svp -I../core/cd_hw -I../core/ntsc -I../gcw0" \
  >/workspace/output/rg280v-apps/genesis-gx-build.log 2>&1
  cd /workspace
