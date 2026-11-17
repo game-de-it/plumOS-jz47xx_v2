@@ -50,7 +50,7 @@ Atari800とTemperのパッチは上流ソースとの差分をゼロ行コンテ
 
 ## SELECT＋STARTメニュー修正
 
-FBA Kung-Fu Masterの映像・操作・音声はユーザーの目視で正常だったが、SELECT＋STARTではメニューを開けず終了できなかった。実行中のFBAはTERMに応答しなかったため、そのプロセスだけをKILLし、FEへ戻した。FBAの上流実装はSELECT＋STARTを2人同時スタートに使い、メニューは別のキーへ割り当てていた。`patches/rg280v-fba-menu.patch` でSELECT＋STARTを優先してGUIへ送るよう変更した。
+FBA Kung-Fu Masterの映像・操作・音声はユーザーの目視で正常だったが、SELECT＋STARTではメニューを開けず終了できなかった。実行中のFBAはTERMに応答しなかったため、そのプロセスだけをKILLし、FEへ戻した。FBAの上流実装はSELECT＋STARTを2人同時スタートに使い、メニューは別のキーへ割り当てていた。`patches/rg280v-fba-input-audio.patch` でSELECT＋STARTを優先してGUIへ送るよう変更した。
 
 同じ操作で他の試験用エミュもメニューを開けるよう、Atari800はSELECT単独をコンソールSELECT、START単独をコンソールSTARTとして残し、同時押しだけをGUIに送るよう `patches/rg280v-atari800-input-video.patch` を更新した。TemperはSDLのSELECT・STARTキー状態を追跡し、同時押しを1回だけメニュー操作として送るよう `patches/rg280v-temper-noipu.patch` を更新した。電源ボタンはエミュメニューには使用しない。
 
@@ -65,4 +65,12 @@ TemperのSDLソースはCRLFなので、対応するパッチもCRLFを保持し
 
 `patches/rg280v-atari800-input-video.patch` に `PLUMOS_RG280V` ビルド時の320×240解像度固定とフルスクリーン指定を追加した。メニュー・ゲーム共通のSDL表示設定だけを修正し、入力・ROM・他の試験用エミュは変更していない。`scripts/build-rg280v-atari800-test.sh` は設定済みのAtari800 4.1.0ソースと展開済み試験OPKを入力として、パッチ適用、soft floatビルド、OPK再作成を実行する。
 
-修正版のCaverns of Marsは、ゲーム・SELECT＋STARTメニューともDRM画像が320×240になり、ゲーム絵とメニュー文字が画面の高さを使うようになった。取得画像はGit管理外の `output/rg280v-apps/rg350-visual-tests/atari-240-{game,menu}.png`。OPKのホスト・端末SHA-256は `12b3d15309e984bfc9744ec30ecb11e0aed8d8413db1c49a3f5517d606eb4b43` で一致し、試験後にFE起動を確認した。実機での読みやすさとゲーム・メニュー復帰の確認は待機中。
+修正版のCaverns of Marsは、ゲーム・SELECT＋STARTメニューともDRM画像が320×240になり、ゲーム絵とメニュー文字が画面の高さを使うようになった。取得画像はGit管理外の `output/rg280v-apps/rg350-visual-tests/atari-240-{game,menu}.png`。OPKのホスト・端末SHA-256は `12b3d15309e984bfc9744ec30ecb11e0aed8d8413db1c49a3f5517d606eb4b43` で一致し、試験後にFE起動を確認した。その後、ユーザーがAtariの全試験ゲームについて実機動作を正常と確認した。
+
+## FBA Ninja Spiritの音声停止とメニュー復帰
+
+ユーザーはNinja Spiritのゲーム中に停止し、その後の更新版ではメニューをBで閉じてゲームへ戻る際にFEへ落ちたと報告した。停止時の `fbasdl.dge` は `futex_wait_queue` で待機し、ログには `ALSA write failed (unrecoverable): Input/output error` が残った。上流のSDL音声リングは空きがなくなると無期限に待つため、コールバック停止後もゲームが進めなくなる。`patches/rg280v-fba-input-audio.patch` に30 msの待機上限と音声破棄を追加した。コールバックが再開した場合に備え、出力バッファは先に無音で初期化する。メニュー前後と設定保存後に診断ログも出す。
+
+比較版ではBでメニューを閉じる操作を3回繰り返しても15秒後までゲームプロセスが生存した。別の比較版でSDLの音声デバイスをメニュー中に停止しない方式も試したが、ALSAエラーは残ったので採用していない。現在の版ではBからの復帰後に `FBA menu: returned to game` まで記録され、15秒後もプロセスが生存し、ALSAエラーが出ない試行もあった。一方、メニューを開いた試行ではALSAエラーがなお再現している。メニューを開かず13秒動かした試行では出なかった。FEへ突然戻る現象の原因はまだ特定できていない。ログ末尾で復帰処理のどこまで進んだかを判別できる状態にした。
+
+現在の診断用FBA OPKはホストと端末でSHA-256 `ebcb78dcf88cb575ea47712144bb6b0e578eeef44a6a04f7a578115c9acffc24` が一致する。自動試験後はFEプロセスの復旧を確認した。実機でゲームプレイ、音、Bからの復帰、FEへの意図しない終了がないかを再確認する必要がある。

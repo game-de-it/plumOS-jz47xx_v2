@@ -8,7 +8,7 @@ src="$work/fba-sdl-src"
 release="$work/fba-multi-od-beta-fix06.opk"
 output="$work/fba44-rg280v-softfloat.opk"
 stage="$work/fba-softfloat-stage"
-patch="$root/patches/rg280v-fba-menu.patch"
+patch="$root/patches/rg280v-fba-input-audio.patch"
 
 for path in "$src/Makefile.dingux" "$release" \
     "$work/avir-2.5/avir.h" \
