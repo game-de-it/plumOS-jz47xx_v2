@@ -68,8 +68,40 @@ static void report(const char *kind)
     }
 }
 
+/* Optional bounded PCM evidence; normal runtime never sets this variable. */
+static void capture_pcm(const Uint8 *stream, int len)
+{
+    static int initialized;
+    static FILE *pcm;
+    static uint64_t skip_bytes, remaining;
+    if (!initialized) {
+        initialized = 1;
+        const char *path = getenv("PLUMOS_STANDALONE_PCM_DUMP");
+        if (!path || !audio_rate || !audio_channels) return;
+        unsigned width = (audio_format & 0xff) / 8;
+        if (width != 1 && width != 2) return;
+        const char *start = getenv("PLUMOS_STANDALONE_PCM_START_SECONDS");
+        unsigned seconds = start ? strtoul(start, NULL, 10) : 0;
+        if (seconds > 240) return;
+        uint64_t bytes_per_second = (uint64_t)audio_rate * audio_channels * width;
+        skip_bytes = bytes_per_second * seconds;
+        remaining = bytes_per_second * 8;
+        pcm = fopen(path, "wb");
+    }
+    if (!pcm || !remaining) return;
+    unsigned skip = skip_bytes < (unsigned)len ? (unsigned)skip_bytes : (unsigned)len;
+    skip_bytes -= skip;
+    stream += skip;
+    len -= skip;
+    unsigned count = remaining < (unsigned)len ? (unsigned)remaining : (unsigned)len;
+    if (count && fwrite(stream, 1, count, pcm) != count) remaining = 0;
+    else remaining -= count;
+    if (!remaining) { fclose(pcm); pcm = NULL; }
+}
+
 static void measure_audio(const Uint8 *stream, int len)
 {
+    capture_pcm(stream, len);
     unsigned samples, i;
     audio_last = now_ns();
     if (!audio_first) audio_first = audio_last;
@@ -385,6 +417,12 @@ int SDL_PollEvent(SDL_Event *event)
     if (!real_poll) real_poll = dlsym(RTLD_NEXT, "SDL_PollEvent");
     if (!real_poll) return 0;
     count = real_poll(event);
+    if (count > 0 && event && getenv("PLUMOS_STANDALONE_INPUT_LOG") &&
+        (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP)) {
+        const char *path = getenv("PLUMOS_STANDALONE_HEALTH_LOG");
+        FILE *out = path ? fopen(path, "a") : NULL;
+        if (out) { fprintf(out, "input\ttype=%u\tkey=%u\n", event->type, event->key.keysym.sym); fclose(out); }
+    }
     if (count || !event) return count;
     return synthetic_key(event);
 }

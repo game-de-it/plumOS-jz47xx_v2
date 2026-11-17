@@ -11,6 +11,89 @@ index b143318..4ac7d5d 100644
                  effect.h frame_skip.c messages.c screen.c timer.h \
                  emu.c frame_skip.h messages.h screen.h unzip.h emu.h \
                  neocrypt.c sound.c unzip.c resfile.h debug.c debug.h \
+diff --git a/src/conf.c b/src/conf.c
+index 55144f0..350f3f8 100644
+--- a/src/conf.c
++++ b/src/conf.c
+@@ -32,6 +32,7 @@
+ #include "conf.h"
+ #include "emu.h"
+ #include "memory.h"
++#include "sound.h"
+ #include "gnutil.h"
+ 
+ static struct {
+@@ -48,6 +49,8 @@ void cf_cache_conf(void)
+   char *system;
+   conf.show_fps = CF_BOOL(cf_get_item_by_name("showfps"));
+   conf.sound = CF_BOOL(cf_get_item_by_name("sound"));
++  /* The linked YM2610 core takes its clock from this field, not sound.h. */
++  conf.sample_rate = SAMPLE_RATE;
+   conf.a_btn = CF_VAL(cf_get_item_by_name("a_btn"));
+   conf.b_btn = CF_VAL(cf_get_item_by_name("b_btn"));
+   conf.x_btn = CF_VAL(cf_get_item_by_name("x_btn"));
+diff --git a/src/emu.c b/src/emu.c
+index d2da5a3..2cc2c2c 100644
+--- a/src/emu.c
++++ b/src/emu.c
+@@ -117,7 +117,7 @@ void init_sound(void)
+ {
+ 
+   if(conf.sound) {
+-    init_sdl_audio();
++    if (!init_sdl_audio()) conf.sound = 0;
+   }
+ 
+   cpu_z80_init();
+@@ -289,6 +289,7 @@ void main_loop(void)
+       reset_frame_skip();
+     }
+ 
++    if(conf.sound) SDL_LockAudio();
+     if(conf.sound) {
+       for(i = 0; i < nb_interlace; i++) {
+         cpu_z80_run(cpu_z80_timeslice_interlace);
+@@ -297,6 +298,7 @@ void main_loop(void)
+     }
+ 
+     tm_cycle = cpu_68k_run(cpu_68k_timeslice - tm_cycle);
++    if(conf.sound) SDL_UnlockAudio();
+     a = neo_interrupt();
+     memory.watchdog++;
+     if(memory.watchdog > 7) {  /* Watchdog reset after ~0.13 == ~7.8 frames */
+diff --git a/src/event.c b/src/event.c
+index 9521940..ddd982b 100644
+--- a/src/event.c
++++ b/src/event.c
+@@ -111,8 +111,28 @@ void set_abxylr(uint32_t v, uint32_t down)
+ int handle_event(void)
+ {
+   SDL_Event event = {0};
++  static int start_down, select_down, menu_latched;
+ 
++  if (menu_latched) {
++    /* The menu consumes releases too; do not retain its chord on resume. */
++    SDL_PumpEvents();
++    Uint8 *keys = SDL_GetKeyState(NULL);
++    if (!keys[SDLK_RETURN] && !keys[SDLK_ESCAPE])
++      start_down = select_down = menu_latched = 0;
++  }
+   while(SDL_PollEvent(&event)) {
++    if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
++      if (event.key.keysym.sym == SDLK_RETURN) start_down = event.type == SDL_KEYDOWN;
++      if (event.key.keysym.sym == SDLK_ESCAPE) select_down = event.type == SDL_KEYDOWN;
++      if (!start_down && !select_down) menu_latched = 0;
++      if (start_down && select_down && !menu_latched) {
++        menu_latched = 1;
++        memory.intern_coin |= 1;
++        memory.intern_start |= 1;
++        return 1;
++      }
++      if (menu_latched) continue;
++    }
+     switch(event.type) {
+     case SDL_KEYUP:
+     case SDL_KEYDOWN:
 diff --git a/src/generator68k/Makefile.am b/src/generator68k/Makefile.am
 index bdc6c64..968a319 100644
 --- a/src/generator68k/Makefile.am
@@ -144,7 +227,7 @@ index bf30fcf..f59a961 100644
        break;
      }
 diff --git a/src/menu.c b/src/menu.c
-index 142fd41..63b8feb 100644
+index 142fd41..567cce7 100644
 --- a/src/menu.c
 +++ b/src/menu.c
 @@ -430,6 +430,7 @@ int gn_init_skin(void)
@@ -155,3 +238,82 @@ index 142fd41..63b8feb 100644
    pbar_logo = SDL_CreateRGBSurface(SDL_SWSURFACE, gngeo_logo->w, gngeo_logo->h, 32, 0xff, 0xff00, 0xff0000, 0xff000000);
    SDL_SetAlpha(gngeo_logo, 0, 0);
    init_back();
+@@ -770,9 +771,9 @@ static int load_state_action(GN_MENU_ITEM *self, void *param)
+           }
+           slot_img = SDL_ConvertSurface(load_state_img(conf.game, slot), menu_buf->format, SDL_SWSURFACE);
+           break;
+-        case SDLK_LCTRL:
+-          return MENU_STAY;
+         case SDLK_LALT:
++          return MENU_STAY;
++        case SDLK_LCTRL:
+           printf("Loading state %p!!\n", buffer);
+           load_state(conf.game, slot);
+           printf("Loaded state %p!!\n", buffer);
+@@ -850,10 +851,10 @@ static int save_state_action(GN_MENU_ITEM *self, void *param)
+             slot_img = SDL_ConvertSurface(load_state_img(conf.game, slot),
+                                           menu_buf->format, SDL_SWSURFACE);
+           break;
+-        case SDLK_LCTRL:
++        case SDLK_LALT:
+           return MENU_STAY;
+           break;
+-        case SDLK_LALT:
++        case SDLK_LCTRL:
+         case SDLK_LSHIFT:
+           save_state(conf.game, slot);
+           printf("Save state!!\n");
+@@ -915,10 +916,10 @@ int menu_event_handling(struct GN_MENU *self)
+           self->current = self->nb_elem - 1;
+         }
+         break;
+-      case SDLK_LCTRL:
++      case SDLK_LALT:
+         return MENU_CLOSE;
+         break;
+-      case SDLK_LALT:
++      case SDLK_LCTRL:
+       case SDLK_SPACE:
+         mi = gn_menu_get_item_by_index(self, self->current);
+         if(mi && mi->action) {
+diff --git a/src/sound.c b/src/sound.c
+index 1ee8d93..cd2acc6 100644
+--- a/src/sound.c
++++ b/src/sound.c
+@@ -52,11 +52,19 @@ int init_sdl_audio(void)
+   if(sound_initialize == GN_TRUE) {
+     close_sdl_audio();
+   }
++  if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
++    printf("PLUMOS_AUDIO init failed: %s\n", SDL_GetError());
++    return GN_FALSE;
++  }
+   sound_initialize = GN_TRUE;
+-  SDL_InitSubSystem(SDL_INIT_AUDIO);
+ 
+-  desired = (SDL_AudioSpec *) malloc(sizeof(SDL_AudioSpec));
+-  obtain = (SDL_AudioSpec *) malloc(sizeof(SDL_AudioSpec));
++  desired = (SDL_AudioSpec *) calloc(1, sizeof(SDL_AudioSpec));
++  obtain = (SDL_AudioSpec *) calloc(1, sizeof(SDL_AudioSpec));
++  if (!desired || !obtain) {
++    printf("PLUMOS_AUDIO allocation failed\n");
++    close_sdl_audio();
++    return GN_FALSE;
++  }
+   desired->freq = SAMPLE_RATE;
+   desired->samples = NB_SAMPLES;
+ 
+@@ -64,7 +72,12 @@ int init_sdl_audio(void)
+   desired->channels = 2;
+   desired->callback = update_sdl_stream;
+   desired->userdata = NULL;
+-  SDL_OpenAudio(desired, obtain);
++  if (SDL_OpenAudio(desired, obtain) < 0) {
++    printf("PLUMOS_AUDIO open failed: %s\n", SDL_GetError());
++    close_sdl_audio();
++    return GN_FALSE;
++  }
++  printf("PLUMOS_AUDIO opened %d Hz format=%x channels=%d samples=%d\n", obtain->freq, obtain->format, obtain->channels, obtain->samples);
+   return GN_TRUE;
+ }
+ 

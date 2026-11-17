@@ -136,5 +136,53 @@
     "evidence": "output/rg280v-apps/rg350-device-audit-unreal-release-final-20261118/results.jsonl",
     "notes": "Real player (not DEMO), physical direction/fire injection, pin/score progression, SNA save/load and menu resume/exit checked. Core approx 50 Hz; SDL redraw 57-60/s. PCM rate/waveform/clipping/ALSA errors checked; speaker listening pending. START=virtual keyboard, START+SELECT=menu, A=fire with qaop caps, B=Enter, X=1, Y=Space, L/R=state save/load.",
     "binary_sha256": "fe2e114806487b0a38bb822260d3794735ae6c25a165481270c1fc8013e87c5a"
+  },
+  {
+    "id": "rg350_source_repair_39_1",
+    "number": 39,
+    "display_name": "TEST 39 GnGeo 1: Art of Fighting",
+    "rom": "/media/data/sd2/.plumos-rg350-tests-20261118/relocated/extra-roms/neogeo/aof.zip",
+    "sha256": "4147d4815405d31bc5e48c27a3b668139c86eb279a6828b07df836aadcdc4aaf",
+    "binary_sha256": "572aea4da2714bc7d3214c0a4549dbda40a15b260a70832512783d812688a5d8",
+    "review": "machine-pass-physical-pending",
+    "gameplay_fps_min": 59.23,
+    "screen_reviewed": true,
+    "audio_signal_checked": true,
+    "clean_exit": true,
+    "fe_restored": true,
+    "evidence": "output/rg280v-apps/rg350-device-audit-gngeo-aof-release-final-20261118/results.jsonl",
+    "notes": "44.1 kHz stereo; sample-clock initialization repaired. START+SELECT menu, A confirm, B resume. Physical display and speaker listening pending."
+  },
+  {
+    "id": "rg350_source_repair_39_2",
+    "number": 39,
+    "display_name": "TEST 39 GnGeo 2: Art of Fighting 2",
+    "rom": "/media/data/sd2/.plumos-rg350-tests-20261118/relocated/extra-roms/neogeo/aof2.zip",
+    "sha256": "4147d4815405d31bc5e48c27a3b668139c86eb279a6828b07df836aadcdc4aaf",
+    "binary_sha256": "572aea4da2714bc7d3214c0a4549dbda40a15b260a70832512783d812688a5d8",
+    "review": "machine-pass-physical-pending",
+    "gameplay_fps_min": 59.56,
+    "screen_reviewed": true,
+    "audio_signal_checked": true,
+    "clean_exit": true,
+    "fe_restored": true,
+    "evidence": "output/rg280v-apps/rg350-device-audit-gngeo-aof2-release-20261118/results.jsonl",
+    "notes": "44.1 kHz stereo; sample-clock initialization repaired. START+SELECT menu, A confirm, B resume. Physical display and speaker listening pending."
+  },
+  {
+    "id": "rg350_source_repair_39_3",
+    "number": 39,
+    "display_name": "TEST 39 GnGeo 3: Art of Fighting 3",
+    "rom": "/media/data/sd2/.plumos-rg350-tests-20261118/relocated/extra-roms/neogeo/aof3.zip",
+    "sha256": "4147d4815405d31bc5e48c27a3b668139c86eb279a6828b07df836aadcdc4aaf",
+    "binary_sha256": "572aea4da2714bc7d3214c0a4549dbda40a15b260a70832512783d812688a5d8",
+    "review": "machine-pass-physical-pending",
+    "gameplay_fps_min": 59.51,
+    "screen_reviewed": true,
+    "audio_signal_checked": true,
+    "clean_exit": true,
+    "fe_restored": true,
+    "evidence": "output/rg280v-apps/rg350-device-audit-gngeo-aof3-gameplay-final-20261118/results.jsonl",
+    "notes": "44.1 kHz stereo; sample-clock initialization repaired. START+SELECT menu, A confirm, B resume. Physical display and speaker listening pending."
   }
 ]
