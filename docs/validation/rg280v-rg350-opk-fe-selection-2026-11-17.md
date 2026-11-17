@@ -4,23 +4,30 @@
 
 対象はRG350 APPREPOSITORYのEmulatorsに含まれる配布OPK **62本** と、その後RG280V向けにソースから作り直したAtari800、FBA44、Temperの試験版。配布原版の8秒起動計測と、改修版の実機確認は別の結果として扱う。全62本の初回測定値は [全件監査](rg280v-rg350-standalone-audit-2026-11-17.md)、環境を合わせた再試験は [対策記録](rg280v-rg350-standalone-remediation-2026-11-17.md)、最新3本は [目視・修正記録](rg280v-rg350-visual-tests-2026-11-17.md) を参照。
 
-追加候補はゲーム中の映像・音・操作・メニュー・FEへの復帰を実機で確認した改修版に限る。短時間の画面提示FPS、音声PCMの非ゼロ、タイトルやメニューの表示だけでは合格にしない。
+判定は「目視確認へ進める候補」と「FEへ正式に追加できるもの」を区別する。約60 FPSで画面・音声が正常と見込めるものは目視確認候補とし、50 FPS以上も確認対象に含める。ゲーム実行が50 FPS未満だったものは性能面から確認優先度を下げる。50 FPSちょうどは候補側に含める。タイトル・メニューのFPSしかないものは、その条件を明記して本編確認へ進める。測定不能、ROM未指定、メニューだけ30 FPSなどの結果はゲーム性能不足とは断定しない。
 
 ## FE経路への選別
 
-| 判定 | エミュ | 対象 | 根拠・条件 |
+| 段階 | エミュ | 対象・結果 | 次の扱い |
 | --- | --- | --- | --- |
-| 追加候補 | **Atari800 4.1.0 RG280V改修版** | Atari 8-bit | Caverns of Mars、Miner 2049er、Food Fightの3本をユーザーが実機で正常確認。320×240表示と入力を修正済み。FEに機種・ROM起動経路を新設する際は統合後の起動と終了を再確認する。 |
-| 追加候補 | **Temper RG280V改修版** | PC Engine HuCard | ゲーム約60 FPSで正常。SELECT＋STARTメニューから戻った後の単独SELECT・START、再度の同時押しをユーザーが実機で正常確認。既存のPC Engine PicoArch経路へ追加する候補。 |
-| ROM限定で合格 | **FBA44 RG280V改修版** | Kung-Fu Master | 同ROMはユーザーが60 FPSで正常動作を確認。ただしNinja Spiritは約38 FPSで音飛び。アーケード全体の汎用FE経路には追加しない。個別ROM許可制ならKung-Fu Masterだけ候補。 |
-| 追試候補 | Race Explorer | Neo Geo Pocket | Baseball Stars Colorの選択画面まで約60 FPS・PCM有信号。本編の映像・音・入力・メニュー終了が未確認。 |
-| 追試候補 | OhBoy | Game Boy | タイトル約59 FPS・PCM有信号。本編と実機スピーカー音、FE復帰が未確認。既存GB経路とは別判定。 |
+| 実機確認済み・FE追加候補 | **Atari800 4.1.0 RG280V改修版** | 試験3 ROMが実機で正常。表示比率・入力修正済み | FE統合へ進める |
+| 実機確認済み・FE追加候補 | **Temper RG280V改修版** | 約60 FPS、映像・音・操作正常。メニュー復帰後の誤入力も修正確認済み | PC EngineのFE経路へ追加可能 |
+| ROMにより実機確認済み | **FBA44 RG280V改修版** | Kung-Fu Masterは60 FPSで正常。Ninja Spiritは約38 FPS・音飛び | Kung-Fu Masterは採用候補。ほかはROMごとの速度で選別 |
+| 目視確認候補・優先 | **Race Explorer** | Baseball Stars Colorの選択画面まで約60 FPS、画面とPCM信号を確認 | 本編を目視・聴取確認する |
+| 目視確認候補・優先 | **OhBoy** | GBタイトル約59 FPS、PCM信号あり | 本編の画面・音・操作を確認する |
+| 目視確認候補・優先 | **Genesis Plus GX配布OPK** | Bare Knuckleのオープニング約60 FPS、PCM信号あり。クリップを記録 | 本編の速度・音質を確認する。既存PicoArch版とは別判定 |
+| 目視確認候補 | **PokeMini** | メニュー約55 FPS | ROMを動かし、本編の映像・音・速度を確認する |
+| 目視確認候補 | **CrocoDS** | 起動画面約50 FPS、採取音声はほぼ無音 | 本編の速度と音を確認する |
+| 速度面は候補・音声確認が先 | **FCEUX配布OPK、Gambatte配布4版** | タイトル等で約59〜60 FPS。採取した音声は無音またはほぼ無音 | 発音する本編場面で再確認する。音声正常とはまだ記載しない |
+| 性能面で低優先 | **Snes9x配布OPK** | SFC ROMで約34〜37 FPS | 目視確認を急がず、性能対策が必要になった時に再検討 |
+| 性能面で低優先 | **FBA44のNinja Spirit** | 実機約38 FPS、音飛び | 性能対策を保留 |
+| 性能面で低優先 | **単体PicoDriveの32X** | After Burnerの本編約25〜56 FPS、50未満の窓が継続 | 常用候補の優先度を下げる |
 
-**現在のFE状態:** `assets/frontend/systems.json` と端末設定のSHA-256は `8c4f65c763f02a10afe687b1b6e0e699cb1ce80a961a9b5b8d2d356864c938ce` で一致。Atari800、Temper、FBA44の3本は現在 `START → Apps` の `TEST` 項目にのみ配置している。正式なFEエミュ経路にはまだ登録していない。既存FEのFCEUX、PocketSNES、Gambatte、ReGBA、PicoDrive、PCSX4ALLなどは別ビルドであり、同名の配布原版OPKの判定を流用しない。
+**現在のFE状態:** `assets/frontend/systems.json` と端末設定のSHA-256は `8c4f65c763f02a10afe687b1b6e0e699cb1ce80a961a9b5b8d2d356864c938ce` で一致（前回照合時）。Atari800、Temper、FBA44の3本は現在 `START → Apps` の `TEST` 項目にのみ配置している。正式なFEエミュ経路にはまだ登録していない。既存FEのFCEUX、PocketSNES、Gambatte、ReGBA、PicoDrive、PCSX4ALLなどは別ビルドであり、同名の配布原版OPKの判定を流用しない。
 
 ## 配布OPK全62本
 
-「初回8秒の観測」は配布原版の当時の記録で、ライブラリ不足表示などはFE相当環境で再試験すると変わる。後続結果を確認せずに採否の理由として使わない。「追加候補」はその名前の**改修版**を指し、配布原版をそのまま登録できる意味ではない。
+「初回8秒の観測」は配布原版の当時の記録で、ライブラリ不足表示などはFE相当環境で再試験すると変わる。後続結果を確認せずに採否の理由として使わない。「実機確認済み」は改修版の結果を指す。目視確認候補は、正式なFE採用前の確認対象を意味する。
 
 | No. | 配布OPK | 初回8秒の観測 | 現時点のFE判断 |
 | ---: | --- | --- | --- |
@@ -91,4 +98,4 @@
 
 - Atari800とTemperは正式なFE経路へ統合した後、ROM選択、設定保存、終了後FE復帰を再確認する。
 - FBA44はKung-Fu Master以外を汎用的に合格としない。Battle Chopperは実プレイと音質、Ninja Spiritは性能改善が残る。
-- Race ExplorerとOhBoyは本編での実機音・操作・終了を確認してから追加を判断する。
+- Race Explorer、OhBoy、Genesis Plus GXを優先して目視確認する。PokeMini、CrocoDSも50 FPS以上の候補として本編を確認する。
