@@ -18,6 +18,10 @@ seed=stage/'350teric/seed/.esoteric'
 seed.mkdir(parents=True)
 source=WORK/'source'
 for d in ['skins','translations','input']: shutil.copytree(source/'assets'/d,seed/d)
+project_skins=ROOT/'assets/rg280v-350teric/skins'
+if project_skins.exists():
+ for skin in project_skins.iterdir():
+  if skin.is_dir():shutil.copytree(skin,seed/'skins'/skin.name)
 for d in ['applications','emulators','settings','favorites']:(seed/'sections'/d).mkdir(parents=True)
 shutil.copyfile(source/'about.txt',seed/'about.txt')
 shutil.copyfile(source/'COPYING',seed/'COPYING')
@@ -100,6 +104,12 @@ with tarfile.open(archive,'w') as tar:
 subprocess.run(ADB+['push',str(archive),BASE+'/350teric-install.tar'],check=True)
 assert shell('sha256sum '+BASE+'/350teric-install.tar').split()[0]==hashlib.sha256(archive.read_bytes()).hexdigest()
 shell('set -e; rm -rf '+BASE+'/350teric/seed; tar -xf '+BASE+'/350teric-install.tar -C '+BASE+'; rm '+BASE+'/350teric-install.tar; mkdir -p '+BASE+'/home/350teric; if ! test -d '+HOME+'; then cp -a '+BASE+'/350teric/seed/.esoteric '+BASE+'/home/350teric/; fi')
+# Project-owned skins are available on fresh installs; existing skin edits survive.
+if project_skins.exists():
+ for skin in project_skins.iterdir():
+  if skin.is_dir():
+   destination=HOME+'/skins/'+skin.name
+   shell('if ! test -d '+Q(destination)+'; then cp -a '+Q(BASE+'/350teric/seed/.esoteric/skins/'+skin.name)+' '+Q(HOME+'/skins/')+'; fi')
 # Refresh only installer-owned route files; retain custom links, favorites and settings.
 backup=BASE+'/backup/350teric-'+time.strftime('%Y%m%d-%H%M%S')
 shell('mkdir -p '+backup+'; cp -a '+HOME+'/sections '+backup+'/; cp -p '+BASE+'/config/frontend/apps.json '+backup+'/apps.json')

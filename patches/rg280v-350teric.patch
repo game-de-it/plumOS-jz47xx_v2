@@ -24,7 +24,7 @@ index f0a20cf..a28f7ff 100644
  
  enum vol_mode_t {
 diff --git a/src/dialog.cpp b/src/dialog.cpp
-index 984081f..9eb5de4 100644
+index 984081f..6f8c427 100644
 --- a/src/dialog.cpp
 +++ b/src/dialog.cpp
 @@ -1,4 +1,5 @@
@@ -63,8 +63,30 @@ index 984081f..9eb5de4 100644
  
  }
  
+@@ -60,6 +56,10 @@ void Dialog::writeSubTitle(const std::string &subtitle, Surface *s) {
+ 
+ void Dialog::drawTopBar(Surface *s = NULL, const std::string &title, const std::string &description, const std::string &icon) {
+ 	if (s == NULL) s = app->screen;
++    if (app->skin->instrumentStyle) {
++        app->ui->drawInstrumentHeader(s, title);
++        return;
++    }
+ 	// Surface *bar = sc.skinRes("imgs/topbar.png");
+ 	// if (bar != NULL) bar->blit(s, 0, 0);
+ 	// else
+@@ -79,6 +79,10 @@ void Dialog::drawTopBar(Surface *s = NULL, const std::string &title, const std::
+ }
+ 
+ void Dialog::drawBottomBar(Surface *s) {
++    if (app->skin->instrumentStyle) {
++        app->ui->drawInstrumentFooter(s ? s : app->screen, "");
++        return;
++    }
+ 	if (s == NULL) s = app->screen;
+ 	s->box(
+ 		0, 
 diff --git a/src/esoteric.cpp b/src/esoteric.cpp
-index cb8c280..ba41e32 100644
+index cb8c280..8695851 100644
 --- a/src/esoteric.cpp
 +++ b/src/esoteric.cpp
 @@ -198,6 +198,7 @@ Esoteric::Esoteric() {
@@ -93,7 +115,20 @@ index cb8c280..ba41e32 100644
  		this->hw->ledOff();
  		pbLoading.finished();
  
-@@ -858,12 +859,12 @@ void Esoteric::initMenu() {
+@@ -785,6 +786,12 @@ void Esoteric::initLayout() {
+ 	this->linkWidth  = (linksRect.w - (skin->numLinkCols + 1 ) * linkSpacing) / skin->numLinkCols;
+ 	this->linkHeight = (linksRect.h - (skin->numLinkCols > 1) * (skin->numLinkRows    + 1 ) * linkSpacing) / skin->numLinkRows;
+ 
++    if (skin->instrumentStyle && skin->numLinkCols == 1) {
++        linksRect = (SDL_Rect){8, 34, getScreenWidth()-16, getScreenHeight()-60};
++        listRect = linksRect;
++        linkWidth = linksRect.w;
++        linkHeight = linksRect.h / skin->numLinkRows;
++    }
+ 	TRACE("exit - cols: %i, rows: %i, width: %i, height: %i", skin->numLinkCols, skin->numLinkRows, linkWidth, linkHeight);
+ }
+ 
+@@ -858,12 +865,12 @@ void Esoteric::initMenu() {
  
  	this->menu->addActionLink(
  						i, 
@@ -110,7 +145,7 @@ index cb8c280..ba41e32 100644
  		this->menu->addActionLink(
  							i, 
  							tr["Install me"], 
-@@ -880,7 +881,7 @@ void Esoteric::initMenu() {
+@@ -880,7 +887,7 @@ void Esoteric::initMenu() {
  						tr["Displays last launched program's output"], 
  						"skin:icons/ebook.png");
  
@@ -119,7 +154,7 @@ index cb8c280..ba41e32 100644
  		this->menu->addActionLink(
  						i, 
  						tr["Mount"], 
-@@ -909,7 +910,7 @@ void Esoteric::initMenu() {
+@@ -909,7 +916,7 @@ void Esoteric::initMenu() {
  						tr["Adjust skin settings"], 
  						"skin:icons/skin.png");
  
@@ -128,7 +163,7 @@ index cb8c280..ba41e32 100644
  		this->menu->addActionLink(
  						i, 
  						tr["Umount"], 
-@@ -917,7 +918,7 @@ void Esoteric::initMenu() {
+@@ -917,7 +924,7 @@ void Esoteric::initMenu() {
  						tr["Umount external SD"], 
  						"skin:icons/eject.png");
  
@@ -137,7 +172,7 @@ index cb8c280..ba41e32 100644
  		this->menu->addActionLink(
  							i, 
  							tr["UnInstall me"], 
-@@ -929,7 +930,7 @@ void Esoteric::initMenu() {
+@@ -929,7 +936,7 @@ void Esoteric::initMenu() {
  	bool showUpgrade = 	this->config->version() < APP_MIN_CONFIG_VERSION || 
  						FileUtils::processPid(this->hw->packageManager()) > 0;
  
@@ -146,7 +181,7 @@ index cb8c280..ba41e32 100644
  		this->menu->addActionLink(
  							i, 
  							tr["Upgrade me"], 
-@@ -971,7 +972,7 @@ void Esoteric::deviceMenu() {
+@@ -971,7 +978,7 @@ void Esoteric::deviceMenu() {
  
  	do {
  
@@ -155,7 +190,7 @@ index cb8c280..ba41e32 100644
  		sd.selected = selected;
  		sd.allowCancel = false;
  
-@@ -1049,7 +1050,7 @@ void Esoteric::deviceMenu() {
+@@ -1049,7 +1056,7 @@ void Esoteric::deviceMenu() {
  
  		if (enablePowerTimeout) {
  			this->config->powerTimeout(powerTimeout);
@@ -164,7 +199,7 @@ index cb8c280..ba41e32 100644
  		} else {
  			this->config->powerTimeout(0);
  			this->powerManager->setTimeout(0);
-@@ -1063,7 +1064,7 @@ void Esoteric::deviceMenu() {
+@@ -1063,7 +1070,7 @@ void Esoteric::deviceMenu() {
  		}
  		if (backlightTimeout != this->config->backlightTimeout()) {
  			this->config->backlightTimeout(backlightTimeout);
@@ -173,7 +208,7 @@ index cb8c280..ba41e32 100644
  		}
  
  		if (this->hw->Cpu()->overclockingSupported()) {
-@@ -1445,7 +1446,7 @@ void Esoteric::settings() {
+@@ -1445,7 +1452,7 @@ void Esoteric::settings() {
  
  		TRACE("setScreenTimeout - %i", this->config->backlightTimeout());
  		this->screenManager->resetTimer();
@@ -182,7 +217,7 @@ index cb8c280..ba41e32 100644
  
  		this->writeConfig();
  
-@@ -2018,7 +2019,12 @@ void Esoteric::restartDialog(bool showDialog) {
+@@ -2018,7 +2025,12 @@ void Esoteric::restartDialog(bool showDialog) {
  		mb.setButton(CANCEL,  tr["Cancel"]);
  		if (mb.exec() == CANCEL) return;
  	}
@@ -208,6 +243,18 @@ index 457771e..182988c 100644
  	void releaseScreen();
  
  	bool f200 = true;
+diff --git a/src/hw-clock.cpp b/src/hw-clock.cpp
+index 4dc6b77..5f9dba0 100644
+--- a/src/hw-clock.cpp
++++ b/src/hw-clock.cpp
+@@ -25,6 +25,7 @@ std::string IClock::getBuildDate() {
+ }
+ 
+ std::string IClock::getClockTime(bool is24hr) {
++    this->refresh();
+     TRACE("enter - is24hr : %i", is24hr);
+     int hours = this->getHours();
+ 	bool pm = (hours >= 12);
 diff --git a/src/hw-generic.cpp b/src/hw-generic.cpp
 index 495e190..a390f17 100644
 --- a/src/hw-generic.cpp
@@ -272,6 +319,43 @@ index 017135b..3e6a96e 100644
          }
  
          virtual int defaultScreenWidth() { return 0; }
+diff --git a/src/hw-power.cpp b/src/hw-power.cpp
+index 0e1f86e..24924e3 100644
+--- a/src/hw-power.cpp
++++ b/src/hw-power.cpp
+@@ -19,7 +19,9 @@ IPower::IPower() {
+ 
+ JzPower::JzPower () : IPower() {
+     TRACE("enter");
+-    this->pollBatteries_ = FileUtils::fileExists(BATTERY_CHARGING_PATH) && FileUtils::fileExists(BATTERY_LEVEL_PATH);
++    this->pollBatteries_ = FileUtils::fileExists(BATTERY_CHARGING_PATH) &&
++        (FileUtils::fileExists(BATTERY_LEVEL_PATH) ||
++         FileUtils::fileExists("/sys/class/power_supply/jz-battery/voltage_now"));
+     this->read();
+     TRACE("exit : %i", this->pollBatteries_);
+ };
+@@ -52,6 +54,21 @@ bool JzPower::readLevel() {
+     TRACE("enter");
+     bool result = false;
+ 
++    if (!FileUtils::fileExists(BATTERY_LEVEL_PATH)) {
++        // Match the plumOS FE fallback on kernels exposing voltage but no capacity.
++        long voltage = 0, minimum = 3400000, maximum = 4200000;
++        std::ifstream now("/sys/class/power_supply/jz-battery/voltage_now");
++        if (!(now >> voltage)) return false;
++        std::ifstream low("/sys/class/power_supply/jz-battery/voltage_min_design");
++        std::ifstream high("/sys/class/power_supply/jz-battery/voltage_max_design");
++        long value;
++        if (low >> value) minimum = value;
++        if (high >> value) maximum = value;
++        if (maximum <= minimum) return false;
++        long percent = (voltage - minimum) * 100 / (maximum - minimum);
++        level_ = percent < 0 ? 0 : (percent > 100 ? 100 : percent);
++        return true;
++    }
+     std::string strval = FileUtils::fileReader(this->BATTERY_LEVEL_PATH);
+     TRACE("raw battery level : '%s'", strval.c_str());
+     this->level_ = atoi(strval.c_str());
 diff --git a/src/hw-power.h b/src/hw-power.h
 index cc14736..255c68a 100644
 --- a/src/hw-power.h
@@ -301,6 +385,19 @@ index 305ba67..056d330 100644
  
      std::string result = "generic";
  
+diff --git a/src/inputmanager.cpp b/src/inputmanager.cpp
+index 70c52c7..bb2949a 100644
+--- a/src/inputmanager.cpp
++++ b/src/inputmanager.cpp
+@@ -377,6 +377,8 @@ bool InputManager::update(bool wait) {
+ 			actions[QUIT].active = true;
+ 			return true;
+ 		} else if (event.type == SDL_NOOPEVENT) {
++            // A status redraw must not replay the previous input action.
++            for (auto &action : actions) action.active = false;
+ 			//TRACE("WAIT NOOP");
+ 			actions[NOOP].active = true;
+ 			// we can return true here, 
 diff --git a/src/launcher.cpp b/src/launcher.cpp
 index 4a595ea..c72deb6 100644
 --- a/src/launcher.cpp
@@ -337,6 +434,39 @@ index 4a595ea..c72deb6 100644
  		TRACE("resetting the console");
  		std::wclog.clear();
  		std::clog.clear();
+diff --git a/src/menusetting.cpp b/src/menusetting.cpp
+index 8cea363..2e9b97c 100644
+--- a/src/menusetting.cpp
++++ b/src/menusetting.cpp
+@@ -27,7 +27,7 @@ MenuSetting::MenuSetting(Esoteric *app, const std::string &title, const std::str
+ MenuSetting::~MenuSetting() {}
+ 
+ void MenuSetting::draw(int y) {
+-	app->screen->write( app->font, title, 5, y + app->font->getHalfHeight(), VAlignMiddle );
++	app->screen->write( app->font, title, app->skin->instrumentStyle ? 16 : 5, y + app->font->getHalfHeight(), VAlignMiddle );
+ }
+ 
+ void MenuSetting::handleTS() {
+@@ -37,5 +37,5 @@ void MenuSetting::handleTS() {
+ void MenuSetting::adjustInput() {}
+ 
+ void MenuSetting::drawSelected(int /*y*/) {
+-	buttonBox.paint(5);
++	if (!app->skin->instrumentStyle) buttonBox.paint(5);
+ }
+diff --git a/src/menusettingbool.cpp b/src/menusettingbool.cpp
+index b440c3d..4135434 100644
+--- a/src/menusettingbool.cpp
++++ b/src/menusettingbool.cpp
+@@ -61,6 +61,8 @@ void MenuSettingBool::draw(int y) {
+ 
+ 	RGBAColor color = (RGBAColor){255, 0, 0, 255};
+ 	if (value()) color = (RGBAColor) {0, 255, 0, 255};
++    if (app->skin->instrumentStyle)
++        color = value() ? app->skin->accent : (RGBAColor){80,85,88,255};
+ 
+ 	int w = app->font->getHeight()/2.5;
+ 	app->screen->box(155, y + 1, w, app->font->getHeight() - 2, color);
 diff --git a/src/progressbar.cpp b/src/progressbar.cpp
 index d80d396..eeec815 100644
 --- a/src/progressbar.cpp
@@ -351,7 +481,7 @@ index d80d396..eeec815 100644
          SDL_RemoveTimer(this->timerId_);
          this->timerId_ = 0;
 diff --git a/src/renderer.cpp b/src/renderer.cpp
-index 69844c9..e29fe20 100644
+index 69844c9..8493cd6 100644
 --- a/src/renderer.cpp
 +++ b/src/renderer.cpp
 @@ -66,7 +66,7 @@ void Renderer::startPolling() {
@@ -363,7 +493,19 @@ index 69844c9..e29fe20 100644
  		//SDL_SetTimer(0, NULL);
          SDL_RemoveTimer(this->timerId_);
  		this->timerId_ = 0;
-@@ -334,12 +334,13 @@ void Renderer::render() {
+@@ -97,6 +97,11 @@ void Renderer::render() {
+ 	if (this->locked_ || this->finished_) 
+ 		return;
+ 	this->locked_ = true;
++    if (app->skin->instrumentStyle && app->skin->numLinkCols == 1) {
++        renderInstrument();
++        this->locked_ = false;
++        return;
++    }
+ 
+     int x = 0;
+     int y = 0;
+@@ -334,12 +339,13 @@ void Renderer::render() {
  			int padding = 36;
  			if (app->skin->linkDisplayMode == Skin::ICON_AND_TEXT || app->skin->linkDisplayMode == Skin::ICON) {
  				//TRACE("theme uses icons");
@@ -382,7 +524,7 @@ index 69844c9..e29fe20 100644
  				} else {
  					WARNING("couldn't load expected icon : '%s'", app->menu->sectionLinks()->at(i)->getIconPath().c_str());
  				}
-@@ -394,7 +395,13 @@ void Renderer::render() {
+@@ -394,7 +400,13 @@ void Renderer::render() {
  
  				// TRACE("setting clip rect");
  				app->screen->setClipRect({ix, iy, app->linkWidth, app->linkHeight});
@@ -397,8 +539,228 @@ index 69844c9..e29fe20 100644
  
  				// selected link highlight
  				// TRACE("checking highlight");
+@@ -729,4 +741,30 @@ uint8_t Renderer::getVolumeMode(uint8_t vol) {
+ 	if (!vol) return VOLUME_MODE_MUTE;
+ 	else if (vol > 0 && vol < 20) return VOLUME_MODE_PHONES;
+ 	return VOLUME_MODE_NORMAL;
+-}
+\ No newline at end of file
++}
++void Renderer::renderInstrument() {
++    app->bg->blit(app->screen, 0, 0);
++    app->ui->drawInstrumentHeader(app->screen, app->tr.translate(app->menu->selSection()));
++    const int first = app->menu->firstDispRow();
++    const int total = app->menu->sectionLinks()->size();
++    const int rowHeight = app->linkHeight;
++    app->screen->setClipRect(app->linksRect);
++    for (int row = 0, index = first; row < app->skin->numLinkRows && index < total; ++row, ++index) {
++        const int y = app->linksRect.y + row * rowHeight;
++        const bool selected = index == app->menu->selLinkIndex();
++        Link *link = app->menu->sectionLinks()->at(index);
++        if (selected)
++            app->ui->drawInstrumentSelection(app->screen,
++                (SDL_Rect){app->linksRect.x, y, app->linksRect.w, rowHeight});
++        Surface *icon = app->sc->themedIcon(link->getIconPath(), selected, 28, rowHeight-4);
++        if (icon) icon->blit(app->screen, 15 + (28-icon->raw->w)/2,
++                             y + (rowHeight-icon->raw->h)/2);
++        const std::string title = StringUtils::strReplace(app->tr.translate(link->getTitle()), " - ", "  ");
++        app->screen->write(app->font, title, 54, y + rowHeight/2, VAlignMiddle,
++                          selected ? app->skin->accent : app->skin->colours.font,
++                          app->skin->colours.fontOutline);
++    }
++    app->screen->clearClipRect();
++    app->ui->drawInstrumentFooter(app->screen, "A SELECT   L/R TABS   START MENU");
++    app->screen->flip();
++}
+diff --git a/src/renderer.h b/src/renderer.h
+index 1705d5b..3348473 100644
+--- a/src/renderer.h
++++ b/src/renderer.h
+@@ -38,6 +38,7 @@ private:
+     uint8_t getVolumeMode(uint8_t vol);
+ 
+     void pollHW();
++    void renderInstrument();
+ 
+ public:
+ 
+diff --git a/src/selector.cpp b/src/selector.cpp
+index 31851e1..c1d97d8 100644
+--- a/src/selector.cpp
++++ b/src/selector.cpp
+@@ -69,6 +69,16 @@ int Selector::exec(int startSelection) {
+ 		(*app->sc)[link->getBackdrop()]->blit(this->bg,0,0);
+ 
+ 	bool close = false, result = true, inputAction = false;
++    // Restored selectors can run before the main renderer's status timer exists.
++    // Wake only for status redraws; input and selection stay in the main thread.
++    struct StatusPulse {
++        SDL_TimerID id;
++        ~StatusPulse() { if (id) SDL_RemoveTimer(id); }
++    } statusPulse = {app->skin->instrumentStyle ? SDL_AddTimer(2000,
++        [](Uint32 interval, void *data) -> Uint32 {
++            static_cast<InputManager *>(data)->noop();
++            return interval;
++        }, app->inputManager) : nullptr};
+ 	std::vector<std::string> screens, titles;
+ 
+ 	TRACE("starting selector");
+@@ -85,20 +95,26 @@ int Selector::exec(int startSelection) {
+ 	this->firstElement = 0;
+ 
+ 	uint32_t i, iY, padding = 6;
+-	uint32_t rowHeight = app->font->getHeight() + 1;
++	uint32_t rowHeight = app->skin->instrumentStyle ?
++        app->listRect.h / app->skin->numLinkRows : app->font->getHeight() + 1;
+ 	uint32_t halfRowHeight = (rowHeight / 2);
+ 
+-	this->numRows = ((app->listRect.h - 2) / rowHeight) - 1;
++	this->numRows = app->skin->instrumentStyle ? app->skin->numLinkRows - 1 :
++        ((app->listRect.h - 2) / rowHeight) - 1;
+ 
+ 	drawTopBar(this->bg, link->getTitle(), link->getDescription(), link->getIconPath());
+ 	drawBottomBar(this->bg);
+ 
+ 	this->bg->box(app->listRect, app->skin->colours.listBackground);
+ 
++    if (app->skin->instrumentStyle) {
++        app->ui->drawInstrumentFooter(this->bg, "A PLAY   B UP   X FAV   START BACK");
++    } else {
+ 	app->ui->drawButton(this->bg, "a", app->tr["Select"],
+ 	app->ui->drawButton(this->bg, "b", app->tr["Up"], 
+ 	app->ui->drawButton(this->bg, "start", app->tr["Exit"],
+ 	app->ui->drawButton(this->bg, "x", app->tr["Favourite"]))));
++    }
+ 
+ 	this->prepare(&fl, &titles, &screens);
+ 	int selected = constrain(startSelection, 0, fl.size() - 1);
+@@ -158,6 +174,18 @@ int Selector::exec(int startSelection) {
+ 			// draw files & Directories
+ 			iY = app->listRect.y + 1;
+ 			for (i = firstElement; i < fl.size() && i <= firstElement + numRows; i++, iY += rowHeight) {
++                if (app->skin->instrumentStyle) {
++                    if (i == selected)
++                        app->ui->drawInstrumentSelection(app->screen,
++                            (SDL_Rect){app->listRect.x, (Sint16)iY, app->listRect.w, (Uint16)rowHeight});
++                    std::string text = titles[i];
++                    if (fl.isDirectory(i) && text != "..") text += "/";
++                    app->screen->write(app->font, text, app->listRect.x + 10,
++                        iY + halfRowHeight, VAlignMiddle,
++                        i == selected ? app->skin->accent : app->skin->colours.font,
++                        app->skin->colours.fontOutline);
++                    continue;
++                }
+ 				if (i == selected) {
+ 					// selected item highlight
+ 					app->screen->box(
+@@ -251,6 +279,7 @@ int Selector::exec(int startSelection) {
+ 				}
+ 			}
+ 			app->screen->clearClipRect();
++            if (!app->skin->instrumentStyle)
+ 			app->ui->drawScrollBar(numRows, fl.size(), firstElement, app->listRect);
+ 			app->screen->flip();
+ 		}
+diff --git a/src/settingsdialog.cpp b/src/settingsdialog.cpp
+index 572755e..ac3756e 100644
+--- a/src/settingsdialog.cpp
++++ b/src/settingsdialog.cpp
+@@ -45,7 +45,7 @@ bool SettingsDialog::exec() {
+ 	while (!close) {
+ 		app->initLayout();
+ 		app->font->
+-			setSize(app->skin->fontSize)->
++			setSize(app->skin->instrumentStyle ? 12 : app->skin->fontSize)->
+ 			setColor(app->skin->colours.font)->
+ 			setOutlineColor(app->skin->colours.fontOutline);
+ 
+@@ -67,6 +67,8 @@ bool SettingsDialog::exec() {
+ 		// redraw to due to realtime skin
+ 		drawTopBar(app->screen, title, voices[selected]->getDescription(), icon);
+ 		drawBottomBar(app->screen);
++        if (app->skin->instrumentStyle)
++            app->ui->drawInstrumentFooter(app->screen, "A CHANGE   B BACK   START SAVE");
+ 		app->screen->box(app->listRect, app->skin->colours.listBackground);
+ 
+ 		//Selection
+@@ -76,10 +78,17 @@ bool SettingsDialog::exec() {
+ 		iY = app->listRect.y + 1;
+ 		for (i = firstElement; i < voices.size() && i <= firstElement + numRows; i++, iY += rowHeight) {
+ 			if (i == selected) {
+-				app->screen->box(app->listRect.x, iY, app->listRect.w, rowHeight, app->skin->colours.selectionBackground);
++				if (app->skin->instrumentStyle)
++                    app->ui->drawInstrumentSelection(app->screen,
++                        (SDL_Rect){app->listRect.x, (Sint16)iY, app->listRect.w, (Uint16)rowHeight});
++                else
++                    app->screen->box(app->listRect.x, iY, app->listRect.w, rowHeight, app->skin->colours.selectionBackground);
+ 				voices[selected]->drawSelected(iY);
+ 			}
++            if (app->skin->instrumentStyle)
++                app->font->setColor(i == selected ? app->skin->accent : app->skin->colours.font);
+ 			voices[i]->draw(iY);
++            if (app->skin->instrumentStyle) app->font->setColor(app->skin->colours.font);
+ 		}
+ 
+ 		app->ui->drawScrollBar(
+@@ -139,6 +148,8 @@ bool SettingsDialog::exec() {
+ 		} while (!inputAction);
+ 	}
+ 
++    if (app->skin->instrumentStyle)
++        app->font->setSize(app->skin->fontSize)->setColor(app->skin->colours.font);
+ 	app->setInputSpeed();
+ 
+ 	return true;
+diff --git a/src/skin.cpp b/src/skin.cpp
+index a4ec7c1..932962c 100644
+--- a/src/skin.cpp
++++ b/src/skin.cpp
+@@ -103,6 +103,8 @@ std::string Skin::toString() {
+     vec.push_back("# the version of skin config file format");
+     vec.push_back("");
+     vec.push_back(StringUtils::stringFormat("version=%i", version));
++    vec.push_back(StringUtils::stringFormat("instrumentStyle=%i", instrumentStyle));
++    vec.push_back(StringUtils::stringFormat("accent=%s", rgbatostr(accent).c_str()));
+     vec.push_back("");
+ 
+     vec.push_back("# font sizes");
+@@ -385,6 +387,8 @@ void Skin::reset() {
+     sectionInfoBarVisible = false;
+     showClock = true;
+     showLoader = false;
++    instrumentStyle = 0;
++    accent = (RGBAColor){242,140,40,255};
+     skinBackdrops = false;
+     showBatteryIcons = true;
+     scaleableHighlightImage = true;
+@@ -467,7 +471,11 @@ bool Skin::fromFile() {
+                     TRACE("handling kvp - %s = %s", name.c_str(), value.c_str());
+ 
+                     try {
+-                        if (name == "version") {
++                        if (name == "instrumentstyle") {
++                            instrumentStyle = atoi(value.c_str()) != 0;
++                        } else if (name == "accent") {
++                            accent = strtorgba(value);
++                        } else if (name == "version") {
+                             version = atoi(value.c_str());
+                         } else if (name == "fontsize") {
+                             this->fontSize = atoi(value.c_str());
+diff --git a/src/skin.h b/src/skin.h
+index 4384ef4..477b98f 100644
+--- a/src/skin.h
++++ b/src/skin.h
+@@ -79,6 +79,8 @@ public:
+ 
+     int version;
+     int showLoader;
++    int instrumentStyle;
++    RGBAColor accent;
+ 
+     LinkDisplayModes linkDisplayMode;
+ 
 diff --git a/src/surfacecollection.cpp b/src/surfacecollection.cpp
-index 777b85a..3599439 100644
+index 777b85a..ab596b1 100644
 --- a/src/surfacecollection.cpp
 +++ b/src/surfacecollection.cpp
 @@ -18,6 +18,8 @@
@@ -410,7 +772,7 @@ index 777b85a..3599439 100644
  #include "surfacecollection.h"
  #include "surface.h"
  #include "fileutils.h"
-@@ -56,6 +58,25 @@ Surface *SurfaceCollection::addIcon(const std::string &path, bool alpha) {
+@@ -56,6 +58,40 @@ Surface *SurfaceCollection::addIcon(const std::string &path, bool alpha) {
  	return this->add(path, alpha, this->skin->iconsToGrayscale);
  }
  
@@ -433,10 +795,25 @@ index 777b85a..3599439 100644
 +    return result;
 +}
 +
++Surface *SurfaceCollection::themedIcon(const std::string &path, bool selected, int width, int height) {
++    const std::string key = path + (selected ? "#selected" : "#normal");
++    auto found = themedPaths.find(key);
++    if (found == themedPaths.end()) {
++        std::string name = FileUtils::pathBaseName(path);
++        std::string themed;
++        if (selected && name.size() > 4)
++            themed = skin->getSkinFilePath("systems/" + name.substr(0, name.size()-4) + "-selected.png");
++        if (themed.empty()) themed = skin->getSkinFilePath("systems/" + name);
++        if (themed.empty()) themed = path;
++        found = themedPaths.insert(std::make_pair(key, themed)).first;
++    }
++    return fitIcon(found->second, width, height);
++}
++
  Surface *SurfaceCollection::skinRes(const std::string &key) {
  	TRACE("enter : %s", key.c_str());
  	if (key.empty()) return NULL;
-@@ -77,6 +98,7 @@ Surface *SurfaceCollection::addSkinRes(const std::string &path, bool alpha) {
+@@ -77,6 +113,7 @@ Surface *SurfaceCollection::addSkinRes(const std::string &path, bool alpha) {
  
  	TRACE("Adding skin surface: '%s'", skinpath.c_str());
  	Surface *s = new Surface(skinpath, alpha);
@@ -444,7 +821,7 @@ index 777b85a..3599439 100644
  	if (NULL != s) {
  		surfaces[path] = s;
  	}
-@@ -106,6 +128,7 @@ Surface *SurfaceCollection::add(const std::string &path, bool alpha, bool graySc
+@@ -106,6 +143,7 @@ Surface *SurfaceCollection::add(const std::string &path, bool alpha, bool graySc
  		}
  
  		s = new Surface(filePath, alpha);
@@ -452,15 +829,109 @@ index 777b85a..3599439 100644
  		if (s != NULL) {
  			if (grayScale)
  				s->toGrayScale();
+@@ -137,6 +175,7 @@ bool SurfaceCollection::empty() {
+ }
+ 
+ void SurfaceCollection::clear() {
++    themedPaths.clear();
+ 	TRACE("enter");
+ 	while (surfaces.size() > 0) {
+ 		if (surfaces.begin()->second) {
 diff --git a/src/surfacecollection.h b/src/surfacecollection.h
-index 772b4f9..51069c1 100644
+index 772b4f9..05b90cc 100644
 --- a/src/surfacecollection.h
 +++ b/src/surfacecollection.h
-@@ -48,6 +48,7 @@ public:
+@@ -21,6 +21,7 @@
+ #define SURFACECOLLECTION_H
+ 
+ #include <string>
++#include <map>
+ #include <tr1/unordered_map>
+ #include "skin.h"
+ 
+@@ -36,6 +37,7 @@ Hash Map of surfaces that loads surfaces not already loaded and reuses already l
+ class SurfaceCollection {
+ private:
+ 	SurfaceHash surfaces;
++    std::map<std::string, std::string> themedPaths;
+ 	Skin * skin;
+ 	Surface *add(const std::string &path, bool alpha=false, bool grayScale=false);
+ 
+@@ -48,6 +50,8 @@ public:
  	bool defaultAlpha;
  	void debug();
  	Surface *addIcon(const std::string &path, bool alpha=true);
 +	Surface *fitIcon(const std::string &path, int width, int height);
++    Surface *themedIcon(const std::string &path, bool selected, int width, int height);
  	Surface *addImage(const std::string &path, bool alpha=true);
  
  	Surface *addSkinRes(const std::string &path, bool alpha=true);
+diff --git a/src/ui.cpp b/src/ui.cpp
+index 364182e..af2d3de 100644
+--- a/src/ui.cpp
++++ b/src/ui.cpp
+@@ -113,3 +113,50 @@ int UI::intTransition(int from, int to, int32_t tickStart, int32_t duration, int
+ 	//                    elapsed                 increments
+ 	return min((int)round(elapsed * (to - from)), (int)max(from, to));
+ }
++
++// Shared geometry and live status for the optional instrument-style skin.
++void UI::drawInstrumentHeader(Surface *s, std::string title) {
++    const int width = app->getScreenWidth();
++    static uint32_t lastPowerRead = 0;
++    const uint32_t now = SDL_GetTicks();
++    if (now - lastPowerRead >= 2000) {
++        app->hw->Power()->read();
++        lastPowerRead = now;
++    }
++    const RGBAColor clear = {0,0,0,0};
++    const auto dash = title.find(" - ");
++    if (dash != std::string::npos) title = title.substr(0, dash);
++    for (char &c : title) if (c >= 'a' && c <= 'z') c -= 'a' - 'A';
++    while (!title.empty() && app->fontTitle->getTextWidth(title) > width - 140) {
++        // Drop a whole UTF-8 codepoint when shortening a dialog title.
++        size_t pos = title.size() - 1;
++        while (pos > 0 && (static_cast<unsigned char>(title[pos]) & 0xc0) == 0x80) --pos;
++        title.erase(pos);
++    }
++    s->box(5, 5, width - 10, 24, app->skin->colours.titleBarBackground);
++    s->box(5, 29, width - 10, 1, app->skin->accent);
++    if (app->skin->showClock)
++        s->write(app->fontSectionTitle, app->hw->Clock()->getClockTime(true),
++                 12, 17, VAlignMiddle, app->skin->colours.font, clear);
++    s->write(app->fontTitle, title, width / 2, 17,
++             HAlignCenter | VAlignMiddle, app->skin->accent, clear);
++    const bool charging = app->hw->Power()->state() == IPower::CHARGING;
++    const std::string battery = std::string(charging ? "CHG " : "BAT ") +
++                                (app->hw->Power()->state() == IPower::UNKNOWN ? "--" :
++                                 std::to_string(app->hw->Power()->rawLevel()));
++    s->write(app->fontSectionTitle, battery, width - 12, 17,
++             HAlignRight | VAlignMiddle, app->skin->colours.font, clear);
++}
++
++void UI::drawInstrumentFooter(Surface *s, const std::string &text) {
++    const int width = app->getScreenWidth(), height = app->getScreenHeight();
++    s->box(5, height - 22, width - 10, 17, app->skin->colours.infoBarBackground);
++    s->box(5, height - 22, width - 10, 1, (RGBAColor){80,85,88,255});
++    s->write(app->fontSectionTitle, text, width / 2, height - 13,
++             HAlignCenter | VAlignMiddle, app->skin->colours.font, (RGBAColor){0,0,0,0});
++}
++
++void UI::drawInstrumentSelection(Surface *s, SDL_Rect rect) {
++    s->box(rect, app->skin->colours.selectionBackground);
++    s->box(rect.x, rect.y + 2, 2, rect.h - 4, app->skin->accent);
++}
+diff --git a/src/ui.h b/src/ui.h
+index 86d3201..68d33a4 100644
+--- a/src/ui.h
++++ b/src/ui.h
+@@ -9,6 +9,9 @@ class UI {
+         Esoteric * app;
+     public:
+         UI(Esoteric * app) { this->app = app; };
++        void drawInstrumentHeader(Surface *s, std::string title);
++        void drawInstrumentFooter(Surface *s, const std::string &text);
++        void drawInstrumentSelection(Surface *s, SDL_Rect rect);
+         void drawSlider(int val, int min, int max, Surface &icon, Surface &bg);
+         int drawButton(Button *btn, int x=5, int y=-10);
+         int drawButton(Surface *s, const std::string &btn, const std::string &text, int x=5, int y=-10);
