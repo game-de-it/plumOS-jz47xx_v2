@@ -34,11 +34,28 @@ index fbcd20a..d54c35a 100644
  int pollEvent();
  int getEventType();
  int getPressedKey();
+diff --git a/simplemenu/src/headers/window_menu.h b/simplemenu/src/headers/window_menu.h
+new file mode 100644
+index 0000000..776c43c
+--- /dev/null
++++ b/simplemenu/src/headers/window_menu.h
+@@ -0,0 +1,6 @@
++#ifndef WINDOW_MENU_H
++#define WINDOW_MENU_H
++void loadWindowMenu(const char *path);
++void freeWindowMenu(void);
++int drawWindowMenu(void);
++#endif
 diff --git a/simplemenu/src/logic/config.c b/simplemenu/src/logic/config.c
-index 15806a4..be4d765 100644
+index 15806a4..47a2a11 100644
 --- a/simplemenu/src/logic/config.c
 +++ b/simplemenu/src/logic/config.c
-@@ -56,6 +56,10 @@ void loadAliasList(int sectionNumber) {
+@@ -1,3 +1,4 @@
++#include "../headers/window_menu.h"
+ #ifndef _GNU_SOURCE
+ #define _GNU_SOURCE
+ #endif
+@@ -56,6 +57,10 @@ void loadAliasList(int sectionNumber) {
  }
  
  void checkIfDefault() {
@@ -49,6 +66,14 @@ index 15806a4..be4d765 100644
  	FILE *fp=NULL;
  	FILE *fpScripts=NULL;
  	#ifdef MIYOO
+@@ -291,6 +296,7 @@ void setThemeResourceValueInSection(ini_t *config, char *sectionName, char *valu
+ 
+ 
+ void loadTheme(char *theme) {
++    loadWindowMenu(theme);
+ 	strcpy(pathToThemeConfigFilePlusFileName,theme);
+ 	char *romPath = getRomPath(theme);
+ 	char *temp = malloc(3000);
 diff --git a/simplemenu/src/logic/control.c b/simplemenu/src/logic/control.c
 index 0b5f576..bcb8b90 100644
 --- a/simplemenu/src/logic/control.c
@@ -133,10 +158,15 @@ index 6eeccd8..b5815f1 100644
   Shake_Effect effect;
   int effect_id;
 diff --git a/simplemenu/src/logic/graphics.c b/simplemenu/src/logic/graphics.c
-index c12ff85..dafdefe 100644
+index c12ff85..bd75259 100644
 --- a/simplemenu/src/logic/graphics.c
 +++ b/simplemenu/src/logic/graphics.c
-@@ -20,7 +20,7 @@
+@@ -1,3 +1,4 @@
++#include "../headers/window_menu.h"
+ #include <pthread.h>
+ #include <stddef.h>
+ #include <stdlib.h>
+@@ -20,7 +21,7 @@
  #include <SDL/SDL_stdinc.h>
  #include <SDL/SDL_video.h>
  
@@ -145,7 +175,7 @@ index c12ff85..dafdefe 100644
  #include <shake.h>
  #endif
  
-@@ -34,6 +34,49 @@
+@@ -34,6 +35,49 @@
  #include "../headers/screen.h"
  #include "../headers/doubly_linked_rom_list.h"
  
@@ -195,7 +225,7 @@ index c12ff85..dafdefe 100644
  void ht_destroy(hashtable_t *hashtable);
  void freeSections();
  void freeSectionGroups();
-@@ -110,6 +153,10 @@ int calculateProportionalSizeOrDistance(int number) {
+@@ -110,6 +154,10 @@ int calculateProportionalSizeOrDistance(int number) {
  }
  
  int genericDrawTextOnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, char *buf, int txtColor[], int align, int backgroundColor[], int shaded) {
@@ -206,7 +236,7 @@ index c12ff85..dafdefe 100644
  	SDL_Surface *msg;
  	SDL_Surface *msg1 = NULL;
  	char *bufCopy=malloc(strlen(buf)+1);
-@@ -120,29 +167,27 @@ int genericDrawTextOnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, cha
+@@ -120,29 +168,27 @@ int genericDrawTextOnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, cha
  
  	int retW = 1;
  
@@ -246,7 +276,7 @@ index c12ff85..dafdefe 100644
  		}
  	}
  
-@@ -200,14 +245,14 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
+@@ -200,14 +246,14 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
  			if (printCounter>0) {
  				SDL_FreeSurface(msg);
  			}
@@ -263,7 +293,7 @@ index c12ff85..dafdefe 100644
  				} else {
  					printCounter++;
  					break;
-@@ -218,7 +263,7 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
+@@ -218,7 +264,7 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
  			}
  			int h = 0;
  			int w = 0;
@@ -272,7 +302,7 @@ index c12ff85..dafdefe 100644
  			genericDrawTextOnScreen(font,outline,x,y,test,txtColor,align,NULL,0);
  			free(test);
  			y+=calculateProportionalSizeOrDistance(lineSeparation);
-@@ -235,7 +280,7 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
+@@ -235,7 +281,7 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
  		}
  
  	} else {
@@ -281,7 +311,7 @@ index c12ff85..dafdefe 100644
  		genericDrawTextOnScreen(font,outline,x,y,buf,txtColor,align,NULL,0);
  		free(wordsInBuf[0]);
  		SDL_FreeSurface(msg);
-@@ -276,8 +321,8 @@ void drawCustomText1OnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, co
+@@ -276,8 +322,8 @@ void drawCustomText1OnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, co
  	strcpy(bufCopy,buf);
  	strcpy(bufCopy1,buf);
  	bufCopy1[1]='\0';
@@ -292,7 +322,7 @@ index c12ff85..dafdefe 100644
  	if (align & HAlignCenter) {
  		x -= msg->w / 2;
  	} else if (align & HAlignRight) {
-@@ -309,15 +354,15 @@ void drawShadedSettingsOptionValueOnScreen(char *option, char *value, int positi
+@@ -309,15 +355,15 @@ void drawShadedSettingsOptionValueOnScreen(char *option, char *value, int positi
  	int retW=1;
  	int retW2=1;
  	int retW3=3;
@@ -312,7 +342,7 @@ index c12ff85..dafdefe 100644
  	drawTextOnScreen(settingsfont, NULL, SCREEN_WIDTH-calculateProportionalSizeOrDistance(5)-retW3, position, value, txtColor, VAlignBottom | HAlignLeft);
  }
  
-@@ -468,7 +513,7 @@ void drawPictureTextOnScreen(char *buf) {
+@@ -468,7 +514,7 @@ void drawPictureTextOnScreen(char *buf) {
  		return;
  	}
  	int h = 0;
@@ -321,7 +351,7 @@ index c12ff85..dafdefe 100644
  	char *temp = malloc(strlen(buf)+2);
  	if (((struct Rom *)CURRENT_SECTION.currentGameNode->data)->preferences.frequency == OC_UC) {
  		strcpy(temp,"-");
-@@ -1036,7 +1081,7 @@ void initializeDisplay() {
+@@ -1036,7 +1082,7 @@ void initializeDisplay() {
  	logMessage("INFO","initializeDisplay","well...");
  	setenv("SDL_FBCON_DONT_CLEAR", "1", 0);
  	logMessage("INFO","initializeDisplay","maybe...");
@@ -330,7 +360,7 @@ index c12ff85..dafdefe 100644
  	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
  	screen = SDL_SetVideoMode(320, 240, 16, SDL_SWSURFACE);
  	SDL_FreeSurface(screen);
-@@ -1143,7 +1188,7 @@ void initializeDisplay() {
+@@ -1143,7 +1189,7 @@ void initializeDisplay() {
  		fclose(fp1);
  	}
  
@@ -339,7 +369,15 @@ index c12ff85..dafdefe 100644
  	if(modes==(SDL_Rect **)0) {
  		printf("No available modes\n");
  	} else if(modes==(SDL_Rect **)-1) {
-@@ -1306,8 +1351,11 @@ void freeResources() {
+@@ -1292,6 +1338,7 @@ void freeSettingsFonts() {
+ }
+ 
+ void freeResources() {
++    freeWindowMenu();
+ 	int i;
+ 
+ 	for (i = 0; i < themeCounter; i++) {
+@@ -1306,8 +1353,11 @@ void freeResources() {
  
  	freeFonts();
  	freeSettingsFonts();
@@ -507,10 +545,15 @@ index 3d7bd33..e8e3b94 100644
  			logMessage("INFO", "recursivelyScanDirectory","It's a dir");
  			if (strcmp(d_name, mediaFolder) != 0 && strcmp(d_name, "..") != 0
 diff --git a/simplemenu/src/logic/screen.c b/simplemenu/src/logic/screen.c
-index 301b469..ee0268e 100644
+index 301b469..6b547bd 100644
 --- a/simplemenu/src/logic/screen.c
 +++ b/simplemenu/src/logic/screen.c
-@@ -240,13 +240,20 @@ void showRomPreferences() {
+@@ -1,3 +1,4 @@
++#include "../headers/window_menu.h"
+ #include <ctype.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -240,13 +241,20 @@ void showRomPreferences() {
  	drawTextOnScreen(getFont(), NULL, calculateProportionalSizeOrDistance(6), (SCREEN_HEIGHT/2)-calculateProportionalSizeOrDistance(28), name, (int[]) {255,255,255}, VAlignMiddle | HAlignLeft);
  	free(name);
  
@@ -534,7 +577,7 @@ index 301b469..ee0268e 100644
  	if (rom->preferences.frequency==OC_OC) {
  		drawTextOnScreen(getFont(), NULL, (SCREEN_WIDTH/2)-width/2+textWidth+1, (SCREEN_HEIGHT/2)-calculateProportionalSizeOrDistance(9), "yes", valueColor, VAlignMiddle | HAlignLeft);
  	} else {
-@@ -809,6 +816,9 @@ void setOptionsAndValues (char **options, char **values, char **hints){
+@@ -809,6 +817,9 @@ void setOptionsAndValues (char **options, char **values, char **hints){
  	strcpy(hints[THEME_OPTION],"LAUNCHER THEME");
  	strcpy(hints[SCREEN_TIMEOUT_OPTION],"SECONDS UNTIL THE SCREEN TURNS OFF");
  	strcpy(hints[DEFAULT_OPTION],"LAUNCH AFTER BOOTING");
@@ -544,6 +587,14 @@ index 301b469..ee0268e 100644
  	logMessage("INFO","setOptionsAndValues","Default option hint");
  	logMessage("INFO","setOptionsAndValues",hints[DEFAULT_OPTION]);
  	strcpy(hints[HELP_OPTION],"HOW TO USE THIS MENU");
+@@ -1147,6 +1158,7 @@ void drawHelpScreen(int page) {
+ }
+ 
+ void updateScreen(struct Node *node) {
++    if (!itsStoppedBecauseOfAnError && drawWindowMenu()) return;
+ 	struct Rom *rom;
+ 	if (node==NULL) {
+ 		rom = NULL;
 diff --git a/simplemenu/src/logic/simplemenu.c b/simplemenu/src/logic/simplemenu.c
 index 488bf98..07546d2 100644
 --- a/simplemenu/src/logic/simplemenu.c
@@ -617,3 +668,246 @@ index 280e4a4..a993e38 100644
  	Shake_Init();
  	device = Shake_Open(0);
  	Shake_SimplePeriodic(&effect, SHAKE_PERIODIC_SQUARE, 0.5, 0.1, 0.05, 0.1);
+diff --git a/simplemenu/src/logic/window_menu.c b/simplemenu/src/logic/window_menu.c
+new file mode 100644
+index 0000000..55c89f8
+--- /dev/null
++++ b/simplemenu/src/logic/window_menu.c
+@@ -0,0 +1,237 @@
++/* Optional, data-driven navigation layout. No section-specific background images. */
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <SDL/SDL.h>
++#include <SDL/SDL_ttf.h>
++#include "../headers/globals.h"
++#include "../headers/definitions.h"
++#include "../headers/graphics.h"
++#include "../headers/logic.h"
++#include "../headers/ini2.h"
++#include "../headers/doubly_linked_rom_list.h"
++#include "../headers/window_menu.h"
++
++static ini_t *wmConfig;
++static TTF_Font *wmFont;
++static SDL_Rect wmBoxes[5];
++static int wmEnabled, wmRows, wmLine;
++static const char *boxKeys[] = {"heading", "list", "detail", "help", "counter"};
++
++void freeWindowMenu(void) {
++    if (wmFont) TTF_CloseFont(wmFont);
++    if (wmConfig) ini_free(wmConfig);
++    wmFont = NULL; wmConfig = NULL; wmEnabled = 0;
++}
++
++void loadWindowMenu(const char *path) {
++    freeWindowMenu();
++    wmConfig = ini_load(path);
++    if (!wmConfig) return;
++    const char *enabled = ini_get(wmConfig, "WINDOW_MENU", "enabled");
++    if (!enabled || atoi(enabled) != 1) return;
++    const char *defaults[] = {"122,10,77,32", "222,10,87,190", "11,27,88,103",
++                             "61,150,88,84", "182,203,98,31"};
++    for (int i=0; i<5; i++) {
++        int x,y,w,h;
++        const char *value = ini_get(wmConfig,"WINDOW_MENU",boxKeys[i]);
++        if (sscanf(value ? value : defaults[i], "%d,%d,%d,%d", &x,&y,&w,&h)!=4 ||
++            x<0 || y<0 || w<24 || h<20 || x+w>SCREEN_WIDTH || y+h>SCREEN_HEIGHT) return;
++        wmBoxes[i]=(SDL_Rect){x,y,w,h};
++    }
++    const char *value = ini_get(wmConfig,"WINDOW_MENU","font_size");
++    int size = value ? atoi(value) : 10;
++    if (size<8 || size>18) return;
++    char fontPath[1024];
++    const char *root=getenv("PLUMOS_ROOT");
++    snprintf(fontPath,sizeof(fontPath),"%s/fonts/cjk-fallback.ttc",root?root:"/media/data/plumos");
++    wmFont=TTF_OpenFont(fontPath,size);
++    if (!wmFont) return;
++    wmLine=TTF_FontHeight(wmFont)+1;
++    value=ini_get(wmConfig,"GENERAL","items");
++    wmRows=value?atoi(value):7;
++    if (wmRows<1 || wmRows>20 || wmRows*wmLine>wmBoxes[1].h-16) return;
++    wmEnabled=1;
++}
++
++static const char *label(const char *name) {
++    const char *value=ini_get(wmConfig,"LABELS",name);
++    return value?value:name;
++}
++
++static const char *detailLabel(const char *name) {
++    const char *value=ini_get(wmConfig,"DETAIL_LABELS",name);
++    return value?value:name;
++}
++
++static const char *uiText(const char *key,const char *fallback) {
++    static char text[512];
++    const char *value=ini_get(wmConfig,"WINDOW_MENU",key);
++    if(!value) return fallback;
++    size_t out=0;
++    while(*value && out<sizeof(text)-1) {
++        if(value[0]=='\\' && value[1]=='n') {text[out++]='\n';value+=2;}
++        else text[out++]=*value++;
++    }
++    text[out]=0;
++    return text;
++}
++
++static void fill(int x,int y,int w,int h,int r,int g,int b) {
++    SDL_Rect rect={x,y,w,h};
++    SDL_FillRect(screen,&rect,SDL_MapRGB(screen->format,r,g,b));
++}
++
++static void frame(SDL_Rect box,int kind) {
++    /* Shared stepped silver frame, shaded interior, and black corner cutouts. */
++    int x=box.x,y=box.y,w=box.w,h=box.h;
++    fill(x+2,y,w-4,h,82,82,82); fill(x,y+2,w,h-4,82,82,82);
++    fill(x+2,y+1,w-4,h-2,230,230,230); fill(x+1,y+2,w-2,h-4,230,230,230);
++    fill(x+3,y+3,w-6,h-6,155,155,155);
++    fill(x+4,y+4,w-8,h-8,255,255,255);
++    for(int row=5;row<h-5;row++) {
++        int shade=(row-5)*12/(h-10);
++        fill(x+5,y+row,w-10,1,kind==1?110-shade:0,
++             kind==2?85-shade:0,kind==2?0:kind==1?90-shade:128-shade);
++    }
++}
++
++static size_t utfNext(const char *text,size_t offset) {
++    if (!text[offset]) return offset;
++    offset++;
++    while (text[offset] && ((unsigned char)text[offset]&0xc0)==0x80) offset++;
++    return offset;
++}
++
++/* Wrap on UTF-8 codepoint boundaries, measure with the actual rendering font. */
++static int textBox(const char *text,SDL_Rect box,int lines,int center) {
++    if (!text || !wmFont || lines<1) return 0;
++    size_t length=strlen(text), start=0;
++    int drawn=0;
++    SDL_Rect oldClip; SDL_GetClipRect(screen,&oldClip); SDL_SetClipRect(screen,&box);
++    for (int row=0;row<lines && start<length && (row+1)*wmLine<=box.h;row++) {
++        char line[1024]; size_t end=start, fit=start;
++        while(end<length && text[end]!='\n') {
++            size_t next=utfNext(text,end);
++            if(next-start>=sizeof(line)-4) break;
++            memcpy(line,text+start,next-start); line[next-start]=0;
++            int width=0; TTF_SizeUTF8(wmFont,line,&width,NULL);
++            if(width>box.w) break;
++            fit=next; end=next;
++        }
++        if(fit==start && text[start]!='\n') fit=utfNext(text,start);
++        size_t count=fit-start;
++        memcpy(line,text+start,count); line[count]=0;
++        if(row==lines-1 && fit<length && text[fit]!='\n') {
++            int width;
++            do {
++                strcpy(line+count,"..."); TTF_SizeUTF8(wmFont,line,&width,NULL);
++                if(width<=box.w || !count) break;
++                do {count--;} while(count && ((unsigned char)line[count]&0xc0)==0x80);
++            } while(1);
++        }
++        SDL_Color color={255,255,255,0};
++        SDL_Surface *glyphs=TTF_RenderUTF8_Solid(wmFont,line,color);
++        if(glyphs) {
++            SDL_Rect target={box.x+(center?(box.w-glyphs->w)/2:0),box.y+row*wmLine,0,0};
++            SDL_BlitSurface(glyphs,NULL,screen,&target); SDL_FreeSurface(glyphs);
++        }
++        start=fit;
++        if(text[start]=='\n') start++;
++        drawn=row+1;
++    }
++    SDL_SetClipRect(screen,&oldClip);
++    return drawn;
++}
++
++static void hand(int x,int y) {
++    /* One pixel-art pointing hand, translated to the selected row each draw. */
++    const char *pixels[]={"000111100000","001111110000","001111111111","111111111111",
++                          "111111111100","111111110000","001111110000","000111100000"};
++    for(int row=0;row<8;row++) for(int col=0;col<12;col++)
++        if(pixels[row][col]=='1') fill(x+col,y+row,1,1,255,255,255);
++}
++
++static char *romName(int index) {
++    if(favoritesSectionSelected) {
++        struct Favorite *fav=GetNthFavorite(index);
++        return strdup(fav?(strlen(fav->alias)>2?fav->alias:fav->name):"");
++    }
++    struct Node *node=GetNthNode(index);
++    if(!node || !node->data) return strdup("");
++    return getFileNameOrAlias((struct Rom *)node->data);
++}
++
++int drawWindowMenu(void) {
++    if(!wmEnabled || (currentState!=CHOOSING_GROUP && currentState!=SELECTING_SECTION &&
++                     currentState!=BROWSING_GAME_LIST)) return 0;
++    fill(0,0,SCREEN_WIDTH,SCREEN_HEIGHT,0,0,0);
++    for(int i=0;i<5;i++) frame(wmBoxes[i],i==0?1:i==4?2:0);
++    int selected,total;
++    const char *heading;
++    if(currentState==CHOOSING_GROUP) {
++        selected=activeGroup; total=sectionGroupCounter; heading=uiText("title","plumOS");
++    } else if(currentState==SELECTING_SECTION) {
++        selected=currentSectionNumber; total=menuSectionCounter-1;
++        if(selected==favoritesSectionNumber) total=menuSectionCounter;
++        heading=label(sectionGroups[activeGroup].groupName);
++    } else {
++        selected=CURRENT_GAME_NUMBER; total=CURRENT_SECTION.gameCount;
++        heading=label(CURRENT_SECTION.sectionName);
++    }
++    SDL_Rect box=wmBoxes[0]; box.x+=6;box.w-=12;box.y+=(box.h-wmLine)/2;
++    textBox(heading,box,1,1);
++    int first=selected/wmRows*wmRows;
++    int rowHeight=(wmBoxes[1].h-16)/wmRows;
++    char *selectedName=NULL;
++    for(int row=0;row<wmRows && first+row<total;row++) {
++        int index=first+row;
++        const char *name;
++        char *owned=NULL;
++        if(currentState==CHOOSING_GROUP) name=label(sectionGroups[index].groupName);
++        else if(currentState==SELECTING_SECTION) name=label(menuSections[index].sectionName);
++        else {owned=romName(index);name=owned;}
++        box=wmBoxes[1];box.x+=19;box.y+=9+row*rowHeight;box.w-=25;
++        textBox(name,box,rowHeight/wmLine,0);
++        if(index==selected) {
++            hand(wmBoxes[1].x+5,box.y+3);
++            const char *description=name;
++            if(currentState==CHOOSING_GROUP) description=detailLabel(sectionGroups[index].groupName);
++            else if(currentState==SELECTING_SECTION) description=detailLabel(menuSections[index].sectionName);
++            selectedName=strdup(description);
++        }
++        free(owned);
++    }
++    box=wmBoxes[2];box.x+=7;box.y+=8;box.w-=14;box.h-=16;
++    int titleRows=textBox(selectedName?selectedName:"",box,4,0);
++    SDL_Rect detail=box; detail.y+=titleRows*wmLine+7;
++    int available=box.y+box.h-detail.y;
++    detail.h=available>0?available:0;
++    if(currentState==CHOOSING_GROUP) textBox(uiText("choose_category","Choose a\ncategory"),detail,2,0);
++    else if(currentState==SELECTING_SECTION) textBox(uiText("choose_system","Choose a\nsystem"),detail,2,0);
++    else {
++        const char *profile=uiText("default_core","Default core");
++        if(!favoritesSectionSelected && CURRENT_SECTION.currentGameNode) {
++            struct Rom *rom=CURRENT_SECTION.currentGameNode->data;
++            int emu=rom->preferences.emulator;
++            if(emu>=0 && emu<10 && CURRENT_SECTION.executables[emu]) {
++                const char *shortName=strstr(CURRENT_SECTION.executables[emu],"__");
++                if(shortName && strcmp(shortName+2,"Default")) profile=shortName+2;
++            }
++        }
++        int profileRows=textBox(profile,detail,2,0);
++        if(!favoritesSectionSelected && CURRENT_SECTION.currentGameNode &&
++           doesFavoriteExist(((struct Rom *)CURRENT_SECTION.currentGameNode->data)->name)) {
++            detail.y+=profileRows*wmLine+2; available=box.y+box.h-detail.y;
++            detail.h=available>0?available:0;
++            if(detail.h>0) textBox(uiText("favorite","Favorite"),detail,1,0);
++        }
++    }
++    free(selectedName);
++    box=wmBoxes[3];box.x+=8;box.y+=9;box.w-=16;
++    textBox(uiText("help_text","A: Select\nB: Back\nSTART: Setup"),box,5,0);
++    char count[80];snprintf(count,sizeof(count),"%d / %d",total?selected+1:0,total);
++    box=wmBoxes[4];box.x+=6;box.w-=12;box.y+=(box.h-wmLine)/2;
++    textBox(count,box,1,1);
++    return 1;
++}

@@ -8,6 +8,7 @@ import shlex
 import shutil
 import subprocess
 import tarfile
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORK = ROOT / 'output/rg280v-simplemenu'
@@ -22,12 +23,23 @@ def shell(command):
     return subprocess.check_output(ADB + ['shell', command], text=True).strip()
 
 
+def theme_names():
+    return sorted(shell('for d in ' + HOME + '/themes/320x240/*; do if test -d "$d"; '
+                        'then echo "${d##*/}"; fi; done').splitlines(), key=str.lower)
+
+
 systems = json.loads(shell('cat ' + BASE + '/config/frontend/systems.json'))['systems']
 if shell("ps | grep '[.]\/simplemenu' || true"):
     raise SystemExit('Exit SimpleMenu before replacing its executable')
 free_kib = int(shell('df -k ' + BASE).splitlines()[-1].split()[3])
 if free_kib < 20 * 1024:
     raise SystemExit('SimpleMenu installation requires 20 MiB of free SD1 space')
+old_state = None
+if shell('if test -f ' + HOME + '/last_state.sav; then echo yes; fi') == 'yes':
+    old_state = shell('cat ' + HOME + '/last_state.sav').splitlines()
+    if len(old_state) < 10 or old_state[0] != '10;':
+        raise SystemExit('Unsupported saved-state header')
+    selected_theme = theme_names()[int(old_state[5].rstrip(';'))]
 (WORK / 'install-systems.json').write_text(json.dumps(systems, indent=2))
 stage = WORK / 'install'
 if stage.exists():
@@ -44,6 +56,10 @@ seed = stage / 'simplemenu/seed/.simplemenu'
 seed.mkdir(parents=True)
 source = WORK / 'source/simplemenu/output/OD'
 shutil.copytree(source / 'themes/320x240/0A', seed / 'themes/320x240/0A')
+project_themes = ROOT / 'assets/rg280v-simplemenu/themes/320x240'
+for theme in sorted(project_themes.iterdir()):
+    if theme.is_dir():
+        shutil.copytree(theme, seed / 'themes/320x240' / theme.name)
 
 config = (source / 'config/config.ini').read_text()
 config = config.replace('[SCREEN]', '[SCREEN]\nscreen_width = 320\nscreen_height = 240')
@@ -118,6 +134,21 @@ assert shell('sha256sum ' + BASE + '/simplemenu-install.tar').split()[0] == hash
 shell('set -e; tar -xf ' + BASE + '/simplemenu-install.tar -C ' + BASE + '; rm ' + BASE + '/simplemenu-install.tar')
 shell('mkdir -p ' + BASE + '/home/simplemenu; if ! test -d ' + HOME + '; then cp -a ' +
       BASE + '/simplemenu/seed/.simplemenu ' + BASE + '/home/simplemenu/; fi')
+backup = BASE + '/backup/simplemenu-project-themes-' + time.strftime('%Y%m%d-%H%M%S')
+shell('mkdir -p ' + backup + '; cp -p ' + HOME + '/last_state.sav ' + backup + '/')
+for theme in sorted(project_themes.iterdir()):
+    if not theme.is_dir():
+        continue
+    destination = HOME + '/themes/320x240/' + theme.name
+    shell('set -e; if test -d ' + Q(destination) + '; then cp -a ' + Q(destination) + ' ' + Q(backup) + '/; fi; '
+          'cp -a ' + Q(BASE + '/simplemenu/seed/.simplemenu/themes/320x240/' + theme.name) + ' ' + Q(HOME + '/themes/320x240/'))
+if old_state is not None:
+    old_state[5] = str(theme_names().index(selected_theme)) + ';'
+    state_file = WORK / 'last-state-theme-preserved.sav'
+    state_file.write_text('\n'.join(old_state) + '\n')
+    subprocess.run(ADB + ['push', str(state_file), HOME + '/last_state.sav.new'], check=True)
+    assert shell('sha256sum ' + HOME + '/last_state.sav.new').split()[0] == hashlib.sha256(state_file.read_bytes()).hexdigest()
+    shell('mv ' + HOME + '/last_state.sav.new ' + HOME + '/last_state.sav')
 apps = json.loads(shell('cat ' + BASE + '/config/frontend/apps.json'))
 apps['apps'] = [a for a in apps['apps'] if not a['id'].startswith('rg350_') and a['id'] != 'simplemenu']
 apps['apps'].append(dict(id='simplemenu', display_name='SimpleMenu', menu='apps',
