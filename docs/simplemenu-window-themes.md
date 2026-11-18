@@ -1,9 +1,10 @@
 # Dynamic window themes for SimpleMenu
 
 CrystalMenu is the project's RPG-style theme for the RG280V logical 320x240
-screen. It uses a common black background, stepped silver frames, blue content
-windows, a purple heading and green position counter. There are no per-item
-background/selection images. Text, lists and the pointing hand are drawn live.
+screen. Category/system selection uses five windows; ROM selection uses a wide
+blue list with purple system heading and green position counter. All use a common
+black background and stepped silver frames. There are no per-item background/
+selection images. Text, lists and the pointing hand are drawn live.
 The supplied reference was used for the layout; no game screenshot or character
 art is included in the theme.
 
@@ -12,23 +13,31 @@ art is included in the theme.
 | Window | Content |
 | --- | --- |
 | Purple, upper center | Current category or short system name |
-| Tall blue, right | Categories, systems or ROMs; the hand indicates selection |
-| Blue, upper left | Full system/ROM name, selected launch profile and favorite state |
+| Tall blue, right | Categories/systems; the hand indicates selection |
+| Blue, upper left | Full system name on one scrolling line |
 | Blue, lower left | A: Select, B: Back, START: Setup |
 | Green, lower right | Selected position / total |
+
+On the ROM screen a 304x192 blue window replaces the narrow list and detail/help
+panels. Six ROM names use single lines across a 279px text area. System name and
+position count are above the list. Launch profile remains accessible via SELECT;
+favorite operations remain X/Y, and A/B/START retain the same behavior.
 
 Categories -> systems -> ROMs use the native SimpleMenu selection state. A
 confirms; B returns up a level. In the ROM list, native SELECT opens launch
 preferences, X marks a favorite and Y toggles the favorites section. Settings,
 help and core-selection submenus retain native SimpleMenu rendering. R1's native
 view flag does not replace the fixed window layout with artwork in this theme.
-Central black space is intentionally reserved; it contains no rotating image.
+The category/system screens' central black space is reserved; the ROM view uses
+that space for the wide list. No rotating image is used.
 
 The default labels are English and use NES, SNES, GB, GBC, GBA, MD, SMS, etc.
-ROM filenames/aliases are not translated; Japanese names remain Japanese. Lists
-use bounded UTF-8 wrapping and ellipsis. The detail window allows up to four name
-lines; extremely long names can still be ellipsized to stay inside the frame.
-Metadata follows the actual number of title lines and is clipped to the window.
+ROM filenames/aliases are not translated; Japanese names remain Japanese. Names
+do not wrap. A selected name wider than its area waits one second, scrolls left
+at24 logical pixels/second, pauses one second at its end, then returns to the
+beginning. Selection/screen changes restart the scroll. Unselected long names
+use UTF-8-safe ellipsis. All moving text is clipped to its own area; fonts keep
+their original bitmap size. Long detail/core/system labels can scroll likewise.
 
 ## Opt-in theme configuration
 
@@ -49,6 +58,12 @@ list = 222,10,87,190
 detail = 11,27,88,103
 help = 61,150,88,84
 counter = 182,203,98,31
+rom_heading = 8,8,188,26
+rom_list = 8,40,304,192
+rom_counter = 204,8,108,26
+scroll_speed = 24
+scroll_delay = 1000
+scroll_pause = 1000
 ```
 
 Rectangles are logical x,y,width,height and must fit the screen. Font size is

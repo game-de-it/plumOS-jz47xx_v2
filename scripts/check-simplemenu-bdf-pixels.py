@@ -11,6 +11,7 @@ parser.add_argument('screenshot', type=Path)
 parser.add_argument('--text', default='Consoles')
 parser.add_argument('--origin', nargs=2, type=int, help='Explicit text top-left, instead of centered heading')
 parser.add_argument('--region', nargs=4, type=int, default=(128, 15, 65, 22), metavar=('X', 'Y', 'W', 'H'))
+parser.add_argument('--find-offset', action='store_true', help='Find an exact horizontally clipped marquee position')
 args = parser.parse_args()
 glyphs = {}
 ascent = descent = 0
@@ -64,6 +65,13 @@ rx, ry, rw, rh = args.region
 actual = {(x, y) for y in range(ry, ry + rh) for x in range(rx, rx + rw)
           if image.getpixel((x, y)) == (255, 255, 255)}
 assert expected, 'Reference rendered no pixels'
-assert actual == expected, dict(missing=len(expected - actual), extra=len(actual - expected))
+offsets = range(max(0, width - rw) + 1) if args.find_offset else [0]
+matches = []
+for offset in offsets:
+    clipped = {(x - offset, y) for x, y in expected
+               if rx <= x - offset < rx + rw and ry <= y < ry + rh}
+    if actual == clipped:
+        matches.append(offset)
+assert len(matches) == 1, dict(matches=matches, actual_pixels=len(actual))
 print(json.dumps(dict(exact_match=True, white_pixels=len(actual),
-                      ascent=ascent, descent=descent, text=args.text)))
+                      ascent=ascent, descent=descent, text=args.text, offset=matches[0])))

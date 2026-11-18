@@ -52,15 +52,16 @@ index fbcd20a..d54c35a 100644
  int getPressedKey();
 diff --git a/simplemenu/src/headers/window_menu.h b/simplemenu/src/headers/window_menu.h
 new file mode 100644
-index 0000000..776c43c
+index 0000000..16e1a23
 --- /dev/null
 +++ b/simplemenu/src/headers/window_menu.h
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +#ifndef WINDOW_MENU_H
 +#define WINDOW_MENU_H
 +void loadWindowMenu(const char *path);
 +void freeWindowMenu(void);
 +int drawWindowMenu(void);
++int windowMenuAnimate(void);
 +#endif
 diff --git a/simplemenu/src/logic/bitmap_font.c b/simplemenu/src/logic/bitmap_font.c
 new file mode 100644
@@ -656,10 +657,20 @@ index 7acdd83..3a0aab9 100644
  
  void pumpEvents() {
 diff --git a/simplemenu/src/logic/logic.c b/simplemenu/src/logic/logic.c
-index 3d7bd33..e8e3b94 100644
+index 3d7bd33..3e2f6c4 100644
 --- a/simplemenu/src/logic/logic.c
 +++ b/simplemenu/src/logic/logic.c
-@@ -216,15 +216,15 @@ void quit() {
+@@ -82,7 +82,8 @@ char* getRomRealName(char *romName) {
+ 	nameTakenFromAlias = ht_get(CURRENT_SECTION.aliasHashTable,strippedNameWithoutExtension);
+ 	if (nameTakenFromAlias != NULL) {
+ 		free(strippedNameWithoutExtension);
+-		return (nameTakenFromAlias);
++		/* getAlias() frees its result; the hash table retains ownership. */
++		return strdup(nameTakenFromAlias);
+ 	} else {
+ 		char *dup = strdup(romName);
+ 		stripGameName(dup);
+@@ -216,15 +217,15 @@ void quit() {
  		exit(0);
  #endif
  		if (selectedShutDownOption == 1) {
@@ -679,7 +690,7 @@ index 3d7bd33..e8e3b94 100644
  		} else {
  			exit(0);
  		}
-@@ -292,6 +292,12 @@ void executeCommand(char *emulatorFolder, char *executable,
+@@ -292,6 +293,12 @@ void executeCommand(char *emulatorFolder, char *executable,
  		char *fileToBeExecutedWithFullPath, int consoleApp) {
  #else
  void executeCommandPC (char *executable, char *fileToBeExecutedWithFullPath) {
@@ -692,7 +703,7 @@ index 3d7bd33..e8e3b94 100644
  #endif
  	FILE *fp;
  	char *exec = malloc(strlen(executable) + 5000);
-@@ -390,7 +396,7 @@ void executeCommandPC (char *executable, char *fileToBeExecutedWithFullPath) {
+@@ -390,7 +397,7 @@ void executeCommandPC (char *executable, char *fileToBeExecutedWithFullPath) {
  			}
  		#endif
  	}
@@ -701,7 +712,7 @@ index 3d7bd33..e8e3b94 100644
  
  //		char menuDirectory[100] = "";
  //		char *directory="/home/retrofw/apps";
-@@ -834,6 +840,9 @@ int recursivelyScanDirectory(char *directory, char *files[], int i, int maxFiles
+@@ -834,6 +841,9 @@ int recursivelyScanDirectory(char *directory, char *files[], int i, int maxFiles
  			break;
  		}
  		const char *d_name = entry->d_name;
@@ -763,7 +774,7 @@ index 301b469..6b547bd 100644
  	if (node==NULL) {
  		rom = NULL;
 diff --git a/simplemenu/src/logic/simplemenu.c b/simplemenu/src/logic/simplemenu.c
-index 488bf98..07546d2 100644
+index 488bf98..0791b26 100644
 --- a/simplemenu/src/logic/simplemenu.c
 +++ b/simplemenu/src/logic/simplemenu.c
 @@ -74,7 +74,7 @@ void initialSetup() {
@@ -802,6 +813,14 @@ index 488bf98..07546d2 100644
  	}
  }
  
+@@ -304,6 +315,7 @@ int main() {
+ 	while(running) {
+ 		start_time=SDL_GetTicks();
+ 		processEvents();
++		if(windowMenuAnimate()) refreshRequest=1;
+ 		if(refreshRequest) {
+ 			updateScreen(CURRENT_SECTION.currentGameNode);
+ 			refreshRequest=0;
 diff --git a/simplemenu/src/logic/system_logic_od.c b/simplemenu/src/logic/system_logic_od.c
 index 280e4a4..a993e38 100644
 --- a/simplemenu/src/logic/system_logic_od.c
@@ -837,10 +856,10 @@ index 280e4a4..a993e38 100644
  	Shake_SimplePeriodic(&effect, SHAKE_PERIODIC_SQUARE, 0.5, 0.1, 0.05, 0.1);
 diff --git a/simplemenu/src/logic/window_menu.c b/simplemenu/src/logic/window_menu.c
 new file mode 100644
-index 0000000..f15610d
+index 0000000..c970454
 --- /dev/null
 +++ b/simplemenu/src/logic/window_menu.c
-@@ -0,0 +1,263 @@
+@@ -0,0 +1,341 @@
 +/* Optional, data-driven navigation layout. No section-specific background images. */
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -859,15 +878,20 @@ index 0000000..f15610d
 +static ini_t *wmConfig;
 +static TTF_Font *wmFont;
 +static BitmapFont *wmBitmap;
-+static SDL_Rect wmBoxes[5];
-+static int wmEnabled, wmRows, wmLine;
-+static const char *boxKeys[] = {"heading", "list", "detail", "help", "counter"};
++static SDL_Rect wmBoxes[8];
++static int wmEnabled, wmRows, wmLine,wmRom;
++static int wmSpeed=24,wmDelay=1000,wmPause=1000;
++static int wmKey[5],wmDistances[4],wmOffsets[4],wmHasKey;
++static Uint32 wmSelectionAt;
++static const char *boxKeys[] = {"heading", "list", "detail", "help", "counter",
++                              "rom_heading","rom_list","rom_counter"};
 +
 +void freeWindowMenu(void) {
 +    if (wmFont) TTF_CloseFont(wmFont);
 +    bitmapFontFree(wmBitmap); wmBitmap=NULL;
 +    if (wmConfig) ini_free(wmConfig);
 +    wmFont = NULL; wmConfig = NULL; wmEnabled = 0;
++    wmHasKey=0;memset(wmDistances,0,sizeof(wmDistances));
 +}
 +
 +void loadWindowMenu(const char *path) {
@@ -877,8 +901,10 @@ index 0000000..f15610d
 +    const char *enabled = ini_get(wmConfig, "WINDOW_MENU", "enabled");
 +    if (!enabled || atoi(enabled) != 1) return;
 +    const char *defaults[] = {"122,10,77,32", "222,10,87,190", "11,27,88,103",
-+                             "61,150,88,84", "182,203,98,31"};
-+    for (int i=0; i<5; i++) {
++                             "61,150,88,84", "182,203,98,31",
++                             "8,8,188,26","8,40,304,192","204,8,108,26"};
++    wmRom=ini_get(wmConfig,"WINDOW_MENU","rom_list")!=NULL;
++    for (int i=0; i<(wmRom?8:5); i++) {
 +        int x,y,w,h;
 +        const char *value = ini_get(wmConfig,"WINDOW_MENU",boxKeys[i]);
 +        if (sscanf(value ? value : defaults[i], "%d,%d,%d,%d", &x,&y,&w,&h)!=4 ||
@@ -911,6 +937,11 @@ index 0000000..f15610d
 +    value=ini_get(wmConfig,"GENERAL","items");
 +    wmRows=value?atoi(value):7;
 +    if (wmRows<1 || wmRows>20 || wmRows*wmLine>wmBoxes[1].h-16) return;
++    if(wmRom && wmRows*wmLine>wmBoxes[6].h-16) return;
++    value=ini_get(wmConfig,"WINDOW_MENU","scroll_speed");wmSpeed=value?atoi(value):24;
++    value=ini_get(wmConfig,"WINDOW_MENU","scroll_delay");wmDelay=value?atoi(value):1000;
++    value=ini_get(wmConfig,"WINDOW_MENU","scroll_pause");wmPause=value?atoi(value):1000;
++    if(wmSpeed<1 || wmSpeed>120 || wmDelay<0 || wmDelay>10000 || wmPause<0 || wmPause>10000) return;
 +    wmEnabled=1;
 +}
 +
@@ -967,6 +998,41 @@ index 0000000..f15610d
 +static int textWidth(const char *text) {
 +    if(wmBitmap) return bitmapFontWidth(wmBitmap,text);
 +    int width=0;TTF_SizeUTF8(wmFont,text,&width,NULL);return width;
++}
++
++static int marqueeOffset(int slot) {
++    int distance=wmDistances[slot];
++    if(distance<=0) return 0;
++    Uint32 travel=((Uint32)distance*1000+wmSpeed-1)/wmSpeed;
++    Uint32 phase=(SDL_GetTicks()-wmSelectionAt)%(wmDelay+travel+wmPause);
++    if(phase<=(Uint32)wmDelay) return 0;
++    if(phase>=(Uint32)wmDelay+travel) return distance;
++    int offset=(phase-wmDelay)*wmSpeed/1000;
++    return offset<distance?offset:distance;
++}
++
++int windowMenuAnimate(void) {
++    if(!wmEnabled || !wmHasKey || isSuspended || (currentState!=CHOOSING_GROUP &&
++       currentState!=SELECTING_SECTION && currentState!=BROWSING_GAME_LIST)) return 0;
++    for(int i=0;i<4;i++) if(marqueeOffset(i)!=wmOffsets[i]) return 1;
++    return 0;
++}
++
++static void singleLine(const char *text,SDL_Rect box,int slot) {
++    if(!text) return;
++    int width=textWidth(text),offset=0;
++    if(slot>=0) {
++        wmDistances[slot]=width>box.w?width-box.w:0;
++        offset=marqueeOffset(slot);wmOffsets[slot]=offset;
++    }
++    SDL_Rect oldClip;SDL_GetClipRect(screen,&oldClip);SDL_SetClipRect(screen,&box);
++    if(wmBitmap) bitmapFontDraw(wmBitmap,text,screen,box.x-offset,box.y);
++    else {
++        SDL_Color white={255,255,255,0};
++        SDL_Surface *glyphs=TTF_RenderUTF8_Solid(wmFont,text,white);
++        if(glyphs) {SDL_Rect target={box.x-offset,box.y,0,0};SDL_BlitSurface(glyphs,NULL,screen,&target);SDL_FreeSurface(glyphs);}
++    }
++    SDL_SetClipRect(screen,&oldClip);
 +}
 +
 +static int textBox(const char *text,SDL_Rect box,int lines,int center) {
@@ -1033,8 +1099,34 @@ index 0000000..f15610d
 +
 +int drawWindowMenu(void) {
 +    if(!wmEnabled || (currentState!=CHOOSING_GROUP && currentState!=SELECTING_SECTION &&
-+                     currentState!=BROWSING_GAME_LIST)) return 0;
++                     currentState!=BROWSING_GAME_LIST)) {wmHasKey=0;return 0;}
++    int key[]={currentState,activeGroup,currentSectionNumber,CURRENT_GAME_NUMBER,favoritesSectionSelected};
++    if(!wmHasKey || memcmp(key,wmKey,sizeof(key))) {
++        memcpy(wmKey,key,sizeof(key));wmSelectionAt=SDL_GetTicks();wmHasKey=1;
++        memset(wmOffsets,0,sizeof(wmOffsets));
++    }
++    memset(wmDistances,0,sizeof(wmDistances));
 +    fill(0,0,SCREEN_WIDTH,SCREEN_HEIGHT,0,0,0);
++    if(wmRom && currentState==BROWSING_GAME_LIST) {
++        frame(wmBoxes[5],1);frame(wmBoxes[6],0);frame(wmBoxes[7],2);
++        SDL_Rect box=wmBoxes[5];box.x+=8;box.w-=16;box.y+=(box.h-wmLine)/2;
++        singleLine(label(CURRENT_SECTION.sectionName),box,3);
++        int selected=CURRENT_GAME_NUMBER,total=CURRENT_SECTION.gameCount;
++        int first=selected/wmRows*wmRows,rowHeight=(wmBoxes[6].h-16)/wmRows;
++        for(int row=0;row<wmRows && first+row<total;row++) {
++            char *name=romName(first+row);
++            box=wmBoxes[6];box.x+=19;box.w-=25;
++            box.y+=9+row*rowHeight+(rowHeight-wmLine)/2;box.h=wmLine;
++            if(first+row==selected) {
++                hand(wmBoxes[6].x+5,box.y+3);singleLine(name,box,0);
++            } else textBox(name,box,1,0);
++            free(name);
++        }
++        char count[80];snprintf(count,sizeof(count),"%d / %d",total?selected+1:0,total);
++        box=wmBoxes[7];box.x+=6;box.w-=12;box.y+=(box.h-wmLine)/2;
++        textBox(count,box,1,1);
++        return 1;
++    }
 +    for(int i=0;i<5;i++) frame(wmBoxes[i],i==0?1:i==4?2:0);
 +    int selected,total;
 +    const char *heading;
@@ -1049,7 +1141,9 @@ index 0000000..f15610d
 +        heading=label(CURRENT_SECTION.sectionName);
 +    }
 +    SDL_Rect box=wmBoxes[0]; box.x+=6;box.w-=12;box.y+=(box.h-wmLine)/2;
-+    textBox(heading,box,1,1);
++    int headingWidth=textWidth(heading);
++    if(headingWidth<box.w) {int inset=(box.w-headingWidth)/2;box.x+=inset;box.w-=inset;}
++    singleLine(heading,box,3);
 +    int first=selected/wmRows*wmRows;
 +    int rowHeight=(wmBoxes[1].h-16)/wmRows;
 +    char *selectedName=NULL;
@@ -1060,8 +1154,9 @@ index 0000000..f15610d
 +        if(currentState==CHOOSING_GROUP) name=label(sectionGroups[index].groupName);
 +        else if(currentState==SELECTING_SECTION) name=label(menuSections[index].sectionName);
 +        else {owned=romName(index);name=owned;}
-+        box=wmBoxes[1];box.x+=19;box.y+=9+row*rowHeight;box.w-=25;
-+        textBox(name,box,rowHeight/wmLine,0);
++        box=wmBoxes[1];box.x+=19;box.y+=9+row*rowHeight;box.w-=25;box.h=wmLine;
++        if(index==selected) singleLine(name,box,0);
++        else textBox(name,box,1,0);
 +        if(index==selected) {
 +            hand(wmBoxes[1].x+5,box.y+3);
 +            const char *description=name;
@@ -1072,7 +1167,8 @@ index 0000000..f15610d
 +        free(owned);
 +    }
 +    box=wmBoxes[2];box.x+=7;box.y+=8;box.w-=14;box.h-=16;
-+    int titleRows=textBox(selectedName?selectedName:"",box,4,0);
++    singleLine(selectedName?selectedName:"",box,1);
++    int titleRows=1;
 +    SDL_Rect detail=box; detail.y+=titleRows*wmLine+7;
 +    int available=box.y+box.h-detail.y;
 +    detail.h=available>0?available:0;
@@ -1088,7 +1184,8 @@ index 0000000..f15610d
 +                if(shortName && strcmp(shortName+2,"Default")) profile=shortName+2;
 +            }
 +        }
-+        int profileRows=textBox(profile,detail,2,0);
++        singleLine(profile,detail,2);
++        int profileRows=1;
 +        if(!favoritesSectionSelected && CURRENT_SECTION.currentGameNode &&
 +           doesFavoriteExist(((struct Rom *)CURRENT_SECTION.currentGameNode->data)->name)) {
 +            detail.y+=profileRows*wmLine+2; available=box.y+box.h-detail.y;
