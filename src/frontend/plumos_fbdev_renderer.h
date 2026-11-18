@@ -2527,17 +2527,29 @@ static int plumos_fbdev_render_centered_progress(
   int y2 = y1 + 64;
   int y3 = y2 + 76;
   int y4 = y3 + 34;
+  int heading_scale = 4;
+  int detail_scale = 2;
   uint32_t blue = plumos_fbdev_pack_color(r, 56, 148, 255);
   uint32_t yellow = plumos_fbdev_pack_color(r, 255, 219, 71);
   uint32_t text_color = plumos_fbdev_pack_color(r, 198, 240, 230);
 
+  if (w <= 320 && h <= 240) {
+    /* Leave the header clear on the RG280V's logical 320x240 canvas. */
+    y1 = 58;
+    y2 = 98;
+    y3 = 148;
+    y4 = 174;
+    heading_scale = 2;
+    detail_scale = 1;
+  }
+
   plumos_fbdev_fill_rect(r, 0, 0, w, h, p->background);
   plumos_fbdev_draw_tty_top_bar(r);
   plumos_fbdev_fill_rect(r, 0, 0, 7, h, blue);
-  plumos_fbdev_draw_text_center(r, 0, y1, w, line1, 4, blue);
-  plumos_fbdev_draw_text_center(r, 0, y2, w, line2, 4, yellow);
-  plumos_fbdev_draw_text_center(r, 0, y3, w, line3, 2, text_color);
-  plumos_fbdev_draw_text_center(r, 0, y4, w, line4, 2, text_color);
+  plumos_fbdev_draw_text_center(r, 0, y1, w, line1, heading_scale, blue);
+  plumos_fbdev_draw_text_center(r, 0, y2, w, line2, heading_scale, yellow);
+  plumos_fbdev_draw_text_center(r, 0, y3, w, line3, detail_scale, text_color);
+  plumos_fbdev_draw_text_center(r, 0, y4, w, line4, detail_scale, text_color);
   return 1;
 }
 
@@ -2678,6 +2690,47 @@ static void plumos_fbdev_graphic_top_layout_metrics(
   }
 }
 
+static void plumos_fbdev_draw_small_top_title(struct plumos_fbdev_renderer *r,
+                                              int x, int y, int width,
+                                              const char *title,
+                                              uint32_t color) {
+  const char *text = title;
+  int row;
+
+  /* Keep one font size across tiles; wrap long names at a word boundary. */
+  for (row = 0; row < 2 && *text; row++) {
+    const char *end = text;
+    const char *space = NULL;
+    int used = 0;
+    char line[PLUMOS_FBDEV_RENDER_LINE_MAX];
+    while (*end) {
+      unsigned int cp;
+      const char *next = plumos_fbdev_utf8_next(end, &cp);
+      int advance = plumos_fbdev_codepoint_advance(r, cp, 1, 0);
+      if (used + advance > width) {
+        break;
+      }
+      if (cp == ' ') {
+        space = end;
+      }
+      used += advance;
+      end = next;
+    }
+    if (*end && space && space > text) {
+      end = space;
+    }
+    if (end == text) {
+      break;
+    }
+    plumos_fbdev_copy_range(line, sizeof(line), text, end);
+    plumos_fbdev_draw_text(r, x, y + row * 9, line, 1, color, x + width);
+    text = end;
+    while (*text == ' ') {
+      text++;
+    }
+  }
+}
+
 static void plumos_fbdev_draw_top_tile(struct plumos_fbdev_renderer *r,
                                        const struct plumos_fbdev_palette *p,
                                        const struct plumos_fbdev_entry *entry,
@@ -2728,8 +2781,13 @@ static void plumos_fbdev_draw_top_tile(struct plumos_fbdev_renderer *r,
         r, media_x, media_y + (media_h - 28) / 2, media_w, badge, 4,
         entry->selected ? p->selection_foreground : p->foreground);
   }
-  plumos_fbdev_draw_text(r, x + 12, title_y, entry->title, title_scale,
-                         title_color, x + w - 12);
+  if (r->var.xres <= 320 && r->var.yres <= 240) {
+    plumos_fbdev_draw_small_top_title(r, x + 12, title_y, w - 18,
+                                      entry->title, title_color);
+  } else {
+    plumos_fbdev_draw_text(r, x + 12, title_y, entry->title, title_scale,
+                           title_color, x + w - 12);
+  }
   if (entry->detail[0] && r->var.xres > 320) {
     plumos_fbdev_draw_text(r, x + 12, detail_y, entry->detail, 2, p->muted,
                            x + w - 12);
