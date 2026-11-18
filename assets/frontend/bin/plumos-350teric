@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+root=${PLUMOS_ROOT:-/media/data/plumos}
+export PLUMOS_ROOT="$root" HOME="$root/home/350teric"
+export SDL_VIDEODRIVER=kmsdrm SDL_VIDEO_KMSDRM_SCALING_MODE=0
+export LD_LIBRARY_PATH="$root/350teric/lib:$root/lib"
+export LC_ALL=C LANG=C
+"$root/bin/plumos-prepare-opk-input"
+cd "$root/350teric"
+exec ./esoteric >>"$root/Logs/350teric.log" 2>&1

@@ -1,0 +1,331 @@
+diff --git a/src/constants.h b/src/constants.h
+index f0a20cf..a28f7ff 100644
+--- a/src/constants.h
++++ b/src/constants.h
+@@ -9,9 +9,9 @@ static const std::string BINARY_NAME = "esoteric";
+ static const std::string TEMP_FILE = "/tmp/" + BINARY_NAME + ".tmp";
+ static const std::string APP_TTY = "/dev/tty1";
+ 
+-static const std::string & EXTERNAL_CARD_PATH = "/media";
++static const std::string & EXTERNAL_CARD_PATH = "/media/data/sd2";
+ 
+-#ifdef TARGET_RG350
++#if defined(TARGET_RG350) && !defined(PLUMOS_RG280V)
+ static const std::string USER_HOME = "/media/data/local/home/";
+ #else
+ static const std::string USER_HOME = "~/";
+@@ -21,7 +21,7 @@ static const std::string USER_PREFIX = USER_HOME + ".esoteric/";
+ 
+ #ifdef HAVE_LIBOPK
+ static const std::string OPK_FOLDER_NAME = "apps";
+-static const std::string OPK_INTERNAL_PATH = "/media/data/" + OPK_FOLDER_NAME;
++static const std::string OPK_INTERNAL_PATH = "/media/data/plumos/350teric/" + OPK_FOLDER_NAME;
+ #endif
+ 
+ enum vol_mode_t {
+diff --git a/src/esoteric.cpp b/src/esoteric.cpp
+index cb8c280..30c54f7 100644
+--- a/src/esoteric.cpp
++++ b/src/esoteric.cpp
+@@ -198,6 +198,7 @@ Esoteric::Esoteric() {
+ 		bpp, 
+ 		flags);
+ 
++	if (!this->screen->raw) { ERROR("SDL_SetVideoMode failed: %s", SDL_GetError()); std::exit(1); }
+ 	this->screenHalfWidth = this->screen->raw->w / 2;
+ 	this->screenHalfHeight = this->screen->raw->h / 2;
+ 	TRACE("sdl video mode initialised to : w = %i, h = %i, bpp = %i", 
+@@ -233,7 +234,7 @@ Esoteric::Esoteric() {
+ 
+ 	TRACE("new power manager");
+ 	this->powerManager = new PowerManager((IHardware *)this->hw);
+-	this->powerManager->setTimeout(this->config->powerTimeout());
++	this->powerManager->setTimeout(0);
+ 
+ 	TRACE("new screen manager");
+ 	this->screenManager = new ScreenManager((IHardware *)this->hw);
+@@ -436,7 +437,7 @@ void Esoteric::main() {
+ 		this->setWallpaper(this->skin->wallpaper);
+ 
+ 		TRACE("set hardware to real settings");
+-		this->screenManager->setTimeout(config->backlightTimeout());
++		this->screenManager->setTimeout(0);
+ 		this->hw->ledOff();
+ 		pbLoading.finished();
+ 
+@@ -858,12 +859,12 @@ void Esoteric::initMenu() {
+ 
+ 	this->menu->addActionLink(
+ 						i, 
+-						tr["Device"], 
+-						fastdelegate::MakeDelegate(this, &Esoteric::deviceMenu), 
+-						tr["Tweak things on this device"], 
++						tr["Return to plumOS"],
++						fastdelegate::MakeDelegate(this, &Esoteric::returnToPlumOS),
++						tr["Close 350teric and return to plumOS"],
+ 						"skin:icons/device.png");
+ 
+-	if (!isDefaultLauncher) {
++	if (false && !isDefaultLauncher) {
+ 		this->menu->addActionLink(
+ 							i, 
+ 							tr["Install me"], 
+@@ -880,7 +881,7 @@ void Esoteric::initMenu() {
+ 						tr["Displays last launched program's output"], 
+ 						"skin:icons/ebook.png");
+ 
+-	if (this->hw->getCardStatus() == IHardware::MMC_UNMOUNTED)
++	if (false && this->hw->getCardStatus() == IHardware::MMC_UNMOUNTED)
+ 		this->menu->addActionLink(
+ 						i, 
+ 						tr["Mount"], 
+@@ -909,7 +910,7 @@ void Esoteric::initMenu() {
+ 						tr["Adjust skin settings"], 
+ 						"skin:icons/skin.png");
+ 
+-	if (this->hw->getCardStatus() == IHardware::MMC_MOUNTED)
++	if (false && this->hw->getCardStatus() == IHardware::MMC_MOUNTED)
+ 		this->menu->addActionLink(
+ 						i, 
+ 						tr["Umount"], 
+@@ -917,7 +918,7 @@ void Esoteric::initMenu() {
+ 						tr["Umount external SD"], 
+ 						"skin:icons/eject.png");
+ 
+-	if (isDefaultLauncher) {
++	if (false && isDefaultLauncher) {
+ 		this->menu->addActionLink(
+ 							i, 
+ 							tr["UnInstall me"], 
+@@ -929,7 +930,7 @@ void Esoteric::initMenu() {
+ 	bool showUpgrade = 	this->config->version() < APP_MIN_CONFIG_VERSION || 
+ 						FileUtils::processPid(this->hw->packageManager()) > 0;
+ 
+-	if (showUpgrade) { 
++	if (false && showUpgrade) {
+ 		this->menu->addActionLink(
+ 							i, 
+ 							tr["Upgrade me"], 
+@@ -971,7 +972,7 @@ void Esoteric::deviceMenu() {
+ 
+ 	do {
+ 
+-		SettingsDialog sd(this, ts, tr["Device"], "skin:icons/device.png");
++		SettingsDialog sd(this, ts, tr["Return to plumOS"], "skin:icons/device.png");
+ 		sd.selected = selected;
+ 		sd.allowCancel = false;
+ 
+@@ -1049,7 +1050,7 @@ void Esoteric::deviceMenu() {
+ 
+ 		if (enablePowerTimeout) {
+ 			this->config->powerTimeout(powerTimeout);
+-			this->powerManager->setTimeout(powerTimeout);
++			this->powerManager->setTimeout(0);
+ 		} else {
+ 			this->config->powerTimeout(0);
+ 			this->powerManager->setTimeout(0);
+@@ -1063,7 +1064,7 @@ void Esoteric::deviceMenu() {
+ 		}
+ 		if (backlightTimeout != this->config->backlightTimeout()) {
+ 			this->config->backlightTimeout(backlightTimeout);
+-			this->screenManager->setTimeout(backlightTimeout);
++			this->screenManager->setTimeout(0);
+ 		}
+ 
+ 		if (this->hw->Cpu()->overclockingSupported()) {
+@@ -1445,7 +1446,7 @@ void Esoteric::settings() {
+ 
+ 		TRACE("setScreenTimeout - %i", this->config->backlightTimeout());
+ 		this->screenManager->resetTimer();
+-		this->screenManager->setTimeout(this->config->backlightTimeout());
++		this->screenManager->setTimeout(0);
+ 
+ 		this->writeConfig();
+ 
+diff --git a/src/esoteric.h b/src/esoteric.h
+index 457771e..182988c 100644
+--- a/src/esoteric.h
++++ b/src/esoteric.h
+@@ -127,6 +127,7 @@ public:
+ 
+ 	static void quit_all(int err);
+ 	void quit();
++	void returnToPlumOS() { quitApp = true; }
+ 	void releaseScreen();
+ 
+ 	bool f200 = true;
+diff --git a/src/hw-generic.cpp b/src/hw-generic.cpp
+index 495e190..a390f17 100644
+--- a/src/hw-generic.cpp
++++ b/src/hw-generic.cpp
+@@ -10,10 +10,15 @@
+ 
+ HwGeneric::HwGeneric() : IHardware() {
+ 
++    this->curMMCStatus = MMC_MOUNTED;
++    this->BLOCK_DEVICE = "/sys/block/mmcblk1/size";
++    this->INTERNAL_MOUNT_DEVICE = "/dev/mmcblk0";
++    this->EXTERNAL_MOUNT_DEVICE = "/dev/mmcblk1";
++    this->EXTERNAL_MOUNT_POINT = "/media/data/sd2";
+     this->clock_ = (IClock *)new SysClock();
+-    this->soundcard_ = (ISoundcard *)new DummySoundcard();
++    this->soundcard_ = (ISoundcard *)new AlsaSoundcard("default", "PCM");
+     this->cpu_ = (ICpu *)new DefaultCpu();
+-    this->power_ = (IPower *)new GenericPower();
++    this->power_ = (IPower *)new JzPower();
+ 
+     TRACE(
+         "brightness: %i, volume : %i",
+@@ -43,6 +48,6 @@ int HwGeneric::setBacklightLevel(int val) { return val; }
+ bool HwGeneric::getKeepAspectRatio() { return true; }
+ bool HwGeneric::setKeepAspectRatio(bool val) { return val; }
+ 
+-std::string HwGeneric::getDeviceType() { return "Generic"; }
++std::string HwGeneric::getDeviceType() { return "RG280V / plumOS"; }
+ 
+ bool HwGeneric::setScreenState(const bool &enable) { return true; }
+diff --git a/src/hw-generic.h b/src/hw-generic.h
+index 54cc081..e51da33 100644
+--- a/src/hw-generic.h
++++ b/src/hw-generic.h
+@@ -27,6 +27,9 @@ class HwGeneric : IHardware {
+         ICpu * Cpu() { return this->cpu_; }
+         IPower * Power() { return this->power_; }
+ 
++        int defaultScreenWidth() { return 320; }
++        int defaultScreenHeight() { return 240; }
++        int defaultScreenBPP() { return 16; }
+         bool getTVOutStatus();
+         std::string getTVOutMode();
+         void setTVOutMode(std::string mode);
+diff --git a/src/hw-ihardware.h b/src/hw-ihardware.h
+index 017135b..3e6a96e 100644
+--- a/src/hw-ihardware.h
++++ b/src/hw-ihardware.h
+@@ -263,13 +263,13 @@ class IHardware {
+         virtual void powerOff() {
+             TRACE("enter");
+             sync();
+-            std::system("poweroff");
++            std::system("/media/data/plumos/bin/plumos-safe-shutdown --shutdown");
+             TRACE("exit");
+         }
+ 
+         virtual void reboot() {
+             sync();
+-		    std::system("reboot");
++		    std::system("/media/data/plumos/bin/plumos-safe-shutdown --reboot");
+         }
+ 
+         virtual int defaultScreenWidth() { return 0; }
+diff --git a/src/hw-power.h b/src/hw-power.h
+index cc14736..255c68a 100644
+--- a/src/hw-power.h
++++ b/src/hw-power.h
+@@ -35,8 +35,8 @@ class JzPower : IPower {
+ 
+     private:
+         bool pollBatteries_ = false;
+-        const std::string BATTERY_CHARGING_PATH = "/sys/class/power_supply/usb/online";
+-        const std::string BATTERY_LEVEL_PATH = "/sys/class/power_supply/battery/capacity";
++        const std::string BATTERY_CHARGING_PATH = "/sys/class/power_supply/usb-charger/online";
++        const std::string BATTERY_LEVEL_PATH = "/sys/class/power_supply/jz-battery/capacity";
+         bool readLevel();
+         bool readState();
+ 
+diff --git a/src/hwfactory.cpp b/src/hwfactory.cpp
+index 305ba67..056d330 100644
+--- a/src/hwfactory.cpp
++++ b/src/hwfactory.cpp
+@@ -46,6 +46,9 @@ std::vector<std::string> HwFactory::supportedDevices() {
+ }
+ 
+ std::string HwFactory::readDeviceType() {
++#ifdef PLUMOS_RG280V
++    return "generic";
++#endif
+ 
+     std::string result = "generic";
+ 
+diff --git a/src/launcher.cpp b/src/launcher.cpp
+index 4a595ea..c72deb6 100644
+--- a/src/launcher.cpp
++++ b/src/launcher.cpp
+@@ -33,7 +33,7 @@ Launcher::Launcher(std::vector<std::string> && commandLine, bool consoleApp)
+ void Launcher::exec() {
+ 	TRACE("enter");
+ 
+-	if (this->consoleApp) {
++	if (this->consoleApp && false) {
+ 		TRACE("console app");
+ 
+ 		/* Enable the framebuffer console */
+@@ -62,11 +62,12 @@ void Launcher::exec() {
+ 	}
+ 
+ 	TRACE("sorting args out for size : %zu", commandLine.size());
++	commandLine.insert(commandLine.begin(), "/media/data/plumos/bin/plumos-350teric-invoker");
+ 	std::vector<const char *> args;
+ 	args.reserve(commandLine.size() + 1);
+ 
+ 	std::string s;
+-	for (auto arg : commandLine) {
++	for (const auto &arg : commandLine) {
+ 		TRACE("pushing back arg : %s", arg.c_str());
+ 		args.push_back(arg.c_str());
+ 		s += " " + arg;
+@@ -75,7 +76,7 @@ void Launcher::exec() {
+ 	TRACE("args finished");
+ 	TRACE("exec-ing : %s", s.c_str());
+ 
+-	if (this->consoleApp) {
++	if (this->consoleApp && false) {
+ 		TRACE("resetting the console");
+ 		std::wclog.clear();
+ 		std::clog.clear();
+diff --git a/src/progressbar.cpp b/src/progressbar.cpp
+index d80d396..eeec815 100644
+--- a/src/progressbar.cpp
++++ b/src/progressbar.cpp
+@@ -57,7 +57,7 @@ ProgressBar::~ProgressBar() {
+ 
+ void ProgressBar::free() {
+     TRACE("enter");
+-    if (this->timerId_ > 0) {
++    if (this->timerId_ != nullptr) {
+         //SDL_SetTimer(0, NULL);
+         SDL_RemoveTimer(this->timerId_);
+         this->timerId_ = 0;
+diff --git a/src/renderer.cpp b/src/renderer.cpp
+index 69844c9..f9c6061 100644
+--- a/src/renderer.cpp
++++ b/src/renderer.cpp
+@@ -66,7 +66,7 @@ void Renderer::startPolling() {
+ 
+ void Renderer::stopPolling() {
+ 	TRACE("enter - timer id : %lu", (long)this->timerId_);
+-    if (this->timerId_ > 0) {
++    if (this->timerId_ != nullptr) {
+ 		//SDL_SetTimer(0, NULL);
+         SDL_RemoveTimer(this->timerId_);
+ 		this->timerId_ = 0;
+diff --git a/src/surfacecollection.cpp b/src/surfacecollection.cpp
+index 777b85a..3d05b30 100644
+--- a/src/surfacecollection.cpp
++++ b/src/surfacecollection.cpp
+@@ -77,6 +77,7 @@ Surface *SurfaceCollection::addSkinRes(const std::string &path, bool alpha) {
+ 
+ 	TRACE("Adding skin surface: '%s'", skinpath.c_str());
+ 	Surface *s = new Surface(skinpath, alpha);
++	if (s && !s->raw) { delete s; return NULL; }
+ 	if (NULL != s) {
+ 		surfaces[path] = s;
+ 	}
+@@ -106,6 +107,7 @@ Surface *SurfaceCollection::add(const std::string &path, bool alpha, bool graySc
+ 		}
+ 
+ 		s = new Surface(filePath, alpha);
++		if (s && !s->raw) { delete s; return NULL; }
+ 		if (s != NULL) {
+ 			if (grayScale)
+ 				s->toGrayScale();

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Esoteric execs this process after releasing SDL; return to it after the child exits.
+set -u
+root=${PLUMOS_ROOT:-/media/data/plumos}
+unset SDL_VIDEO_KMSDRM_SCALING_MODE
+"$@"
+rc=$?
+printf '350teric child exit=%s\n' "$rc"
+cd "$root/350teric" || exit 1
+export SDL_VIDEO_KMSDRM_SCALING_MODE=0
+exec ./esoteric
