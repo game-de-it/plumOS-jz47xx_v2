@@ -1,3 +1,19 @@
+diff --git a/simplemenu/src/headers/bitmap_font.h b/simplemenu/src/headers/bitmap_font.h
+new file mode 100644
+index 0000000..a6e6474
+--- /dev/null
++++ b/simplemenu/src/headers/bitmap_font.h
+@@ -0,0 +1,10 @@
++#ifndef BITMAP_FONT_H
++#define BITMAP_FONT_H
++#include <SDL/SDL.h>
++typedef struct BitmapFont BitmapFont;
++BitmapFont *bitmapFontLoad(const char *path);
++void bitmapFontFree(BitmapFont *font);
++int bitmapFontHeight(BitmapFont *font);
++int bitmapFontWidth(BitmapFont *font,const char *text);
++void bitmapFontDraw(BitmapFont *font,const char *text,SDL_Surface *surface,int x,int y);
++#endif
 diff --git a/simplemenu/src/headers/globals.h b/simplemenu/src/headers/globals.h
 index 91808b1..f6ec0c7 100644
 --- a/simplemenu/src/headers/globals.h
@@ -46,6 +62,157 @@ index 0000000..776c43c
 +void freeWindowMenu(void);
 +int drawWindowMenu(void);
 +#endif
+diff --git a/simplemenu/src/logic/bitmap_font.c b/simplemenu/src/logic/bitmap_font.c
+new file mode 100644
+index 0000000..dfceb8d
+--- /dev/null
++++ b/simplemenu/src/logic/bitmap_font.c
+@@ -0,0 +1,145 @@
++/* BDF integer-pixel renderer. DWIDTH/BBX offsets share the font's baseline. */
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include "../headers/bitmap_font.h"
++
++typedef struct {
++    int code,advance,w,h,x,y,order;
++    Uint32 rows[32];
++} BitmapGlyph;
++struct BitmapFont {
++    int count,height,ascent;
++    BitmapGlyph *glyphs;
++};
++
++static int compare(const void *a,const void *b) {
++    int x=((const BitmapGlyph *)a)->code,y=((const BitmapGlyph *)b)->code;
++    return (x>y)-(x<y);
++}
++
++static int compareLoad(const void *a,const void *b) {
++    int result=compare(a,b);
++    if(result) return result;
++    return ((const BitmapGlyph *)a)->order-((const BitmapGlyph *)b)->order;
++}
++
++void bitmapFontFree(BitmapFont *font) {
++    if(font) {free(font->glyphs);free(font);}
++}
++
++BitmapFont *bitmapFontLoad(const char *path) {
++    FILE *file=fopen(path,"r");
++    if(!file) return NULL;
++    BitmapFont *font=calloc(1,sizeof(*font));
++    if(!font) {fclose(file);return NULL;}
++    char line[512]; int capacity=0,descent=0,row=-1,invalid=0,finished=0;
++    BitmapGlyph glyph={.code=-1};
++    while(fgets(line,sizeof(line),file)) {
++        if(!strncmp(line,"STARTFONT ",10)) {finished=0;row=-1;continue;}
++        int n;
++        if(sscanf(line,"FONT_ASCENT %d",&n)==1) {if(n>font->ascent) font->ascent=n;continue;}
++        if(sscanf(line,"FONT_DESCENT %d",&n)==1) {if(n>descent) descent=n;continue;}
++        if(sscanf(line,"CHARS %d",&n)==1) {
++            if(n<1 || n>65536-capacity) {invalid=1;break;}
++            BitmapGlyph *expanded=realloc(font->glyphs,(capacity+n)*sizeof(*font->glyphs));
++            if(!expanded) {invalid=1;break;}
++            font->glyphs=expanded;capacity+=n;
++        } else if(!strncmp(line,"STARTCHAR ",10)) {
++            memset(&glyph,0,sizeof(glyph));glyph.code=-1;row=-1;
++        } else if(sscanf(line,"ENCODING %d",&glyph.code)==1) {
++            continue;
++        } else if(sscanf(line,"DWIDTH %d",&glyph.advance)==1) {
++            continue;
++        } else if(sscanf(line,"BBX %d %d %d %d",&glyph.w,&glyph.h,&glyph.x,&glyph.y)==4) {
++            if(glyph.w<0 || glyph.w>32 || glyph.h<0 || glyph.h>32 ||
++               glyph.x<-64 || glyph.x>64 || glyph.y<-64 || glyph.y>64) {invalid=1;break;}
++        } else if(!strncmp(line,"BITMAP",6)) {
++            row=0;
++        } else if(!strncmp(line,"ENDCHAR",7)) {
++            if(row!=glyph.h || glyph.advance<0 || glyph.advance>64 || font->count>=capacity) {invalid=1;break;}
++            if(glyph.code>=0) {glyph.order=font->count;font->glyphs[font->count++]=glyph;}
++            row=-1;
++        } else if(!strncmp(line,"ENDFONT",7)) {
++            finished=1;row=-1;
++        } else if(row>=0) {
++            char *end;
++            if(row>=glyph.h) {invalid=1;break;}
++            unsigned long bits=strtoul(line,&end,16);
++            if(end==line || (*end!='\r' && *end!='\n' && *end!=0)) {invalid=1;break;}
++            glyph.rows[row++]=(Uint32)bits;
++        }
++    }
++    fclose(file);
++    font->height=font->ascent+descent;
++    if(invalid || !finished || !font->count || font->ascent<1 || font->height<1 || font->height>64) {
++        bitmapFontFree(font);return NULL;
++    }
++    qsort(font->glyphs,font->count,sizeof(*font->glyphs),compareLoad);
++    int unique=0;
++    for(int i=0;i<font->count;i++) {
++        if(unique && font->glyphs[unique-1].code==font->glyphs[i].code)
++            font->glyphs[unique-1]=font->glyphs[i];
++        else font->glyphs[unique++]=font->glyphs[i];
++    }
++    font->count=unique;
++    return font;
++}
++
++static unsigned int decode(const char **ptr) {
++    const unsigned char *p=(const unsigned char *)*ptr;
++    unsigned int code=*p++; int extra=0;
++    if(code>=0xc2 && code<=0xdf) {code&=31;extra=1;}
++    else if(code>=0xe0 && code<=0xef) {code&=15;extra=2;}
++    else if(code>=0xf0 && code<=0xf4) {code&=7;extra=3;}
++    else if(code>=0x80) code='?';
++    for(int i=0;i<extra;i++) {
++        if((*p&0xc0)!=0x80) {code='?';break;}
++        code=(code<<6)|(*p++&63);
++    }
++    *ptr=(const char *)p;return code;
++}
++
++static BitmapGlyph *lookup(BitmapFont *font,unsigned int code) {
++    BitmapGlyph key={.code=(int)code};
++    BitmapGlyph *glyph=bsearch(&key,font->glyphs,font->count,sizeof(key),compare);
++    if(!glyph && code!='?') return lookup(font,'?');
++    return glyph;
++}
++
++int bitmapFontHeight(BitmapFont *font) {return font->height;}
++int bitmapFontWidth(BitmapFont *font,const char *text) {
++    int width=0;
++    while(*text) {BitmapGlyph *g=lookup(font,decode(&text));width+=g?g->advance:font->height/2;}
++    return width;
++}
++
++void bitmapFontDraw(BitmapFont *font,const char *text,SDL_Surface *surface,int x,int y) {
++    int width=bitmapFontWidth(font,text);
++    if(width<1) return;
++    SDL_Surface *glyphs=SDL_CreateRGBSurface(SDL_SWSURFACE,width,font->height,32,
++                                           0x00ff0000,0x0000ff00,0x000000ff,0);
++    if(!glyphs) return;
++    SDL_FillRect(glyphs,NULL,0);
++    SDL_SetColorKey(glyphs,SDL_SRCCOLORKEY,0);
++    Uint32 white=SDL_MapRGB(glyphs->format,255,255,255);
++    int pen=0;
++    while(*text) {
++        BitmapGlyph *g=lookup(font,decode(&text));
++        if(!g) {pen+=font->height/2;continue;}
++        int top=font->ascent-g->h-g->y;
++        int stride=(g->w+7)/8*8;
++        for(int row=0;row<g->h;row++) for(int col=0;col<g->w;col++) {
++            int tx=pen+g->x+col,ty=top+row;
++            if(tx>=0 && tx<width && ty>=0 && ty<font->height &&
++               (g->rows[row]&((Uint32)1<<(stride-1-col)))) {
++                Uint32 *target=(Uint32 *)((Uint8 *)glyphs->pixels+ty*glyphs->pitch)+tx;
++                *target=white;
++            }
++        }
++        pen+=g->advance;
++    }
++    SDL_Rect target={x,y,0,0};
++    SDL_BlitSurface(glyphs,NULL,surface,&target);
++    SDL_FreeSurface(glyphs);
++}
 diff --git a/simplemenu/src/logic/config.c b/simplemenu/src/logic/config.c
 index 15806a4..47a2a11 100644
 --- a/simplemenu/src/logic/config.c
@@ -670,10 +837,10 @@ index 280e4a4..a993e38 100644
  	Shake_SimplePeriodic(&effect, SHAKE_PERIODIC_SQUARE, 0.5, 0.1, 0.05, 0.1);
 diff --git a/simplemenu/src/logic/window_menu.c b/simplemenu/src/logic/window_menu.c
 new file mode 100644
-index 0000000..55c89f8
+index 0000000..f15610d
 --- /dev/null
 +++ b/simplemenu/src/logic/window_menu.c
-@@ -0,0 +1,237 @@
+@@ -0,0 +1,263 @@
 +/* Optional, data-driven navigation layout. No section-specific background images. */
 +#include <stdio.h>
 +#include <stdlib.h>
@@ -687,15 +854,18 @@ index 0000000..55c89f8
 +#include "../headers/ini2.h"
 +#include "../headers/doubly_linked_rom_list.h"
 +#include "../headers/window_menu.h"
++#include "../headers/bitmap_font.h"
 +
 +static ini_t *wmConfig;
 +static TTF_Font *wmFont;
++static BitmapFont *wmBitmap;
 +static SDL_Rect wmBoxes[5];
 +static int wmEnabled, wmRows, wmLine;
 +static const char *boxKeys[] = {"heading", "list", "detail", "help", "counter"};
 +
 +void freeWindowMenu(void) {
 +    if (wmFont) TTF_CloseFont(wmFont);
++    bitmapFontFree(wmBitmap); wmBitmap=NULL;
 +    if (wmConfig) ini_free(wmConfig);
 +    wmFont = NULL; wmConfig = NULL; wmEnabled = 0;
 +}
@@ -720,10 +890,24 @@ index 0000000..55c89f8
 +    if (size<8 || size>18) return;
 +    char fontPath[1024];
 +    const char *root=getenv("PLUMOS_ROOT");
-+    snprintf(fontPath,sizeof(fontPath),"%s/fonts/cjk-fallback.ttc",root?root:"/media/data/plumos");
-+    wmFont=TTF_OpenFont(fontPath,size);
-+    if (!wmFont) return;
-+    wmLine=TTF_FontHeight(wmFont)+1;
++    const char *fontFile=ini_get(wmConfig,"WINDOW_MENU","font");
++    if(fontFile && fontFile[0]=='/') snprintf(fontPath,sizeof(fontPath),"%s",fontFile);
++    else if(fontFile) {
++        const char *slash=strrchr(path,'/');
++        int prefix=slash?(int)(slash-path+1):0;
++        snprintf(fontPath,sizeof(fontPath),"%.*s%s",prefix,path,fontFile);
++    } else snprintf(fontPath,sizeof(fontPath),"%s/fonts/cjk-fallback.ttc",root?root:"/media/data/plumos");
++    size_t pathLength=strlen(fontPath);
++    if(pathLength>=4 && !strcasecmp(fontPath+pathLength-4,".bdf")) {
++        wmBitmap=bitmapFontLoad(fontPath);
++        if(!wmBitmap) return;
++        wmLine=bitmapFontHeight(wmBitmap)+1;
++        fprintf(stderr,"WINDOW_MENU bitmap=%s height=%d\n",fontPath,wmLine-1);
++    } else {
++        wmFont=TTF_OpenFont(fontPath,size);
++        if(!wmFont) return;
++        wmLine=TTF_FontHeight(wmFont)+1;
++    }
 +    value=ini_get(wmConfig,"GENERAL","items");
 +    wmRows=value?atoi(value):7;
 +    if (wmRows<1 || wmRows>20 || wmRows*wmLine>wmBoxes[1].h-16) return;
@@ -780,8 +964,13 @@ index 0000000..55c89f8
 +}
 +
 +/* Wrap on UTF-8 codepoint boundaries, measure with the actual rendering font. */
++static int textWidth(const char *text) {
++    if(wmBitmap) return bitmapFontWidth(wmBitmap,text);
++    int width=0;TTF_SizeUTF8(wmFont,text,&width,NULL);return width;
++}
++
 +static int textBox(const char *text,SDL_Rect box,int lines,int center) {
-+    if (!text || !wmFont || lines<1) return 0;
++    if (!text || (!wmFont && !wmBitmap) || lines<1) return 0;
 +    size_t length=strlen(text), start=0;
 +    int drawn=0;
 +    SDL_Rect oldClip; SDL_GetClipRect(screen,&oldClip); SDL_SetClipRect(screen,&box);
@@ -791,7 +980,7 @@ index 0000000..55c89f8
 +            size_t next=utfNext(text,end);
 +            if(next-start>=sizeof(line)-4) break;
 +            memcpy(line,text+start,next-start); line[next-start]=0;
-+            int width=0; TTF_SizeUTF8(wmFont,line,&width,NULL);
++            int width=textWidth(line);
 +            if(width>box.w) break;
 +            fit=next; end=next;
 +        }
@@ -801,16 +990,20 @@ index 0000000..55c89f8
 +        if(row==lines-1 && fit<length && text[fit]!='\n') {
 +            int width;
 +            do {
-+                strcpy(line+count,"..."); TTF_SizeUTF8(wmFont,line,&width,NULL);
++                strcpy(line+count,"..."); width=textWidth(line);
 +                if(width<=box.w || !count) break;
 +                do {count--;} while(count && ((unsigned char)line[count]&0xc0)==0x80);
 +            } while(1);
 +        }
-+        SDL_Color color={255,255,255,0};
-+        SDL_Surface *glyphs=TTF_RenderUTF8_Solid(wmFont,line,color);
-+        if(glyphs) {
-+            SDL_Rect target={box.x+(center?(box.w-glyphs->w)/2:0),box.y+row*wmLine,0,0};
-+            SDL_BlitSurface(glyphs,NULL,screen,&target); SDL_FreeSurface(glyphs);
++        if(wmBitmap) {
++            bitmapFontDraw(wmBitmap,line,screen,box.x+(center?(box.w-textWidth(line))/2:0),box.y+row*wmLine);
++        } else {
++            SDL_Color color={255,255,255,0};
++            SDL_Surface *glyphs=TTF_RenderUTF8_Solid(wmFont,line,color);
++            if(glyphs) {
++                SDL_Rect target={box.x+(center?(box.w-glyphs->w)/2:0),box.y+row*wmLine,0,0};
++                SDL_BlitSurface(glyphs,NULL,screen,&target); SDL_FreeSurface(glyphs);
++            }
 +        }
 +        start=fit;
 +        if(text[start]=='\n') start++;

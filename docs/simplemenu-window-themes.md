@@ -42,6 +42,7 @@ items_in_fullscreen_mode = 6
 
 [WINDOW_MENU]
 enabled = 1
+font = resources/fonts/umplus_j10r.bdf
 font_size = 10
 heading = 122,10,77,32
 list = 222,10,87,190
@@ -53,9 +54,17 @@ counter = 182,203,98,31
 Rectangles are logical x,y,width,height and must fit the screen. Font size is
 8..18; list rows are 1..20 and must fit the list window. Native theme `items`
 defines the page size; `items_in_fullscreen_mode` should match it for this layout.
-Window text uses the existing plumOS CJK fallback font, supporting English and
-Japanese with the same measurement/rendering font. The ordinary theme font path
-references the standard 0A font for native fallback/submenu compatibility.
+CrystalMenu uses `resources/fonts/umplus_j10r.bdf`; CrystalMenu12 uses the supplied
+`umplus_j12r.bdf`. These original M+ bitmap fonts from Pyxel example assets include
+both Japanese and Latin BDF blocks. The renderer reads all blocks, uses a shared
+ascent/descent baseline, and draws the source bits at integer coordinates without
+resampling. English and Japanese use the same bitmap measurements. Their license
+and source notice are included beside the font files.
+
+`[WINDOW_MENU] font` accepts a theme-relative BDF path (or TTF path). BDF pixels
+are fixed by the file; `font_size` does not resize them. Without this key, the
+existing plumOS CJK fallback TTF remains supported. The ordinary GENERAL font path
+still references standard 0A for native fallback/submenu compatibility.
 
 Optional WINDOW_MENU strings: `title`, `choose_category`, `choose_system`,
 `default_core`, `favorite`, `help_text`. A literal `\n` separates text lines.
@@ -77,6 +86,8 @@ seeds and updates their installed copies with a timestamped backup. It preserves
 the selected theme by name when adding folders shifts numeric theme indices.
 Existing external theme assets, section INIs, favorites and ROM settings remain.
 Choose Apps -> SimpleMenu -> START -> Theme -> CrystalMenu, then B to apply.
+Choose CrystalMenu12 for the 12-dot version. It shares the same layout and points
+to the 12-dot file in CrystalMenu's resources; retain both installed folders.
 
 Native source changes remain in `patches/rg280v-simplemenu.patch`, applied against
 the pinned upstream checkout by the build script. Original 0A, SimUI, ArtBook and

@@ -6,10 +6,16 @@ import re
 import shlex
 import subprocess
 import time
+import argparse
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUT = ROOT / 'output/rg280v-simplemenu/window-check'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--theme-name', choices=('CrystalMenu', 'CrystalMenu12'), default='CrystalMenu')
+args = parser.parse_args()
+suffix = '' if args.theme_name == 'CrystalMenu' else '-' + args.theme_name
+OUT = ROOT / ('output/rg280v-simplemenu/window-check' + suffix)
 OUT.mkdir(parents=True, exist_ok=True)
+(OUT / 'results.json').unlink(missing_ok=True)
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
 BASE = '/media/data/plumos'
 HOME = '/tmp/plumos-simplemenu-window-check'
@@ -55,7 +61,7 @@ def capture(name):
 assert not shell("ps | awk '$5==\"./simplemenu\" {print $1}'"), 'Exit SimpleMenu first'
 names = sorted(shell('for d in ' + BASE + '/home/simplemenu/.simplemenu/themes/320x240/*; '
                      'do if test -d "$d"; then echo "${d##*/}"; fi; done').splitlines(), key=str.lower)
-index = names.index('CrystalMenu')
+index = names.index(args.theme_name)
 shell('/media/data/local/init.d/S95frontend stop')
 process = None
 pid = None

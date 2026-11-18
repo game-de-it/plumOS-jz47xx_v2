@@ -1,0 +1,5 @@
+M+ bitmap fonts by COZ, used unchanged.
+BDF headers: Copyright (C) 2002-2004 COZ.
+Source: Pyxel example assets
+https://github.com/kitao/pyxel/tree/main/python/pyxel/examples/assets
+License: LICENSE_MPLUS_BITMAP.txt

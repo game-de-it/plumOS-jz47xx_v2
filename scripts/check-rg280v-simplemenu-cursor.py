@@ -18,6 +18,7 @@ label = args.theme_name or str(args.theme_index)
 assert re.fullmatch(r'[A-Za-z0-9_-]+', label), 'Unsafe output label'
 OUT = ROOT / f'output/rg280v-simplemenu/input-check-theme-{label}'
 OUT.mkdir(parents=True, exist_ok=True)
+(OUT / 'results.json').unlink(missing_ok=True)
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
 BASE = '/media/data/plumos'
 TMP = '/tmp/plumos-simplemenu-input-check'
