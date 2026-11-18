@@ -856,16 +856,17 @@ index 280e4a4..a993e38 100644
  	Shake_SimplePeriodic(&effect, SHAKE_PERIODIC_SQUARE, 0.5, 0.1, 0.05, 0.1);
 diff --git a/simplemenu/src/logic/window_menu.c b/simplemenu/src/logic/window_menu.c
 new file mode 100644
-index 0000000..c970454
+index 0000000..a8f0334
 --- /dev/null
 +++ b/simplemenu/src/logic/window_menu.c
-@@ -0,0 +1,341 @@
+@@ -0,0 +1,374 @@
 +/* Optional, data-driven navigation layout. No section-specific background images. */
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
 +#include <SDL/SDL.h>
 +#include <SDL/SDL_ttf.h>
++#include <SDL/SDL_image.h>
 +#include "../headers/globals.h"
 +#include "../headers/definitions.h"
 +#include "../headers/graphics.h"
@@ -878,6 +879,8 @@ index 0000000..c970454
 +static ini_t *wmConfig;
 +static TTF_Font *wmFont;
 +static BitmapFont *wmBitmap;
++static SDL_Surface *wmBackground;
++static int wmBackgroundFrames;
 +static SDL_Rect wmBoxes[8];
 +static int wmEnabled, wmRows, wmLine,wmRom;
 +static int wmSpeed=24,wmDelay=1000,wmPause=1000;
@@ -889,6 +892,8 @@ index 0000000..c970454
 +void freeWindowMenu(void) {
 +    if (wmFont) TTF_CloseFont(wmFont);
 +    bitmapFontFree(wmBitmap); wmBitmap=NULL;
++    if(wmBackground) SDL_FreeSurface(wmBackground);
++    wmBackground=NULL;
 +    if (wmConfig) ini_free(wmConfig);
 +    wmFont = NULL; wmConfig = NULL; wmEnabled = 0;
 +    wmHasKey=0;memset(wmDistances,0,sizeof(wmDistances));
@@ -942,6 +947,32 @@ index 0000000..c970454
 +    value=ini_get(wmConfig,"WINDOW_MENU","scroll_delay");wmDelay=value?atoi(value):1000;
 +    value=ini_get(wmConfig,"WINDOW_MENU","scroll_pause");wmPause=value?atoi(value):1000;
 +    if(wmSpeed<1 || wmSpeed>120 || wmDelay<0 || wmDelay>10000 || wmPause<0 || wmPause>10000) return;
++    value=ini_get(wmConfig,"WINDOW_MENU","background_contains_frames");
++    wmBackgroundFrames=value?atoi(value):0;
++    const char *background=ini_get(wmConfig,"WINDOW_MENU","background");
++    if(background) {
++        char imagePath[1024];
++        if(background[0]=='/') snprintf(imagePath,sizeof(imagePath),"%s",background);
++        else {
++            const char *slash=strrchr(path,'/');
++            int prefix=slash?(int)(slash-path+1):0;
++            snprintf(imagePath,sizeof(imagePath),"%.*s%s",prefix,path,background);
++        }
++        SDL_Surface *raw=IMG_Load(imagePath);
++        if(raw) {
++            SDL_Surface *converted=SDL_ConvertSurface(raw,screen->format,SDL_SWSURFACE);
++            SDL_FreeSurface(raw);
++            wmBackground=SDL_CreateRGBSurface(SDL_SWSURFACE,SCREEN_WIDTH,SCREEN_HEIGHT,
++                screen->format->BitsPerPixel,screen->format->Rmask,screen->format->Gmask,
++                screen->format->Bmask,screen->format->Amask);
++            if(!converted || !wmBackground || SDL_SoftStretch(converted,NULL,wmBackground,NULL)<0) {
++                if(wmBackground) SDL_FreeSurface(wmBackground);
++                wmBackground=NULL;
++            }
++            if(converted) SDL_FreeSurface(converted);
++        }
++        if(!wmBackground) fprintf(stderr,"WINDOW_MENU background failed: %s\n",imagePath);
++    }
 +    wmEnabled=1;
 +}
 +
@@ -1127,7 +1158,9 @@ index 0000000..c970454
 +        textBox(count,box,1,1);
 +        return 1;
 +    }
-+    for(int i=0;i<5;i++) frame(wmBoxes[i],i==0?1:i==4?2:0);
++    if(wmBackground) SDL_BlitSurface(wmBackground,NULL,screen,NULL);
++    if(!wmBackground || !wmBackgroundFrames)
++        for(int i=0;i<5;i++) frame(wmBoxes[i],i==0?1:i==4?2:0);
 +    int selected,total;
 +    const char *heading;
 +    if(currentState==CHOOSING_GROUP) {

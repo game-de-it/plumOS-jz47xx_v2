@@ -5,8 +5,8 @@ screen. Category/system selection uses five windows; ROM selection uses a wide
 blue list with purple system heading and green position counter. All use a common
 black background and stepped silver frames. There are no per-item background/
 selection images. Text, lists and the pointing hand are drawn live.
-The supplied reference was used for the layout; no game screenshot or character
-art is included in the theme.
+The main category/system artwork is the user-supplied `resources/main.png`, shared
+across every selection. Its frames contain no baked-in list text or pointer.
 
 ## Navigation and layout
 
@@ -28,8 +28,8 @@ confirms; B returns up a level. In the ROM list, native SELECT opens launch
 preferences, X marks a favorite and Y toggles the favorites section. Settings,
 help and core-selection submenus retain native SimpleMenu rendering. R1's native
 view flag does not replace the fixed window layout with artwork in this theme.
-The category/system screens' central black space is reserved; the ROM view uses
-that space for the wide list. No rotating image is used.
+The category/system screens show the common shop artwork in the center; the ROM
+view uses that space for the wide list. No per-item image rotation is used.
 
 The default labels are English and use NES, SNES, GB, GBC, GBA, MD, SMS, etc.
 ROM filenames/aliases are not translated; Japanese names remain Japanese. Names
@@ -53,6 +53,8 @@ items_in_fullscreen_mode = 6
 enabled = 1
 font = resources/fonts/umplus_j10r.bdf
 font_size = 10
+background = resources/main.png
+background_contains_frames = 1
 heading = 122,10,77,32
 list = 222,10,87,190
 detail = 11,27,88,103
@@ -69,6 +71,10 @@ scroll_pause = 1000
 Rectangles are logical x,y,width,height and must fit the screen. Font size is
 8..18; list rows are 1..20 and must fit the list window. Native theme `items`
 defines the page size; `items_in_fullscreen_mode` should match it for this layout.
+Optional `background` is a theme-relative image, loaded once and nearest-neighbor
+scaled to the logical screen. `background_contains_frames = 1` uses its existing
+frames instead of drawing the five native frames over it. Missing backgrounds
+fall back to native frames. The wide ROM layout remains drawn separately.
 CrystalMenu uses `resources/fonts/umplus_j10r.bdf`; CrystalMenu12 uses the supplied
 `umplus_j12r.bdf`. These original M+ bitmap fonts from Pyxel example assets include
 both Japanese and Latin BDF blocks. The renderer reads all blocks, uses a shared
