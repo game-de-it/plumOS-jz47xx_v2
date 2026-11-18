@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "reference": "https://yoshives.com/simplemenu-theme-simple-quest/",
+  "section_names": {
+    "gb": "GAME BOY", "gbc": "GAME BOY COLOR", "gba": "GAME BOY ADVANCE",
+    "sfc": "SNES", "megadrive": "SEGA GENESIS", "mastersystem": "MASTER SYSTEM",
+    "gamegear": "GAME GEAR", "pcengine": "PC ENGINE", "pcenginecd": "PC ENGINE CD",
+    "ngpc": "NEO GEO POCKET COLOR", "neogeocd": "NEO GEO CD",
+    "arcade": "FINALBURN ALPHA", "pokemini": "POKEMON MINI", "lynx": "ATARI LYNX",
+    "cpc": "AMSTRAD CPC", "zxspectrum": "ZX SPECTRUM"
+  },
+  "groups": {
+    "arcades": ["arcade"],
+    "consoles": ["nes", "sfc", "mastersystem", "megadrive", "segacd", "atari2600", "neogeo", "pcengine", "pcenginecd", "psx", "supergrafx", "neogeocd"],
+    "handhelds": ["gb", "gbc", "gba", "gamegear", "lynx", "ngpc", "wonderswan", "pokemini"],
+    "home computers": ["zxspectrum", "cpc", "msx", "amiga", "atari800"]
+  }
+}

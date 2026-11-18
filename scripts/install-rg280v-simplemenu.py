@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Install SimpleMenu with existing FE launch profiles and locally fetched themes."""
 import hashlib
+import argparse
+import configparser
 import json
 import pathlib
 import shlex
 import shutil
 import subprocess
 import tarfile
+import time
+from simplemenu_section_layout import migrate_state
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 WORK = ROOT / 'output/rg280v-simplemenu'
@@ -14,6 +18,10 @@ ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
 BASE = '/media/data/plumos'
 HOME = BASE + '/home/simplemenu/.simplemenu'
 Q = shlex.quote
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--refresh-sections', action='store_true',
+                    help='Update installed section order while preserving the selected system by name')
+args = parser.parse_args()
 
 
 def shell(command):
@@ -55,25 +63,25 @@ for old in ['underclocked_speed = 444', 'overclocked_speed = 1092', 'sleep_speed
 for name in ['apps', 'games', 'tmp', 'rom_preferences', 'section_groups']:
     (seed / name).mkdir()
 
-names = {'gb': 'GAME BOY', 'gbc': 'GAME BOY COLOR', 'gba': 'GAME BOY ADVANCE',
-         'snes': 'SNES', 'sfc': 'SNES', 'megadrive': 'SEGA GENESIS',
-         'mastersystem': 'MASTER SYSTEM', 'gamegear': 'GAME GEAR',
-         'pcengine': 'PC ENGINE', 'pcenginecd': 'PC ENGINE CD',
-         'ngpc': 'NEO GEO POCKET COLOR', 'neogeocd': 'NEO GEO CD',
-         'arcade': 'FINALBURN ALPHA', 'pokemini': 'POKEMON MINI',
-         'lynx': 'ATARI LYNX', 'cpc': 'AMSTRAD CPC', 'zxspectrum': 'ZX SPECTRUM'}
+layout_document = json.loads((ROOT / 'assets/rg280v-simplemenu/system-order.json').read_text())
+names = layout_document['section_names']
 handhelds = {'gb', 'gbc', 'gba', 'ngpc', 'wonderswan', 'pokemini', 'lynx', 'gamegear'}
 computers = {'msx', 'amiga', 'atari800', 'cpc', 'zxspectrum'}
 groups = {g: [] for g in ['arcades', 'consoles', 'handhelds', 'home computers']}
+layout = layout_document['groups']
+section_ids = {}
 launchers = stage / 'simplemenu/launchers'
 launchers.mkdir()
 for system in systems:
     if not system.get('enabled') or not system.get('launch_profiles'):
         continue
     ident = system['id']
-    group = ('handhelds' if ident in handhelds else 'home computers' if ident in computers
-             else 'arcades' if ident in {'arcade', 'neogeo'} else 'consoles')
+    group = next((g for g, ids in layout.items() if ident in ids), None)
+    if group is None:
+        group = ('handhelds' if ident in handhelds else 'home computers' if ident in computers
+                 else 'arcades' if ident == 'arcade' else 'consoles')
     section = names.get(ident, system['display_name'].upper())
+    section_ids[section] = ident
     profiles = [('Default', None)] + [(p.replace(':', '_'), p) for p in system['launch_profiles']]
     assert len(profiles) <= 10, ident
     execs = []
@@ -99,6 +107,8 @@ export PLUMOS_ROOT="$root" PLUMOS_SDCARD_ROOT="$sdcard"
         'romDirs = ' + ','.join(dict.fromkeys(dirs)), 'romExts = ' + ','.join(exts)])))
 
 for group, sections in groups.items():
+    rank = {ident: i for i, ident in enumerate(layout[group])}
+    sections.sort(key=lambda item: rank.get(section_ids[item[0]], 1000))
     (seed / 'section_groups' / (group + '.ini')).write_text(
         '[CONSOLES]\nconsoleList = ' + ','.join(n for n, _ in sections) + '\n\n' +
         '\n\n'.join(text for _, text in sections) + '\n')
@@ -106,6 +116,17 @@ for group, sections in groups.items():
                     seed / 'section_groups' / (group + '.png'))
 # Initial selection: SimpleQuest, consoles/NES; subsequent user state is preserved.
 (seed / 'last_state.sav').write_text('10;\n1;\n0;\n1;\n1;\n1;\n0;\n1;\n0;\n3;\n')
+if args.refresh_sections:
+    old_groups = {}
+    for group in groups:
+        old_config = configparser.ConfigParser(interpolation=None)
+        old_config.read_string(shell('cat ' + Q(HOME + '/section_groups/' + group + '.ini')))
+        old_groups[group] = [n.strip() for n in old_config['CONSOLES']['consoleList'].split(',')]
+    old_state = shell('cat ' + Q(HOME + '/last_state.sav'))
+    new_groups = {g: [name for name, _ in rows] for g, rows in groups.items()}
+    migrated = migrate_state(old_state, old_groups, new_groups)
+    (WORK / 'state-before-layout.sav').write_text(old_state + '\n')
+    (WORK / 'state-after-layout.sav').write_text(migrated)
 (stage / 'bin').mkdir()
 for name in ['plumos-simplemenu', 'plumos-simplemenu-invoker']:
     shutil.copyfile(ROOT / 'assets/frontend/bin' / name, stage / 'bin' / name)
@@ -119,6 +140,13 @@ assert shell('sha256sum ' + BASE + '/simplemenu-install.tar').split()[0] == hash
 shell('set -e; tar -xf ' + BASE + '/simplemenu-install.tar -C ' + BASE + '; rm ' + BASE + '/simplemenu-install.tar')
 shell('mkdir -p ' + BASE + '/home/simplemenu; if ! test -d ' + HOME + '; then cp -a ' +
       BASE + '/simplemenu/seed/.simplemenu ' + BASE + '/home/simplemenu/; fi')
+if args.refresh_sections:
+    backup = BASE + '/backup/simplemenu-layout-' + time.strftime('%Y%m%d-%H%M%S')
+    shell('mkdir -p ' + Q(backup) + '; cp -a ' + Q(HOME + '/section_groups') + ' ' + Q(backup) +
+          '; cp -p ' + Q(HOME + '/last_state.sav') + ' ' + Q(backup))
+    subprocess.run(ADB + ['push', str(WORK / 'state-after-layout.sav'), HOME + '/last_state.sav.new'], check=True)
+    shell('set -e; cp ' + Q(BASE + '/simplemenu/seed/.simplemenu/section_groups') + '/*.ini ' +
+          Q(HOME + '/section_groups/') + '; mv ' + Q(HOME + '/last_state.sav.new') + ' ' + Q(HOME + '/last_state.sav'))
 apps = json.loads(shell('cat ' + BASE + '/config/frontend/apps.json'))
 apps['apps'] = [a for a in apps['apps'] if not a['id'].startswith('rg350_') and a['id'] != 'simplemenu']
 apps['apps'].append(dict(id='simplemenu', display_name='SimpleMenu', menu='apps',
