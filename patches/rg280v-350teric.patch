@@ -297,7 +297,7 @@ index d80d396..eeec815 100644
          SDL_RemoveTimer(this->timerId_);
          this->timerId_ = 0;
 diff --git a/src/renderer.cpp b/src/renderer.cpp
-index 69844c9..f9c6061 100644
+index 69844c9..e29fe20 100644
 --- a/src/renderer.cpp
 +++ b/src/renderer.cpp
 @@ -66,7 +66,7 @@ void Renderer::startPolling() {
@@ -309,11 +309,80 @@ index 69844c9..f9c6061 100644
  		//SDL_SetTimer(0, NULL);
          SDL_RemoveTimer(this->timerId_);
  		this->timerId_ = 0;
+@@ -334,12 +334,13 @@ void Renderer::render() {
+ 			int padding = 36;
+ 			if (app->skin->linkDisplayMode == Skin::ICON_AND_TEXT || app->skin->linkDisplayMode == Skin::ICON) {
+ 				//TRACE("theme uses icons");
+-				Surface * sfcIcon = (*app->sc)[app->menu->sectionLinks()->at(i)->getIconPath()];
++				Surface * sfcIcon = app->sc->fitIcon(
++                    app->menu->sectionLinks()->at(i)->getIconPath(),
++                    padding - 4, app->linkHeight - 4);
+ 				if (NULL != sfcIcon) {
+-					sfcIcon->blit(
+-						app->screen, 
+-						{ ix, iy, padding, app->linkHeight }, 
+-						HAlignCenter | VAlignMiddle);
++					sfcIcon->blit(app->screen,
++                        ix + (padding - sfcIcon->raw->w) / 2,
++                        iy + (app->linkHeight - sfcIcon->raw->h) / 2);
+ 				} else {
+ 					WARNING("couldn't load expected icon : '%s'", app->menu->sectionLinks()->at(i)->getIconPath().c_str());
+ 				}
+@@ -394,7 +395,13 @@ void Renderer::render() {
+ 
+ 				// TRACE("setting clip rect");
+ 				app->screen->setClipRect({ix, iy, app->linkWidth, app->linkHeight});
+-				Surface * icon = (*app->sc)[app->menu->sectionLinks()->at(i)->getIconPath()];
++				int iconHeight = app->linkHeight;
++                if (app->skin->linkDisplayMode == Skin::ICON_AND_TEXT)
++                    iconHeight -= app->font->getHeight() + padding;
++                Surface * icon = app->sc->fitIcon(
++                    app->menu->sectionLinks()->at(i)->getIconPath(),
++                    app->linkWidth, iconHeight);
++                if (!icon) continue;
+ 
+ 				// selected link highlight
+ 				// TRACE("checking highlight");
 diff --git a/src/surfacecollection.cpp b/src/surfacecollection.cpp
-index 777b85a..3d05b30 100644
+index 777b85a..3599439 100644
 --- a/src/surfacecollection.cpp
 +++ b/src/surfacecollection.cpp
-@@ -77,6 +77,7 @@ Surface *SurfaceCollection::addSkinRes(const std::string &path, bool alpha) {
+@@ -18,6 +18,8 @@
+  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+  ***************************************************************************/
+ 
++#include <algorithm>
++#include <SDL_rotozoom.h>
+ #include "surfacecollection.h"
+ #include "surface.h"
+ #include "fileutils.h"
+@@ -56,6 +58,25 @@ Surface *SurfaceCollection::addIcon(const std::string &path, bool alpha) {
+ 	return this->add(path, alpha, this->skin->iconsToGrayscale);
+ }
+ 
++// Keep source images intact: list and grid views can request different sizes.
++Surface *SurfaceCollection::fitIcon(const std::string &path, int width, int height) {
++    if (width < 1 || height < 1) return NULL;
++    const std::string key = path + "::fit:" + std::to_string(width) + "x" + std::to_string(height);
++    SurfaceHash::iterator cached = surfaces.find(key);
++    if (cached != surfaces.end()) return cached->second;
++    Surface *source = addIcon(path);
++    if (!source || !source->raw) return NULL;
++    if (source->raw->w <= width && source->raw->h <= height) return source;
++    const double scale = std::min(double(width) / source->raw->w,
++                                  double(height) / source->raw->h);
++    SDL_Surface *scaled = zoomSurface(source->raw, scale, scale, SMOOTHING_ON);
++    if (!scaled) return NULL;
++    Surface *result = new Surface();
++    result->raw = scaled;
++    surfaces[key] = result;
++    return result;
++}
++
+ Surface *SurfaceCollection::skinRes(const std::string &key) {
+ 	TRACE("enter : %s", key.c_str());
+ 	if (key.empty()) return NULL;
+@@ -77,6 +98,7 @@ Surface *SurfaceCollection::addSkinRes(const std::string &path, bool alpha) {
  
  	TRACE("Adding skin surface: '%s'", skinpath.c_str());
  	Surface *s = new Surface(skinpath, alpha);
@@ -321,7 +390,7 @@ index 777b85a..3d05b30 100644
  	if (NULL != s) {
  		surfaces[path] = s;
  	}
-@@ -106,6 +107,7 @@ Surface *SurfaceCollection::add(const std::string &path, bool alpha, bool graySc
+@@ -106,6 +128,7 @@ Surface *SurfaceCollection::add(const std::string &path, bool alpha, bool graySc
  		}
  
  		s = new Surface(filePath, alpha);
@@ -329,3 +398,15 @@ index 777b85a..3d05b30 100644
  		if (s != NULL) {
  			if (grayScale)
  				s->toGrayScale();
+diff --git a/src/surfacecollection.h b/src/surfacecollection.h
+index 772b4f9..51069c1 100644
+--- a/src/surfacecollection.h
++++ b/src/surfacecollection.h
+@@ -48,6 +48,7 @@ public:
+ 	bool defaultAlpha;
+ 	void debug();
+ 	Surface *addIcon(const std::string &path, bool alpha=true);
++	Surface *fitIcon(const std::string &path, int width, int height);
+ 	Surface *addImage(const std::string &path, bool alpha=true);
+ 
+ 	Surface *addSkinRes(const std::string &path, bool alpha=true);
