@@ -144,13 +144,26 @@ try:
         navigation = []
         for step in range(13):
             if step:
+                before = len(events())
                 key(108)
+                deadline = time.monotonic() + 5
+                while not any(e['type'] == 3 and e['key'] == 274
+                              for e in events()[before:]):
+                    assert process.poll() is None, 'SimpleMenu exited during navigation'
+                    assert time.monotonic() < deadline, 'DOWN release was not processed'
+                    time.sleep(0.02)
+                assert len(downs(before)) == 1, 'One tap advanced multiple times'
             navigation.append(dict(step=step, group=events()[-1]['group'],
                                    section=events()[-1]['section']))
-            subprocess.run(['env', 'ADB_SERVER_PORT=5041',
-                            str(ROOT / 'scripts/capture-rg280v-drm.sh'),
-                            str(OUT / f'section-{step:02d}.png')],
-                           check=True, stdout=subprocess.DEVNULL)
+            for attempt in range(3):
+                time.sleep(0.15)
+                capture = subprocess.run(['env', 'ADB_SERVER_PORT=5041',
+                                          str(ROOT / 'scripts/capture-rg280v-drm.sh'),
+                                          str(OUT / f'section-{step:02d}.png')],
+                                         stdout=subprocess.DEVNULL)
+                if capture.returncode == 0:
+                    break
+                assert attempt < 2, 'Unable to capture settled display'
         results.append(dict(case='system selection artwork comparison',
                             theme_index=args.theme_index, navigation=navigation))
         start = len(events())
@@ -158,6 +171,19 @@ try:
         assert process.poll() is None and events()[-1]['state'] == 0
         assert len(downs(start)) == 1, 'Holding A entered more than one screen'
         results.append(dict(case='hold A enters once without launching game', keydowns=len(downs(start))))
+        rom_moves = []
+        for code in [108] * 5 + [103] * 5:
+            before = len(events())
+            key(code)
+            deadline = time.monotonic() + 5
+            sym = 274 if code == 108 else 273
+            while not any(e['type'] == 3 and e['key'] == sym for e in events()[before:]):
+                assert time.monotonic() < deadline, 'ROM-list key release was not processed'
+                time.sleep(0.02)
+            assert len(downs(before)) == 1
+            assert events()[-1]['state'] == 0
+            rom_moves.append(dict(key=code, game=events()[-1]['game']))
+        results.append(dict(case='ROM list down five up five', navigation=rom_moves))
 finally:
     if pid:
         shell('kill -CONT ' + pid + ' 2>/dev/null || true; kill -TERM ' + pid + ' 2>/dev/null || true')
