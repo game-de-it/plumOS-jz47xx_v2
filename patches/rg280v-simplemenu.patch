@@ -20,6 +20,20 @@ index 91808b1..f6ec0c7 100644
  extern Shake_Device *device;
  extern Shake_Effect effect;
  extern int effect_id;
+diff --git a/simplemenu/src/headers/input.h b/simplemenu/src/headers/input.h
+index fbcd20a..d54c35a 100644
+--- a/simplemenu/src/headers/input.h
++++ b/simplemenu/src/headers/input.h
+@@ -1,5 +1,9 @@
+ #ifndef input
+ #define input
++#ifdef PLUMOS_RG280V
++#include <SDL/SDL_events.h>
++int plumosPollEvent(SDL_Event *event);
++#endif
+ int pollEvent();
+ int getEventType();
+ int getPressedKey();
 diff --git a/simplemenu/src/logic/config.c b/simplemenu/src/logic/config.c
 index 15806a4..be4d765 100644
 --- a/simplemenu/src/logic/config.c
@@ -338,6 +352,104 @@ index c12ff85..dafdefe 100644
  	Shake_Stop(device, effect_id);
  	Shake_EraseEffect(device, effect_id);
  	Shake_Close(device);
+diff --git a/simplemenu/src/logic/input.c b/simplemenu/src/logic/input.c
+index 7acdd83..3a0aab9 100644
+--- a/simplemenu/src/logic/input.c
++++ b/simplemenu/src/logic/input.c
+@@ -1,9 +1,72 @@
+ #include <stddef.h>
++#include <string.h>
+ #include <SDL/SDL_events.h>
+ #include <SDL/SDL_keyboard.h>
+ 
+ #include "../headers/globals.h"
+ 
++#ifdef PLUMOS_RG280V
++/* SDL_GetKeyState reflects the end of a pumped batch, not each queued event. */
++static Uint8 plumosHeld[SDLK_LAST];
++static Uint8 plumosActionKeys[SDLK_LAST];
++static SDLKey plumosRepeatKey = SDLK_UNKNOWN;
++static Uint32 plumosRepeatAt;
++static int plumosDirection(SDLKey key) {
++    return key==BTN_UP || key==BTN_DOWN || key==BTN_LEFT || key==BTN_RIGHT;
++}
++static void plumosClearInput(void) {
++    memset(plumosHeld,0,sizeof(plumosHeld));
++    memset(plumosActionKeys,0,sizeof(plumosActionKeys));
++    plumosRepeatKey=SDLK_UNKNOWN;
++    plumosRepeatAt=0;
++}
++static void plumosPrepareAction(SDLKey key) {
++    memset(plumosActionKeys,0,sizeof(plumosActionKeys));
++    plumosActionKeys[key]=1;
++    /* B is SimpleMenu's explicit modifier for native button combinations. */
++    if (key!=BTN_B) plumosActionKeys[BTN_B]=plumosHeld[BTN_B];
++}
++int plumosPollEvent(SDL_Event *out) {
++    while (SDL_PollEvent(out)) {
++        if (out->type==SDL_KEYDOWN || out->type==SDL_KEYUP) {
++            SDLKey key=out->key.keysym.sym;
++            if (key<=SDLK_UNKNOWN || key>=SDLK_LAST) continue;
++            if (out->type==SDL_KEYDOWN) {
++                /* Ignore duplicate kernel/SDL repeats; the timer below owns repeat. */
++                if (plumosHeld[key]) continue;
++                plumosHeld[key]=1;
++                plumosPrepareAction(key);
++                if (plumosDirection(key)) {
++                    plumosRepeatKey=key;
++                    plumosRepeatAt=SDL_GetTicks()+250;
++                }
++            } else {
++                if (!plumosHeld[key]) continue;
++                plumosHeld[key]=0;
++                memset(plumosActionKeys,0,sizeof(plumosActionKeys));
++                if (plumosRepeatKey==key) plumosRepeatKey=SDLK_UNKNOWN;
++            }
++        } else if (out->type==SDL_ACTIVEEVENT && !out->active.gain) {
++            plumosClearInput();
++        }
++        return 1;
++    }
++    if (plumosRepeatKey!=SDLK_UNKNOWN && plumosHeld[plumosRepeatKey] &&
++        (Sint32)(SDL_GetTicks()-plumosRepeatAt)>=0) {
++        SDLKey key=plumosRepeatKey;
++        /* At most one repeat per pass; never catch up after a slow redraw. */
++        plumosRepeatAt=SDL_GetTicks()+80;
++        plumosPrepareAction(key);
++        memset(out,0,sizeof(*out));
++        out->type=SDL_KEYDOWN;
++        out->key.state=SDL_PRESSED;
++        out->key.keysym.sym=key;
++        return 1;
++    }
++    return 0;
++}
++#endif
++
+ SDL_Event event;
+ 
+ int pollEvent() {
+@@ -51,11 +114,20 @@ int getJoystickMotion() {
+ }
+ 
+ void enableKeyRepeat() {
++#ifdef PLUMOS_RG280V
++	SDL_EnableKeyRepeat(0,0);
++#else
+ 	SDL_EnableKeyRepeat(250,80);
++#endif
+ }
+ 
+ void initializeKeys() {
++#ifdef PLUMOS_RG280V
++	plumosClearInput();
++	keys=plumosActionKeys;
++#else
+ 	keys = SDL_GetKeyState(NULL);
++#endif
+ }
+ 
+ void pumpEvents() {
 diff --git a/simplemenu/src/logic/logic.c b/simplemenu/src/logic/logic.c
 index 3d7bd33..e8e3b94 100644
 --- a/simplemenu/src/logic/logic.c
@@ -433,7 +545,7 @@ index 301b469..ee0268e 100644
  	logMessage("INFO","setOptionsAndValues",hints[DEFAULT_OPTION]);
  	strcpy(hints[HELP_OPTION],"HOW TO USE THIS MENU");
 diff --git a/simplemenu/src/logic/simplemenu.c b/simplemenu/src/logic/simplemenu.c
-index 488bf98..2c78b46 100644
+index 488bf98..07546d2 100644
 --- a/simplemenu/src/logic/simplemenu.c
 +++ b/simplemenu/src/logic/simplemenu.c
 @@ -74,7 +74,7 @@ void initialSetup() {
@@ -445,6 +557,33 @@ index 488bf98..2c78b46 100644
  	resetFrameBuffer();
  	#endif
  	createConfigFilesInHomeIfTheyDontExist();
+@@ -128,8 +128,16 @@ void initialSetup2() {
+ }
+ 
+ void processEvents() {
++	int inputTrace = getenv("PLUMOS_SIMPLEMENU_INPUT_TRACE") != NULL;
+ 	SDL_Event event;
++#ifdef PLUMOS_RG280V
++	while (plumosPollEvent(&event)) {
++#else
+ 	while (SDL_PollEvent(&event)) {
++#endif
++        if (inputTrace && (event.type==SDL_KEYDOWN || event.type==SDL_KEYUP)) {
++            fprintf(stderr,"SM_INPUT before tick=%u type=%d key=%d up=%d down=%d left=%d right=%d a=%d b=%d state=%d group=%d section=%d game=%d setting=%d choice=%d\n", SDL_GetTicks(),event.type,event.key.keysym.sym,keys[BTN_UP],keys[BTN_DOWN],keys[BTN_LEFT],keys[BTN_RIGHT],keys[BTN_A],keys[BTN_B],currentState,activeGroup,currentSectionNumber,CURRENT_GAME_NUMBER,chosenSetting,chosenChoosingOption);
++        }
+ 		if(event.type==getKeyDown()){
+ 			if (!isSuspended) {
+ 				switch (currentState) {
+@@ -237,6 +245,9 @@ void processEvents() {
+ 			}
+ //		}
+ //		break;
++        if (inputTrace && (event.type==SDL_KEYDOWN || event.type==SDL_KEYUP)) {
++            fprintf(stderr,"SM_INPUT after tick=%u type=%d key=%d state=%d group=%d section=%d game=%d setting=%d choice=%d\n",SDL_GetTicks(),event.type,event.key.keysym.sym,currentState,activeGroup,currentSectionNumber,CURRENT_GAME_NUMBER,chosenSetting,chosenChoosingOption);
++        }
+ 	}
+ }
+ 
 diff --git a/simplemenu/src/logic/system_logic_od.c b/simplemenu/src/logic/system_logic_od.c
 index 280e4a4..a993e38 100644
 --- a/simplemenu/src/logic/system_logic_od.c
