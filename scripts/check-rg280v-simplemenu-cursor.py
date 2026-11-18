@@ -10,10 +10,13 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--theme-index', type=int, choices=(0, 1, 2), default=1,
-                    help='Installed theme index: 0=0A, 1=SimpleQuest, 2=SimpleQuest2')
+parser.add_argument('--theme-index', type=int, default=1,
+                    help='Installed theme index (prefer --theme-name after adding themes)')
+parser.add_argument('--theme-name', help='Resolve an installed theme by name, without assuming its index')
 args = parser.parse_args()
-OUT = ROOT / f'output/rg280v-simplemenu/input-check-theme-{args.theme_index}'
+label = args.theme_name or str(args.theme_index)
+assert re.fullmatch(r'[A-Za-z0-9_-]+', label), 'Unsafe output label'
+OUT = ROOT / f'output/rg280v-simplemenu/input-check-theme-{label}'
 OUT.mkdir(parents=True, exist_ok=True)
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
 BASE = '/media/data/plumos'
@@ -26,9 +29,26 @@ def shell(command):
     return subprocess.check_output(ADB + ['shell', command], text=True).strip()
 
 
+if args.theme_name:
+    names = sorted(shell('for d in ' + BASE + '/home/simplemenu/.simplemenu/themes/320x240/*; '
+                         'do if test -d "$d"; then echo "${d##*/}"; fi; done').splitlines(), key=str.lower)
+    args.theme_index = names.index(args.theme_name)
+
+
 def key(code, milliseconds=50):
     shell(INJECT + str(code) + ' ' + str(milliseconds))
     time.sleep(0.08)
+
+
+def capture_screen(name):
+    for attempt in range(3):
+        time.sleep(0.15)
+        capture = subprocess.run(['env', 'ADB_SERVER_PORT=5041',
+                                  str(ROOT / 'scripts/capture-rg280v-drm.sh'),
+                                  str(OUT / name)], stdout=subprocess.DEVNULL)
+        if capture.returncode == 0:
+            return
+        assert attempt < 2, 'Unable to capture settled display'
 
 
 log = OUT / 'events.log'
@@ -155,15 +175,7 @@ try:
                 assert len(downs(before)) == 1, 'One tap advanced multiple times'
             navigation.append(dict(step=step, group=events()[-1]['group'],
                                    section=events()[-1]['section']))
-            for attempt in range(3):
-                time.sleep(0.15)
-                capture = subprocess.run(['env', 'ADB_SERVER_PORT=5041',
-                                          str(ROOT / 'scripts/capture-rg280v-drm.sh'),
-                                          str(OUT / f'section-{step:02d}.png')],
-                                         stdout=subprocess.DEVNULL)
-                if capture.returncode == 0:
-                    break
-                assert attempt < 2, 'Unable to capture settled display'
+            capture_screen(f'section-{step:02d}.png')
         results.append(dict(case='system selection artwork comparison',
                             theme_index=args.theme_index, navigation=navigation))
         start = len(events())
@@ -184,6 +196,7 @@ try:
             assert events()[-1]['state'] == 0
             rom_moves.append(dict(key=code, game=events()[-1]['game']))
         results.append(dict(case='ROM list down five up five', navigation=rom_moves))
+        capture_screen('rom-list.png')
 finally:
     if pid:
         shell('kill -CONT ' + pid + ' 2>/dev/null || true; kill -TERM ' + pid + ' 2>/dev/null || true')
