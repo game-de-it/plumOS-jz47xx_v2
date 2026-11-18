@@ -31,6 +31,13 @@ view flag does not replace the fixed window layout with artwork in this theme.
 The category/system screens show the common shop artwork in the center; the ROM
 view uses that space for the wide list. No per-item image rotation is used.
 
+Fresh Apps -> SimpleMenu launches open the category screen, highlighting the
+remembered category. System/ROM selections are still saved and restored when you
+enter those lists. Exiting an emulator returns directly to the previous ROM list.
+The Apps wrapper passes `--start-groups`; the emulator invoker omits that flag.
+Native launch-at-boot configurations, if explicitly set, retain their existing
+precedence. Direct native launches without the flag retain ROM-list restoration.
+
 The default labels are English and use NES, SNES, GB, GBC, GBA, MD, SMS, etc.
 ROM filenames/aliases are not translated; Japanese names remain Japanese. Names
 do not wrap. A selected name wider than its area waits one second, scrolls left

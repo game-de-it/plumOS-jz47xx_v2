@@ -6,4 +6,4 @@ export SDL_VIDEODRIVER=kmsdrm SDL_VIDEO_KMSDRM_SCALING_MODE=0
 export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 "$root/bin/plumos-prepare-opk-input"
 cd "$root/simplemenu"
-exec ./simplemenu >>"$root/Logs/simplemenu.log" 2>&1
+exec ./simplemenu --start-groups >>"$root/Logs/simplemenu.log" 2>&1

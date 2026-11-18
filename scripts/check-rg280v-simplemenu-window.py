@@ -13,10 +13,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--theme-name', choices=('CrystalMenu', 'CrystalMenu12'), default='CrystalMenu')
 parser.add_argument('--marquee-check', action='store_true', help='Use a temporary long ROM alias and verify scrolling pixels')
+parser.add_argument('--startup-check', action='store_true', help='Start at categories and verify remembered ROM selection')
 args = parser.parse_args()
 suffix = '' if args.theme_name == 'CrystalMenu' else '-' + args.theme_name
 if args.marquee_check:
     suffix += '-marquee'
+if args.startup_check:
+    suffix += '-startup'
 OUT = ROOT / ('output/rg280v-simplemenu/window-check' + suffix)
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / 'results.json').unlink(missing_ok=True)
@@ -25,6 +28,8 @@ BASE = '/media/data/plumos'
 HOME = '/tmp/plumos-simplemenu-window-check'
 if args.marquee_check:
     HOME += '-marquee'
+if args.startup_check:
+    HOME += '-startup'
 INJECT = BASE + '/bin/rg280v-inject-key /dev/input/event2 '
 Q = shlex.quote
 LONG_TITLE = 'Akumajou Densetsu - Long title scrolling verification - Keep the original ROM and launch profile'
@@ -88,17 +93,42 @@ try:
     else:
         shell('ln -sfn ' + BASE + '/home/simplemenu/.simplemenu/section_groups ' + folder + '/section_groups')
     state = OUT / 'initial-state.sav'
-    state.write_text(f'10;\n1;\n0;\n1;\n1;\n{index};\n0;\n1;\n0;\n3;\n')
+    if args.startup_check:
+        saved = shell('cat ' + BASE + '/home/simplemenu/.simplemenu/last_state.sav').splitlines()
+        saved[5] = str(index) + ';'; saved[7] = '1;'; saved[8] = '0;'
+        group = -1
+        for i in range(10, len(saved)):
+            values = list(map(int, saved[i].rstrip(';').split(';')))
+            if values[1] == 0:
+                group += 1
+            if group == 1:
+                values[0] = int(values[1] == 0)
+                if values[1] == 0:
+                    values[2:5] = [1, 1, 7]  # Six-row theme: remember real ROM index7.
+                saved[i] = ';'.join(map(str, values))
+        state.write_text('\n'.join(saved) + '\n')
+    else:
+        state.write_text(f'10;\n1;\n0;\n1;\n1;\n{index};\n0;\n1;\n0;\n3;\n')
     subprocess.run(ADB + ['push', str(state), folder + '/last_state.sav'], check=True, capture_output=True)
     cmd = ('cd ' + BASE + '/simplemenu; echo $$ >' + HOME + '/pid; exec env HOME=' + Q(HOME) +
            ' PLUMOS_ROOT=' + BASE + ' PLUMOS_SDCARD_ROOT=/media/data/sd2 '
            'SDL_VIDEODRIVER=kmsdrm SDL_VIDEO_KMSDRM_SCALING_MODE=0 LD_LIBRARY_PATH=' + BASE + '/lib '
-           'PLUMOS_SIMPLEMENU_INPUT_TRACE=1 ./simplemenu')
+           'PLUMOS_SIMPLEMENU_INPUT_TRACE=1 ./simplemenu' + (' --start-groups' if args.startup_check else ''))
     with (OUT / 'events.log').open('wb') as stream:
         process = subprocess.Popen(ADB + ['shell', cmd], stdout=stream, stderr=subprocess.STDOUT)
         time.sleep(1)
         pid = shell('cat ' + HOME + '/pid')
         assert pid.isdigit() and int(pid) > 1
+        if args.startup_check:
+            assert key(108)['state'] == 2 and events()[-1]['group'] == 2
+            assert key(103)['state'] == 2 and events()[-1]['group'] == 1
+            capture('startup-categories.png')
+            assert key(29)['state'] == 4 and events()[-1]['section'] == 0
+            assert key(29)['state'] == 0 and events()[-1]['game'] == 7
+            capture('remembered-rom.png')
+            for _ in range(7):
+                key(103)
+            assert events()[-1]['game'] == 0
         capture('nes-roms.png')
         scroll_offsets = []
         if args.marquee_check:
@@ -181,7 +211,8 @@ try:
         (OUT / 'results.json').write_text(json.dumps(dict(
             category_groups=groups, japanese_last_game=last,
             theme_switch_roundtrip=True, game_exit=0, returned_input=True,
-            favorites_roundtrip=True, marquee_offsets=scroll_offsets), indent=2) + '\n')
+            favorites_roundtrip=True, marquee_offsets=scroll_offsets,
+            startup_groups=args.startup_check, remembered_game=7 if args.startup_check else None), indent=2) + '\n')
 finally:
     if pid:
         shell('kill -TERM ' + pid + ' 2>/dev/null || true')

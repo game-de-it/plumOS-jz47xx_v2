@@ -774,7 +774,7 @@ index 301b469..6b547bd 100644
  	if (node==NULL) {
  		rom = NULL;
 diff --git a/simplemenu/src/logic/simplemenu.c b/simplemenu/src/logic/simplemenu.c
-index 488bf98..0791b26 100644
+index 488bf98..62bfda8 100644
 --- a/simplemenu/src/logic/simplemenu.c
 +++ b/simplemenu/src/logic/simplemenu.c
 @@ -74,7 +74,7 @@ void initialSetup() {
@@ -813,7 +813,29 @@ index 488bf98..0791b26 100644
  	}
  }
  
-@@ -304,6 +315,7 @@ int main() {
+@@ -275,7 +286,8 @@ void freeAutostartRom(struct AutostartRom *autostartRom) {
+ 	free(autostartRom);
+ }
+ 
+-int main() {
++int main(int argc,char **argv) {
++	int startGroups=argc>1 && strcmp(argv[1],"--start-groups")==0;
+ 	logMessage("INFO","main","Setup 1");
+ 	initialSetup();
+ 	logMessage("INFO","main","Setup 2");
+@@ -292,7 +304,10 @@ int main() {
+ 		}
+ 		freeAutostartRom(launchAtBootGame);
+ 	} else {
+-		currentState=BROWSING_GAME_LIST;
++		if(startGroups && sectionGroupCounter>0) {
++			beforeTryingToSwitchGroup=activeGroup;
++			currentState=CHOOSING_GROUP;
++		} else currentState=BROWSING_GAME_LIST;
+ 		pushEvent();
+ 	}
+ 	const int GAME_FPS=60;
+@@ -304,6 +319,7 @@ int main() {
  	while(running) {
  		start_time=SDL_GetTicks();
  		processEvents();
