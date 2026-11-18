@@ -7,4 +7,11 @@ export LD_LIBRARY_PATH="$root/350teric/lib:$root/lib"
 export LC_ALL=C LANG=C
 "$root/bin/plumos-prepare-opk-input"
 cd "$root/350teric"
-exec ./esoteric >>"$root/Logs/350teric.log" 2>&1
+# Skin changes request a frontend-only restart; ordinary Quit returns to plumOS.
+while :; do
+    set +e
+    ./esoteric >>"$root/Logs/350teric.log" 2>&1
+    rc=$?
+    set -e
+    [ "$rc" -eq 75 ] || exit "$rc"
+done

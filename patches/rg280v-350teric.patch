@@ -23,8 +23,48 @@ index f0a20cf..a28f7ff 100644
  #endif
  
  enum vol_mode_t {
+diff --git a/src/dialog.cpp b/src/dialog.cpp
+index 984081f..9eb5de4 100644
+--- a/src/dialog.cpp
++++ b/src/dialog.cpp
+@@ -1,4 +1,5 @@
+ #include <string>
++#include <algorithm>
+ 
+ #include "dialog.h"
+ #include "esoteric.h"
+@@ -15,20 +16,15 @@ void Dialog::drawTitleIcon(const std::string &icon, Surface *s) {
+ 	if (s == NULL) 
+ 		s = app->screen;
+ 
+-	Surface *i = NULL;
+-	if (!icon.empty()) {
+-		i = (*app->sc)[icon];
+-		if (i == NULL) i = app->sc->skinRes(icon);
+-	}
+-	if (i == NULL) 
+-		i = app->sc->skinRes("icons/generic.png");
+-
+-	i->blit(
+-		s, 
+-		{ 4, 4, app->getScreenWidth() - 8, app->skin->menuTitleBarHeight - 8 }, 
+-		VAlignMiddle);
+-
+-	this->iconWidth = i->raw->w;
++    const int size = std::max(1, std::min(app->skin->menuTitleBarHeight - 8,
++                                         app->getScreenWidth() / 4));
++    Surface *i = app->sc->fitIcon(icon, size, size);
++    if (!i) i = app->sc->fitIcon(app->skin->getSkinFilePath(icon), size, size);
++    if (!i) i = app->sc->fitIcon(app->skin->getSkinFilePath("icons/generic.png"), size, size);
++    this->iconWidth = i ? size : 0;
++    if (!i) return;
++    i->blit(s, 4 + (size - i->raw->w) / 2,
++            (app->skin->menuTitleBarHeight - i->raw->h) / 2);
+ 
+ }
+ 
 diff --git a/src/esoteric.cpp b/src/esoteric.cpp
-index cb8c280..30c54f7 100644
+index cb8c280..ba41e32 100644
 --- a/src/esoteric.cpp
 +++ b/src/esoteric.cpp
 @@ -198,6 +198,7 @@ Esoteric::Esoteric() {
@@ -142,6 +182,20 @@ index cb8c280..30c54f7 100644
  
  		this->writeConfig();
  
+@@ -2018,7 +2019,12 @@ void Esoteric::restartDialog(bool showDialog) {
+ 		mb.setButton(CANCEL,  tr["Cancel"]);
+ 		if (mb.exec() == CANCEL) return;
+ 	}
+-	Esoteric::quit_all(0);
++#ifdef PLUMOS_RG280V
++    // The Apps wrapper restarts this frontend, without restarting plumOS.
++    Esoteric::quit_all(75);
++#else
++    Esoteric::quit_all(0);
++#endif
+ }
+ 
+ void Esoteric::poweroffDialog() {
 diff --git a/src/esoteric.h b/src/esoteric.h
 index 457771e..182988c 100644
 --- a/src/esoteric.h
