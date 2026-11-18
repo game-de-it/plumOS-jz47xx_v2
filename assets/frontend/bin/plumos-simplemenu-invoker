@@ -1,0 +1,22 @@
+#!/bin/sh
+# SimpleMenu saves its position before exec; restart it after the emulator exits.
+set -eu
+[ "$#" -ge 3 ] || exit 2
+root=${PLUMOS_ROOT:-/media/data/plumos}
+folder=$1
+emulator=$2
+rom=$3
+folder=${folder%/}
+case "$folder/$emulator" in
+    "$root/simplemenu/launchers/"*) ;;
+    *) printf 'Unregistered SimpleMenu launcher: root=%s folder=%s emulator=%s\n' "$root" "$folder" "$emulator" >&2; exit 2 ;;
+esac
+set +e
+unset SDL_VIDEO_KMSDRM_SCALING_MODE
+"$folder/$emulator" "$rom"
+rc=$?
+set -e
+printf 'SimpleMenu emulator exit=%s\n' "$rc"
+cd "$root/simplemenu"
+export SDL_VIDEO_KMSDRM_SCALING_MODE=0
+exec ./simplemenu

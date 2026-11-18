@@ -1,0 +1,480 @@
+diff --git a/simplemenu/src/headers/globals.h b/simplemenu/src/headers/globals.h
+index 91808b1..f6ec0c7 100644
+--- a/simplemenu/src/headers/globals.h
++++ b/simplemenu/src/headers/globals.h
+@@ -18,7 +18,7 @@
+ #include "../headers/hashtable.h"
+ #include "../headers/constants.h"
+ 
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ #include <shake.h>
+ #endif
+ 
+@@ -321,7 +321,7 @@ extern int BTN_R1;
+ extern int BTN_L2;
+ extern int BTN_R2;
+ 
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ extern Shake_Device *device;
+ extern Shake_Effect effect;
+ extern int effect_id;
+diff --git a/simplemenu/src/logic/config.c b/simplemenu/src/logic/config.c
+index 15806a4..be4d765 100644
+--- a/simplemenu/src/logic/config.c
++++ b/simplemenu/src/logic/config.c
+@@ -56,6 +56,10 @@ void loadAliasList(int sectionNumber) {
+ }
+ 
+ void checkIfDefault() {
++#ifdef PLUMOS_RG280V
++	shutDownEnabled=0;
++	return;
++#endif
+ 	FILE *fp=NULL;
+ 	FILE *fpScripts=NULL;
+ 	#ifdef MIYOO
+diff --git a/simplemenu/src/logic/control.c b/simplemenu/src/logic/control.c
+index 0b5f576..bcb8b90 100644
+--- a/simplemenu/src/logic/control.c
++++ b/simplemenu/src/logic/control.c
+@@ -5,7 +5,7 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
+-#if defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ #include <shake.h>
+ #endif
+ 
+@@ -470,7 +470,7 @@ void showOrHideFavorites() {
+ void removeFavorite() {
+ 	favoritesChanged=1;
+ 	if (favoritesSize>0) {
+-		#if defined RG350
++		#if defined(RG350) && !defined(PLUMOS_RG280V)
+ 		Shake_Play(device, effect_id1);
+ 		#endif
+ 		// Remove the favorite at the current game number position
+@@ -511,7 +511,7 @@ void markAsFavorite(struct Rom *rom) {
+ 	favoritesChanged=1;
+ 	if (!doesFavoriteExist(rom->name)) {
+ 		resetHideHeartTimer();
+-		#if defined RG350
++		#if defined(RG350) && !defined(PLUMOS_RG280V)
+ 		Shake_Play(device, effect_id);
+ 		msleep(200);
+ 		Shake_Play(device, effect_id);
+@@ -776,6 +776,9 @@ void performSettingsChoosingAction() {
+ 				}
+ 			}
+ 		} else if (chosenSetting==DEFAULT_OPTION) {
++#ifdef PLUMOS_RG280V
++			return; /* Startup is managed by plumOS. */
++#endif
+ 			char command[300] = {0};			
+ 			if (shutDownEnabled) {
+ 				#ifdef MIYOO
+@@ -895,6 +898,9 @@ void performSettingsChoosingAction() {
+ 
+ 
+ void performChoosingAction() {
++#ifdef PLUMOS_RG280V
++	if (chosenChoosingOption==0 && (keys[BTN_LEFT] || keys[BTN_RIGHT])) return;
++#endif
+ 	struct Rom *rom = (struct Rom *)CURRENT_SECTION.currentGameNode->data;
+ 	if (keys[BTN_UP]) {
+ 		chosenChoosingOption--;
+diff --git a/simplemenu/src/logic/control_od.c b/simplemenu/src/logic/control_od.c
+index c8fe08e..e6dee8e 100644
+--- a/simplemenu/src/logic/control_od.c
++++ b/simplemenu/src/logic/control_od.c
+@@ -1,4 +1,4 @@
+-#if defined (RG350) || defined (RG350)
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ #include <shake.h>
+ #endif
+ #include <stdlib.h>
+diff --git a/simplemenu/src/logic/globals.c b/simplemenu/src/logic/globals.c
+index 6eeccd8..b5815f1 100644
+--- a/simplemenu/src/logic/globals.c
++++ b/simplemenu/src/logic/globals.c
+@@ -7,7 +7,7 @@
+ #include "../headers/hashtable.h"
+ #include "../headers/constants.h"
+ 
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ #include <shake.h>
+ #endif
+ SDL_Surface *screen;
+@@ -299,7 +299,7 @@ int BTN_R1;
+ int BTN_L2;
+ int BTN_R2;
+ 
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+  Shake_Device *device;
+  Shake_Effect effect;
+  int effect_id;
+diff --git a/simplemenu/src/logic/graphics.c b/simplemenu/src/logic/graphics.c
+index c12ff85..dafdefe 100644
+--- a/simplemenu/src/logic/graphics.c
++++ b/simplemenu/src/logic/graphics.c
+@@ -20,7 +20,7 @@
+ #include <SDL/SDL_stdinc.h>
+ #include <SDL/SDL_video.h>
+ 
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ #include <shake.h>
+ #endif
+ 
+@@ -34,6 +34,49 @@
+ #include "../headers/screen.h"
+ #include "../headers/doubly_linked_rom_list.h"
+ 
++#ifdef PLUMOS_RG280V
++/* Keep the theme font wherever it has the requested glyphs. */
++static TTF_Font *plumosCjkFonts[96];
++static TTF_Font *plumosFontForText(TTF_Font *original, const char *text) {
++    const unsigned char *p = (const unsigned char *)text;
++    int missing = 0;
++    if (!original || !text) return original;
++    while (*p) {
++        unsigned int cp = *p++;
++        int remaining = 0;
++        if (cp >= 0xf0) { cp &= 7; remaining = 3; }
++        else if (cp >= 0xe0) { cp &= 15; remaining = 2; }
++        else if (cp >= 0xc0) { cp &= 31; remaining = 1; }
++        while (remaining-- > 0 && *p && (*p & 0xc0) == 0x80) cp = (cp << 6) | (*p++ & 63);
++        if (cp > 127 && cp != 0x3000) {
++            int minx, maxx, miny, maxy, advance;
++            if (cp > 65535 || !TTF_GlyphIsProvided(original, (Uint16)cp) ||
++                TTF_GlyphMetrics(original, (Uint16)cp, &minx, &maxx, &miny, &maxy, &advance) < 0 ||
++                maxx <= minx || maxy <= miny) missing = 1;
++        }
++    }
++    if (missing) {
++        int height = TTF_FontHeight(original);
++        if (height < 6) height = 6;
++        if (height > 95) height = 95;
++        if (!plumosCjkFonts[height]) {
++            const char *root = getenv("PLUMOS_ROOT");
++            char path[1024];
++            snprintf(path, sizeof(path), "%s/fonts/cjk-fallback.ttc", root ? root : "/media/data/plumos");
++            plumosCjkFonts[height] = TTF_OpenFont(path, height * 2 / 3);
++        }
++        if (plumosCjkFonts[height]) return plumosCjkFonts[height];
++    }
++    return original;
++}
++static void plumosCloseCjkFonts(void) {
++    for (int i=0;i<96;i++) {
++        if (plumosCjkFonts[i]) TTF_CloseFont(plumosCjkFonts[i]);
++        plumosCjkFonts[i] = NULL;
++    }
++}
++#endif
++
+ void ht_destroy(hashtable_t *hashtable);
+ void freeSections();
+ void freeSectionGroups();
+@@ -110,6 +153,10 @@ int calculateProportionalSizeOrDistance(int number) {
+ }
+ 
+ int genericDrawTextOnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, char *buf, int txtColor[], int align, int backgroundColor[], int shaded) {
++#ifdef PLUMOS_RG280V
++	font=plumosFontForText(font,buf);
++	if (outline) outline=plumosFontForText(outline,buf);
++#endif
+ 	SDL_Surface *msg;
+ 	SDL_Surface *msg1 = NULL;
+ 	char *bufCopy=malloc(strlen(buf)+1);
+@@ -120,29 +167,27 @@ int genericDrawTextOnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, cha
+ 
+ 	int retW = 1;
+ 
+-	TTF_SizeText(font, (const char *) buf, &retW, NULL);
++	TTF_SizeUTF8(font, (const char *) buf, &retW, NULL);
+ 
+-	while (retW>width) {
++	while (retW>width && len>0) {
++		do { len--; } while (len>0 && ((unsigned char)bufCopy[len]&0xc0)==0x80);
+ 		bufCopy[len]='\0';
+-		char *bufCopy1=strdup(bufCopy);
+-		len--;
+-		TTF_SizeText(font, (const char *) bufCopy1, &retW, NULL);
+-		free(bufCopy1);
++		TTF_SizeUTF8(font, bufCopy, &retW, NULL);
+ 	}
+ 
+ 	if (shaded) {
+ 		if (currentState==BROWSING_GAME_LIST  && outline != NULL && fontOutline > 0) {
+-			msg1 = TTF_RenderText_Shaded(outline, bufCopy, make_color(50,50,50), make_color(backgroundColor[0], backgroundColor[1], backgroundColor[2]));
+-			msg = TTF_RenderText_Solid(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
++			msg1 = TTF_RenderUTF8_Shaded(outline, bufCopy, make_color(50,50,50), make_color(backgroundColor[0], backgroundColor[1], backgroundColor[2]));
++			msg = TTF_RenderUTF8_Solid(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
+ 		} else {
+-			msg = TTF_RenderText_Shaded(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]), make_color(backgroundColor[0], backgroundColor[1], backgroundColor[2]));
++			msg = TTF_RenderUTF8_Shaded(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]), make_color(backgroundColor[0], backgroundColor[1], backgroundColor[2]));
+ 		}
+ 	} else {
+ 		if (currentState==BROWSING_GAME_LIST && outline != NULL && fontOutline > 0) {
+-			msg1 = TTF_RenderText_Blended(outline, bufCopy, make_color(50, 50, 50));
+-			msg = TTF_RenderText_Solid(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
++			msg1 = TTF_RenderUTF8_Blended(outline, bufCopy, make_color(50, 50, 50));
++			msg = TTF_RenderUTF8_Solid(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
+ 		} else {
+-			msg = TTF_RenderText_Blended(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
++			msg = TTF_RenderUTF8_Blended(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
+ 		}
+ 	}
+ 
+@@ -200,14 +245,14 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
+ 			if (printCounter>0) {
+ 				SDL_FreeSurface(msg);
+ 			}
+-			msg = TTF_RenderText_Blended(font, test, make_color(txtColor[0], txtColor[1], txtColor[2]));
++			msg = TTF_RenderUTF8_Blended(font, test, make_color(txtColor[0], txtColor[1], txtColor[2]));
+ 			while (msg->w<=maxWidth&&printCounter<wordCounter) {
+ 				printCounter++;
+ 				if (strcmp(wordsInBuf[printCounter],"-")!=0) {
+ 					strcat(test," ");
+ 					strcat(test,wordsInBuf[printCounter]);
+ 					SDL_FreeSurface(msg);
+-					msg = TTF_RenderText_Blended(font, test, make_color(txtColor[0], txtColor[1], txtColor[2]));
++					msg = TTF_RenderUTF8_Blended(font, test, make_color(txtColor[0], txtColor[1], txtColor[2]));
+ 				} else {
+ 					printCounter++;
+ 					break;
+@@ -218,7 +263,7 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
+ 			}
+ 			int h = 0;
+ 			int w = 0;
+-			TTF_SizeText(miniFont, test, &w, &h);
++			TTF_SizeUTF8(miniFont, test, &w, &h);
+ 			genericDrawTextOnScreen(font,outline,x,y,test,txtColor,align,NULL,0);
+ 			free(test);
+ 			y+=calculateProportionalSizeOrDistance(lineSeparation);
+@@ -235,7 +280,7 @@ void genericDrawMultiLineTextOnScreen(TTF_Font *font, TTF_Font *outline, int x,
+ 		}
+ 
+ 	} else {
+-		msg = TTF_RenderText_Blended(font, buf, make_color(txtColor[0], txtColor[1], txtColor[2]));
++		msg = TTF_RenderUTF8_Blended(font, buf, make_color(txtColor[0], txtColor[1], txtColor[2]));
+ 		genericDrawTextOnScreen(font,outline,x,y,buf,txtColor,align,NULL,0);
+ 		free(wordsInBuf[0]);
+ 		SDL_FreeSurface(msg);
+@@ -276,8 +321,8 @@ void drawCustomText1OnScreen(TTF_Font *font, TTF_Font *outline, int x, int y, co
+ 	strcpy(bufCopy,buf);
+ 	strcpy(bufCopy1,buf);
+ 	bufCopy1[1]='\0';
+-	msg = TTF_RenderText_Blended(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
+-	msg1 = TTF_RenderText_Blended(outline, bufCopy, make_color(50,50,50));
++	msg = TTF_RenderUTF8_Blended(font, bufCopy, make_color(txtColor[0], txtColor[1], txtColor[2]));
++	msg1 = TTF_RenderUTF8_Blended(outline, bufCopy, make_color(50,50,50));
+ 	if (align & HAlignCenter) {
+ 		x -= msg->w / 2;
+ 	} else if (align & HAlignRight) {
+@@ -309,15 +354,15 @@ void drawShadedSettingsOptionValueOnScreen(char *option, char *value, int positi
+ 	int retW=1;
+ 	int retW2=1;
+ 	int retW3=3;
+-	TTF_SizeText(settingsfont, (const char *) option, &retW, NULL);
+-	TTF_SizeText(settingsfont, (const char *) " ", &retW2, NULL);
+-	TTF_SizeText(settingsfont, (const char *) value, &retW3, NULL);
++	TTF_SizeUTF8(settingsfont, (const char *) option, &retW, NULL);
++	TTF_SizeUTF8(settingsfont, (const char *) " ", &retW2, NULL);
++	TTF_SizeUTF8(settingsfont, (const char *) value, &retW3, NULL);
+ 	drawShadedTextOnScreen(settingsfont, NULL, SCREEN_WIDTH-calculateProportionalSizeOrDistance(5)-retW3, position, value, txtColor, VAlignBottom | HAlignLeft, txtBackgroundColor);
+ }
+ 
+ void drawSettingsOptionValueOnScreen(char *value, int position, int txtColor[]) {
+ 	int retW3=3;
+-	TTF_SizeText(settingsfont, (const char *) value, &retW3, NULL);
++	TTF_SizeUTF8(settingsfont, (const char *) value, &retW3, NULL);
+ 	drawTextOnScreen(settingsfont, NULL, SCREEN_WIDTH-calculateProportionalSizeOrDistance(5)-retW3, position, value, txtColor, VAlignBottom | HAlignLeft);
+ }
+ 
+@@ -468,7 +513,7 @@ void drawPictureTextOnScreen(char *buf) {
+ 		return;
+ 	}
+ 	int h = 0;
+-	TTF_SizeText(font, buf, NULL, &h);
++	TTF_SizeUTF8(font, buf, NULL, &h);
+ 	char *temp = malloc(strlen(buf)+2);
+ 	if (((struct Rom *)CURRENT_SECTION.currentGameNode->data)->preferences.frequency == OC_UC) {
+ 		strcpy(temp,"-");
+@@ -1036,7 +1081,7 @@ void initializeDisplay() {
+ 	logMessage("INFO","initializeDisplay","well...");
+ 	setenv("SDL_FBCON_DONT_CLEAR", "1", 0);
+ 	logMessage("INFO","initializeDisplay","maybe...");
+-#ifdef RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+ 	screen = SDL_SetVideoMode(320, 240, 16, SDL_SWSURFACE);
+ 	SDL_FreeSurface(screen);
+@@ -1143,7 +1188,7 @@ void initializeDisplay() {
+ 		fclose(fp1);
+ 	}
+ 
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ 	if(modes==(SDL_Rect **)0) {
+ 		printf("No available modes\n");
+ 	} else if(modes==(SDL_Rect **)-1) {
+@@ -1306,8 +1351,11 @@ void freeResources() {
+ 
+ 	freeFonts();
+ 	freeSettingsFonts();
++	#ifdef PLUMOS_RG280V
++	plumosCloseCjkFonts();
++	#endif
+ 	TTF_Quit();
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ 	Shake_Stop(device, effect_id);
+ 	Shake_EraseEffect(device, effect_id);
+ 	Shake_Close(device);
+diff --git a/simplemenu/src/logic/logic.c b/simplemenu/src/logic/logic.c
+index 3d7bd33..e8e3b94 100644
+--- a/simplemenu/src/logic/logic.c
++++ b/simplemenu/src/logic/logic.c
+@@ -216,15 +216,15 @@ void quit() {
+ 		exit(0);
+ #endif
+ 		if (selectedShutDownOption == 1) {
+-			execlp("sh", "sh", "-c", "sync && reboot", NULL);
++			execlp("sh", "sh", "-c", "exec /media/data/plumos/bin/plumos-safe-shutdown --reboot", NULL);
+ 		} else {
+-			execlp("sh", "sh", "-c", "sync && poweroff", NULL);
++			execlp("sh", "sh", "-c", "exec /media/data/plumos/bin/plumos-safe-shutdown --shutdown", NULL);
+ 		}
+ 	} else {
+ 		if (selectedShutDownOption == 1) {
+-			execlp("sh", "sh", "-c", "sync && reboot", NULL);
++			execlp("sh", "sh", "-c", "exec /media/data/plumos/bin/plumos-safe-shutdown --reboot", NULL);
+ 		} else if (selectedShutDownOption == 2) {
+-			execlp("sh", "sh", "-c", "sync && poweroff", NULL);
++			execlp("sh", "sh", "-c", "exec /media/data/plumos/bin/plumos-safe-shutdown --shutdown", NULL);
+ 		} else {
+ 			exit(0);
+ 		}
+@@ -292,6 +292,12 @@ void executeCommand(char *emulatorFolder, char *executable,
+ 		char *fileToBeExecutedWithFullPath, int consoleApp) {
+ #else
+ void executeCommandPC (char *executable, char *fileToBeExecutedWithFullPath) {
++#endif
++#if defined(PLUMOS_RG280V) && !defined(PC)
++	/* freeResources() releases the section and ROM owning these arguments. */
++	emulatorFolder = strdup(emulatorFolder);
++	fileToBeExecutedWithFullPath = strdup(fileToBeExecutedWithFullPath);
++	if (!emulatorFolder || !fileToBeExecutedWithFullPath) _exit(1);
+ #endif
+ 	FILE *fp;
+ 	char *exec = malloc(strlen(executable) + 5000);
+@@ -390,7 +396,7 @@ void executeCommandPC (char *executable, char *fileToBeExecutedWithFullPath) {
+ 			}
+ 		#endif
+ 	}
+-	char states[] = { };
++	char states[] = "";
+ 
+ //		char menuDirectory[100] = "";
+ //		char *directory="/home/retrofw/apps";
+@@ -834,6 +840,9 @@ int recursivelyScanDirectory(char *directory, char *files[], int i, int maxFiles
+ 			break;
+ 		}
+ 		const char *d_name = entry->d_name;
++#ifdef PLUMOS_RG280V
++		if (d_name[0] == '.') continue; /* Do not list hidden CD track directories. */
++#endif
+ 		if (entry->d_type & DT_DIR) {
+ 			logMessage("INFO", "recursivelyScanDirectory","It's a dir");
+ 			if (strcmp(d_name, mediaFolder) != 0 && strcmp(d_name, "..") != 0
+diff --git a/simplemenu/src/logic/screen.c b/simplemenu/src/logic/screen.c
+index 301b469..ee0268e 100644
+--- a/simplemenu/src/logic/screen.c
++++ b/simplemenu/src/logic/screen.c
+@@ -240,13 +240,20 @@ void showRomPreferences() {
+ 	drawTextOnScreen(getFont(), NULL, calculateProportionalSizeOrDistance(6), (SCREEN_HEIGHT/2)-calculateProportionalSizeOrDistance(28), name, (int[]) {255,255,255}, VAlignMiddle | HAlignLeft);
+ 	free(name);
+ 
+-	TTF_SizeText(getFont(), (const char *) "Overclock: " , &textWidth, NULL);
++#ifdef PLUMOS_RG280V
++	const char *cpuLabel="CPU policy: ";
++#else
++	const char *cpuLabel="Overclock: ";
++#endif
++	TTF_SizeUTF8(getFont(), cpuLabel, &textWidth, NULL);
+ 	textWidth+=calculateProportionalSizeOrDistance(2);
+ 
+ 	//Frequency option text
+-	drawTextOnScreen(getFont(), NULL, (SCREEN_WIDTH/2)-width/2+calculateProportionalSizeOrDistance(4), (SCREEN_HEIGHT/2)-calculateProportionalSizeOrDistance(9), "Overclock: ", textColor, VAlignMiddle | HAlignLeft);
++	drawTextOnScreen(getFont(), NULL, (SCREEN_WIDTH/2)-width/2+calculateProportionalSizeOrDistance(4), (SCREEN_HEIGHT/2)-calculateProportionalSizeOrDistance(9), cpuLabel, textColor, VAlignMiddle | HAlignLeft);
+ 	//Frequency option value
+-#if defined RG350 || defined RETROFW || defined MIYOO
++#if defined PLUMOS_RG280V
++	drawTextOnScreen(getFont(), NULL, (SCREEN_WIDTH/2)-width/2+textWidth+1, (SCREEN_HEIGHT/2)-calculateProportionalSizeOrDistance(9), "plumOS", valueColor, VAlignMiddle | HAlignLeft);
++#elif defined RG350 || defined RETROFW || defined MIYOO
+ 	if (rom->preferences.frequency==OC_OC) {
+ 		drawTextOnScreen(getFont(), NULL, (SCREEN_WIDTH/2)-width/2+textWidth+1, (SCREEN_HEIGHT/2)-calculateProportionalSizeOrDistance(9), "yes", valueColor, VAlignMiddle | HAlignLeft);
+ 	} else {
+@@ -809,6 +816,9 @@ void setOptionsAndValues (char **options, char **values, char **hints){
+ 	strcpy(hints[THEME_OPTION],"LAUNCHER THEME");
+ 	strcpy(hints[SCREEN_TIMEOUT_OPTION],"SECONDS UNTIL THE SCREEN TURNS OFF");
+ 	strcpy(hints[DEFAULT_OPTION],"LAUNCH AFTER BOOTING");
++#ifdef PLUMOS_RG280V
++	strcpy(hints[DEFAULT_OPTION],"STARTUP IS MANAGED BY PLUMOS");
++#endif
+ 	logMessage("INFO","setOptionsAndValues","Default option hint");
+ 	logMessage("INFO","setOptionsAndValues",hints[DEFAULT_OPTION]);
+ 	strcpy(hints[HELP_OPTION],"HOW TO USE THIS MENU");
+diff --git a/simplemenu/src/logic/simplemenu.c b/simplemenu/src/logic/simplemenu.c
+index 488bf98..2c78b46 100644
+--- a/simplemenu/src/logic/simplemenu.c
++++ b/simplemenu/src/logic/simplemenu.c
+@@ -74,7 +74,7 @@ void initialSetup() {
+ 	sigaction(SIGABRT, &sa, NULL);
+ 	sigaction(SIGINT, &sa, NULL);
+ 	signal(SIGTERM, &sig_term_handler);
+-	#if defined RG350
++	#if defined(RG350) && !defined(PLUMOS_RG280V)
+ 	resetFrameBuffer();
+ 	#endif
+ 	createConfigFilesInHomeIfTheyDontExist();
+diff --git a/simplemenu/src/logic/system_logic_od.c b/simplemenu/src/logic/system_logic_od.c
+index 280e4a4..a993e38 100644
+--- a/simplemenu/src/logic/system_logic_od.c
++++ b/simplemenu/src/logic/system_logic_od.c
+@@ -11,7 +11,7 @@
+ #include "../headers/system_logic.h"
+ #include "../headers/globals.h"
+ #include "../headers/utils.h"
+-#if defined RG350 || defined RG350
++#if defined(RG350) && !defined(PLUMOS_RG280V)
+ #include <shake.h>
+ #endif
+ 
+@@ -47,6 +47,10 @@ void to_string(char str[], int num)
+ 
+ void setCPU(uint32_t mhz)
+ {
++#ifdef PLUMOS_RG280V
++	currentCPU = 996; /* Keep the accepted plumOS governor and frequency limit. */
++	return;
++#endif
+ 	currentCPU = mhz;
+ 	#if defined RG350
+ 		char strMhz[10];
+@@ -115,7 +119,7 @@ void initSuspendTimer() {
+ 
+ void HW_Init()
+ {
+-	#if defined RG350 || defined RG350
++	#if defined(RG350) && !defined(PLUMOS_RG280V)
+ 	Shake_Init();
+ 	device = Shake_Open(0);
+ 	Shake_SimplePeriodic(&effect, SHAKE_PERIODIC_SQUARE, 0.5, 0.1, 0.05, 0.1);

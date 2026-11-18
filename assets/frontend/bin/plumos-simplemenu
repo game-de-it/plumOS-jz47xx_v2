@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+root=${PLUMOS_ROOT:-/media/data/plumos}
+export PLUMOS_ROOT="$root" HOME="$root/home/simplemenu"
+export SDL_VIDEODRIVER=kmsdrm SDL_VIDEO_KMSDRM_SCALING_MODE=0
+export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+"$root/bin/plumos-prepare-opk-input"
+cd "$root/simplemenu"
+exec ./simplemenu >>"$root/Logs/simplemenu.log" 2>&1
