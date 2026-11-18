@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Replay fast/queued GPIO inputs against SimpleMenu without changing user state."""
 import json
+import argparse
 import pathlib
 import re
 import shlex
@@ -8,7 +9,11 @@ import subprocess
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUT = ROOT / 'output/rg280v-simplemenu/input-check'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--theme-index', type=int, choices=(0, 1, 2), default=1,
+                    help='Installed theme index: 0=0A, 1=SimpleQuest, 2=SimpleQuest2')
+args = parser.parse_args()
+OUT = ROOT / f'output/rg280v-simplemenu/input-check-theme-{args.theme_index}'
 OUT.mkdir(parents=True, exist_ok=True)
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
 BASE = '/media/data/plumos'
@@ -62,7 +67,7 @@ try:
           'cp ' + BASE + '/home/simplemenu/.simplemenu/config.ini ' + home + '/config.ini; '
           ': >' + home + '/favorites.sav')
     state = OUT / 'initial-state.sav'
-    state.write_text('10;\n1;\n0;\n1;\n1;\n1;\n0;\n1;\n0;\n3;\n')
+    state.write_text(f'10;\n1;\n0;\n1;\n1;\n{args.theme_index};\n0;\n1;\n0;\n3;\n')
     subprocess.run(ADB + ['push', str(state), home + '/last_state.sav'], check=True, capture_output=True)
     command = ('cd ' + BASE + '/simplemenu; echo $$ >' + TMP + '/pid; exec env '
                'HOME=' + Q(TMP) + ' PLUMOS_ROOT=' + Q(BASE) + ' PLUMOS_SDCARD_ROOT=/media/data/sd2 '
@@ -134,6 +139,20 @@ try:
 
         key(56)
         assert events()[-1]['state'] == 4  # System selection.
+        # Compare logical selection against the captured theme image. Theme
+        # artwork can contain its own fixed list/marker, unlike the real INIs.
+        navigation = []
+        for step in range(13):
+            if step:
+                key(108)
+            navigation.append(dict(step=step, group=events()[-1]['group'],
+                                   section=events()[-1]['section']))
+            subprocess.run(['env', 'ADB_SERVER_PORT=5041',
+                            str(ROOT / 'scripts/capture-rg280v-drm.sh'),
+                            str(OUT / f'section-{step:02d}.png')],
+                           check=True, stdout=subprocess.DEVNULL)
+        results.append(dict(case='system selection artwork comparison',
+                            theme_index=args.theme_index, navigation=navigation))
         start = len(events())
         key(29, 650)
         assert process.poll() is None and events()[-1]['state'] == 0
