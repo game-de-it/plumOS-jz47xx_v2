@@ -10,7 +10,7 @@ import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--theme-index', type=int, default=1,
+parser.add_argument('--theme-index', type=int, default=0,
                     help='Installed theme index (prefer --theme-name after adding themes)')
 parser.add_argument('--theme-name', help='Resolve an installed theme by name, without assuming its index')
 args = parser.parse_args()
