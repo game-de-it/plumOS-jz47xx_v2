@@ -1,0 +1,38 @@
+--- a/src/gallium/drivers/etnaviv/etnaviv_rs.c
++++ b/src/gallium/drivers/etnaviv/etnaviv_rs.c
+@@ -493,7 +493,7 @@
+                  const struct pipe_blit_info *blit_info)
+ {
+    void *smap, *srow, *dmap, *drow;
+-   size_t tile_size;
++   size_t tile_row_bytes;
+ 
+    assert(src->layout == ETNA_LAYOUT_TILED);
+    assert(dst->layout == ETNA_LAYOUT_TILED);
+@@ -500,7 +500,16 @@
+    assert(src->base.nr_samples == 0);
+    assert(dst->base.nr_samples == 0);
+ 
+-   tile_size = util_format_get_blocksize(blit_info->src.format) * 4 * 4;
++   /* Partial tiles require the generic blitter to preserve adjacent pixels. */
++   if (blit_info->src.box.width <= 0 || blit_info->src.box.height <= 0 ||
++       (blit_info->src.box.width & 3) || (blit_info->src.box.height & 3))
++      return false;
++
++   /* Width is in pixels, not tiles. One tiled row covers four scanlines;
++    * multiplying bytes-per-tile by pixel width would copy four times too much.
++    */
++   tile_row_bytes = util_format_get_blocksize(blit_info->src.format) *
++                    4 * blit_info->src.box.width;
+ 
+    smap = etna_bo_map(src->bo);
+    if (!smap)
+@@ -517,7 +526,7 @@
+    etna_bo_cpu_prep(dst->bo, DRM_ETNA_PREP_WRITE);
+ 
+    for (int y = 0; y < blit_info->src.box.height; y += 4) {
+-      memcpy(drow, srow, tile_size * blit_info->src.box.width);
++      memcpy(drow, srow, tile_row_bytes);
+       srow += src_lev->stride * 4;
+       drow += dst_lev->stride * 4;
+    }

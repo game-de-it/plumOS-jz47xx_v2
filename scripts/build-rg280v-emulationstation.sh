@@ -55,3 +55,4 @@ done
 cp "$w/source/LICENSE.md" "$w/source/CREDITS.md" "$w/source/opensans_license.txt" "$w/runtime/"
 "$t/bin/mipsel-gcw0-linux-uclibc-readelf" -A "$w/runtime/emulationstation" | grep 'Soft float'
 BUILD
+bash scripts/build-rg280v-emulationstation-mesa.sh

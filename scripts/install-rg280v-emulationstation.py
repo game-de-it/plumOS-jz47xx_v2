@@ -13,7 +13,7 @@ if shell('pidof emulationstation || true'):raise SystemExit('EmulationStation is
 systems=json.loads(shell('cat '+BASE+'/config/frontend/systems.json'))['systems']
 stage=WORK/'install'
 if stage.exists():shutil.rmtree(stage)
-shutil.copytree(WORK/'runtime',stage/'emulationstation')
+shutil.copytree(WORK/'runtime',stage/'emulationstation',symlinks=True)
 seed=stage/'emulationstation/seed';seed.mkdir()
 launchers=stage/'emulationstation/launchers';launchers.mkdir()
 # Original low-resolution RG350 theme. No emulator binaries, BIOS or ROMs copied.
@@ -36,7 +36,7 @@ for system in systems:
  script=launchers/ident
  script.write_text('''#!/bin/sh
 set -eu
-unset SDL_VIDEO_KMSDRM_SCALING_MODE
+unset SDL_VIDEO_KMSDRM_SCALING_MODE LIBGL_DRIVERS_PATH
 sdcard=${PLUMOS_SDCARD_ROOT:-/media/data/sd2}
 rom=$(readlink -f "$1")
 case "$rom" in "$sdcard/roms/"*) relative=${rom#"$sdcard/roms/"} ;; *) exit 2 ;; esac

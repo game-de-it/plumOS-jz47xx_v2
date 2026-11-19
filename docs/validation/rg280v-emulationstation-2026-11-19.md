@@ -32,3 +32,13 @@
 - Ignored captures/build evidence: `output/rg280v-emulationstation/`.
 
 Sources: https://github.com/lualiliu/emulationstation-on-jz4770 and https://github.com/ManuelSch81/RG350-EmulationStation_configured .
+
+## Follow-up: category navigation crash
+
+The reported category-entry/back crash was reproduced with the original installed GPU driver. The failing copy was identified in the matching Mesa 23.2.1 etnaviv driver. The correction is packaged in an application-private DRI directory, selected only by the EmulationStation wrapper. Emulator launchers clear that selection before starting a game. The operating system's shared driver is unchanged.
+
+- Regression check: `scripts/verify-rg280v-es-mesa-blit.py` extracts the actual Mesa copy function and runs it with checked memory boundaries. Original fails; corrected R8/RGBA copies and partial-tile fallback pass.
+- Device check: all 26 categories, three complete circuits, five actions per category (enter/down/up/back/next): **390 actions, zero abnormal exits**, same frontend process throughout.
+- Private-driver loading was checked against the running process. Diagnostic handlers were removed from the installed frontend binary.
+- `scripts/build-rg280v-emulationstation-mesa.sh` builds the private driver and restores the SDK source and library afterward. The main frontend build script invokes it automatically.
+- The installer preserves runtime symlinks; generated child launchers unset the private driver search path. Wrapper logs include the frontend exit status.
