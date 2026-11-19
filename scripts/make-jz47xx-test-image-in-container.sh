@@ -6,16 +6,18 @@ model=${1:?usage: make-jz47xx-test-image-in-container.sh MODEL}
 case "$model" in rg300x|rg350|rg280v|rg350m) ;; *) exit 2 ;; esac
 base=/workspace/output/jz47xx-multimodel
 boot="$base/boot"
-# Linux filesystem: preserve case-sensitive theme names, modes and symlinks.
-stage=/workspace/output/rg280v/jz47xx-test-image-stage
-root="$stage/data-root"
-destination="$base/plumos-jz47xx-test.img"
-mkdir -p "$root" "$stage/empty"
+destination="$base/plumos-jz47xx-$model-test.img"
 test -f "$base/runtime.tar"
 test ! -e "$destination" || {
     echo "Existing image: move or explicitly remove it before rebuilding: $destination" >&2
     exit 1
 }
+# Use a fresh Linux staging directory to preserve case-sensitive theme names,
+# modes and symlinks without carrying files across model builds.
+stage=$(mktemp -d /workspace/output/rg280v/jz47xx-test-image-stage.XXXXXXXX)
+trap 'rm -rf -- "$stage"' EXIT
+root="$stage/data-root"
+mkdir -p "$root" "$stage/empty"
 (cd "$boot" && sha256sum -c SHA256SUMS)
 tar xf "$base/runtime.tar" -C "$root" \
     --exclude=plumos/backup --exclude=plumos/backups --exclude=plumos/Logs

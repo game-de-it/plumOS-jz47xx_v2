@@ -1,6 +1,6 @@
 # JZ4770の4機種で共通SDを使う構成
 
-対象はRG300X、RG350、RG280V、RG350M。まずRG300Xの予備SD1で実機検証する。
+対象はRG300X、RG350、RG280V、RG350M。RG300Xに続き、RG350Mを予備SD1で検証する。
 現在のRG280VのSD1には試験用起動ファイルを書き込まない。
 
 ## 起動方式
@@ -60,8 +60,10 @@ RG300XはDTSでHDMIのI2CをGPIO方式に切り替えているので、この定
 rootfsとmodulesは、ビルド後のSDK内にある別状態のファイルを混ぜず、
 実機から取り出して照合した組を使う。
 
-`scripts/make-jz47xx-test-image-in-container.sh rg300x`は試験イメージだけを生成し、
-ディスクへの書き込みはしない。構成はFAT32の起動領域128 MiB、ext4の
+`scripts/make-jz47xx-test-image-in-container.sh rg350m`は
+`output/jz47xx-multimodel/plumos-jz47xx-rg350m-test.img`とSHA-256ファイルを生成する。
+ファイル名には引数の機種名を使う。SDカードへの書き込みは手動で行う。
+構成はFAT32の起動領域128 MiB、ext4の
 実行領域1536 MiB、FAT32のユーザー領域64 MiBと先頭予約領域。
 カードの残り容量へはこの試験では拡張しない。
 実機の完了済み環境を引き継ぐため、コピー先のseedマーカーを外し、
@@ -92,6 +94,8 @@ rootfsとmodulesは、ビルド後のSDK内にある別状態のファイルを�
 - 復帰時のDRM polling警告、ゲーム経路、残る電源試験は継続対象。
   詳細は `validation/rg300x-first-boot-2026-11-19.md`。
 - RG350、RG350Mでの実起動・表示・音声・入力・電源操作は未確認。
+- RG350Mの試験イメージを生成。イメージ内の`model.txt`、連結カーネル、
+  rootfs・modules・mininitを生成元と照合し、パーティション表、ext4、SHA-256を検査した。
 
 RG300Xでは、起動→DT/パネル/入力の取得→FE表示とABXY→音声とエミュ起動/復帰→
 音量/輝度→電源メニュー→Reboot/Shutdown→Sleep/復帰の順に確認する。
