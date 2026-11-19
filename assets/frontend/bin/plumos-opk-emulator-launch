@@ -33,6 +33,10 @@ fi
 export PLUMOS_ROOT="$root" HOME="$root/home/opk/$id"
 export PLUMOS_OPK_HOME="$HOME" SDL_VIDEODRIVER=kmsdrm
 export LD_LIBRARY_PATH="$root/lib/opk-compat:$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Preserve the accepted 2.2.3 binary while correcting its legacy SDL mode check.
+if [ "$id" = fceux223 ]; then
+    export PLUMOS_FCEUX_LEGACY_MODE_CHECK=1
+fi
 # Both GCW Zero builds expect HOME for their menu, reserved for OS power here.
 case "$id" in
     fceux223|neo4all)
