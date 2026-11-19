@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+root=${PLUMOS_ROOT:-/media/data/plumos}
+export PLUMOS_ROOT="$root" HOME="$root/home/pymenu"
+export PYTHONHOME="$root/pymenu/python" PYTHONUNBUFFERED=1
+export SDL_VIDEODRIVER=kmsdrm SDL_VIDEO_KMSDRM_SCALING_MODE=0
+export LD_LIBRARY_PATH="$root/pymenu/python/lib:$root/pymenu/lib:$root/lib"
+export LC_ALL=C LANG=C
+"$root/bin/plumos-prepare-opk-input"
+rm -f /tmp/plumos-pymenu-resume.json
+cd "$root/pymenu/ui"
+while :; do
+    set +e
+    "$PYTHONHOME/bin/python3.11" main.py >>"$root/Logs/pymenu.log" 2>&1
+    rc=$?
+    set -e
+    [ "$rc" -eq 75 ] || exit "$rc"
+done

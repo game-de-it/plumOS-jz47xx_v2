@@ -1,0 +1,10 @@
+#!/bin/sh
+# PyMenu execs this process after releasing SDL; return to it after the child exits.
+set -u
+root=${PLUMOS_ROOT:-/media/data/plumos}
+unset SDL_VIDEO_KMSDRM_SCALING_MODE
+"$@"
+rc=$?
+printf 'PyMenu child exit=%s\n' "$rc"
+# Return to the existing supervisor; avoid nesting another shell on each game.
+exit 75

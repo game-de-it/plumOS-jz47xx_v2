@@ -484,3 +484,9 @@
 - ユーザーの指定に従い、Emulatorsの配布OPK全62本を登録順に静的監査・実機起動した。26本にはSD2のROMを指定し、8秒ずつDRM画面、SDL画面提示、PCMコールバックを記録。16本で画面提示、13本で音声コールバックを取得したが、非ゼロPCMは2本のみ。25本は旧共有ライブラリ不足を報告。タイトル・メニュー値をゲーム中の性能値とは扱わない。
 - Neo Geo PocketのRace ExplorerはROMを読み込みチーム・メンバー選択まで進み、後半は約60 FPSと非ゼロPCM。NES FCEUXはBaseballのチーム選択まで約60 FPSだがPCM無音、Mega Drive Genesis Plus GXはBare Knuckleのオープニングで約60 FPS・非ゼロPCM、GB Gambatte原版はSuper Mario Landのゲーム画面で約60 FPSだがPCMほぼ無音。配布原版と既存FE改修版は別判定とした。全62件の個別理由と測定範囲は`docs/validation/rg280v-rg350-standalone-audit-2026-11-17.md`。
 - 試験用OPKは各回で削除、FEを最終復旧して実行プロセスを確認。ROM、OPK、スクリーンショットはGitに入れていない。実機での音質・操作・ゲーム終了経路は、候補別の追加確認が必要。
+
+## 2026-11-19 — PyMenuの追加
+
+- 推奨順の最初として、元のPyMenuソースをPython 3.11/Pygame 1.9.6の専用環境で移植。元のUIとテーマを維持し、Python 2依存の座標変換・辞書比較・scandirを修正した。
+- 26機種・58の正規SA/PICO経路を取り込み、STARTのコア選択、NES起動、SELECT＋STARTメニュー終了、PyMenuのROM一覧への復帰を実機で確認。plumOS FEのAppsからの起動とFEへの復帰も確認した。
+- 電源・音量・輝度・CPU管理はOS側を使い、既存の起動FEやSDL/ALSAは変更していない。再現用ビルド・導入スクリプト、パッチ、試験範囲をGitに保存。詳細は`docs/validation/rg280v-pymenu-2026-11-19.md`。

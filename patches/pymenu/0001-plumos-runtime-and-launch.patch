@@ -1,0 +1,295 @@
+diff --git a/Common.py b/Common.py
+index 8757093..941410f 100644
+--- a/Common.py
++++ b/Common.py
+@@ -102,6 +102,7 @@ def loadImage(path):
+     return  pygame.Surface((1,1),pygame.SRCALPHA)
+ 
+ def getFPS():
++    return 60
+     if(Configuration.isRetroFW() or platform.processor() == ""):
+        return 30
+     else:
+@@ -218,22 +219,8 @@ def blitMultilineText(surface, text, pos, font, color=pygame.Color('black')):
+         y += word_height  # Start on new row.
+ 
+ def quick_sort(items):
+-        """ Implementation of quick sort """
+-        if len(items) > 1:
+-                pivot_index = int(len(items) / 2)
+-                smaller_items = []
+-                larger_items = []
+- 
+-                for i, val in enumerate(items):
+-                        if i != pivot_index:
+-                                if val < items[pivot_index]:
+-                                        smaller_items.append(val)
+-                                else:
+-                                        larger_items.append(val)
+- 
+-                quick_sort(smaller_items)
+-                quick_sort(larger_items)
+-                items[:] = smaller_items + [items[pivot_index]] + larger_items
++    # Python 3 does not compare dictionaries. Sort by displayed filename.
++    items.sort(key=lambda item: item["name"].casefold())
+ 
+ def addToCustomList(config, rom, dataName, limitEntries = True):
+     data = getDataEntry(config, rom)
+diff --git a/Configuration.py b/Configuration.py
+index 927be78..c5dd831 100644
+--- a/Configuration.py
++++ b/Configuration.py
+@@ -47,7 +47,7 @@ def initOPK():
+ 
+ 
+     for (dirpath, dirnames, filenames) in os.walk(str(configuration["opkPath"])):
+-        for name in filenames:
++        for name in sorted(filenames):
+             opkName = os.path.splitext(name)[0].lower()
+            
+             if(opkName.find(".") != -1):
+@@ -104,7 +104,7 @@ def initLinks():
+         return
+ 
+     for (dirpath, dirnames, filenames) in os.walk(configuration["linkPath"]):
+-        for name in filenames:
++        for name in sorted(filenames):
+             if(name.startswith(".")):
+                 continue
+         
+@@ -114,7 +114,7 @@ def initLinks():
+              
+             #check for title in link
+             if("title" in data):
+-                title = data["title"].lower()
++                title = data.get("system", data["title"]).lower()
+             else:
+                 #use file as title
+                 title = os.path.splitext(name)[0].lower()
+diff --git a/FileChooser.py b/FileChooser.py
+index a3448b2..96861d7 100644
+--- a/FileChooser.py
++++ b/FileChooser.py
+@@ -9,13 +9,8 @@ import SelectionMenu
+ import json
+ import copy
+ 
+-try:        
+-    import scandir
+-    print("using native scandir")     
+-except Exception as ex:
+-    sys.path.insert(0, "scandir")
+-    import scandir
+-    print("using custom scandir")    
++# Python 3 provides the original scandir backport in the standard library.
++import os as scandir
+ 
+ 
+ class FileChooser(AbstractList.AbstractList):
+diff --git a/Header.py b/Header.py
+index 5fdec9c..e161054 100644
+--- a/Header.py
++++ b/Header.py
+@@ -100,8 +100,8 @@ class Header():
+                 self.usbDevice = open("/sys/devices/platform/musb_hdrc.0/uh_cable", "r")
+             
+             if(Configuration.isOpenDinguX()):
+-                self.battery = open("/sys/class/power_supply/battery/voltage_now", "r")
+-                self.usbDevice = open("/sys/devices/platform/gpio-charger.1/power_supply/usb/online", "r")
++                self.battery = open("/sys/class/power_supply/jz-battery/voltage_now", "r")
++                self.usbDevice = open("/sys/class/power_supply/usb-charger/online", "r")
+             else:
+                 self.battery = open("/proc/jz/battery", "r")    
+ 
+diff --git a/MainMenu.py b/MainMenu.py
+index 73f092f..628986e 100644
+--- a/MainMenu.py
++++ b/MainMenu.py
+@@ -155,7 +155,7 @@ class MainMenu(RenderObject.RenderObject):
+ 
+     def openPowerMenu(self):
+         if(Configuration.isOpenDinguX()):
+-            self.overlay = SelectionMenu.SelectionMenu(self.screen, ["Poweroff", "Reboot", "Run Gmenu2x"], self.contextMenuCallback)
++            self.overlay = SelectionMenu.SelectionMenu(self.screen, ["Return to plumOS"], self.contextMenuCallback)
+         else:
+             self.overlay = SelectionMenu.SelectionMenu(self.screen, ["Poweroff", "Reboot", "Mount USB", "Run Gmenu2x"], self.contextMenuCallback)
+     
+@@ -207,6 +207,9 @@ class MainMenu(RenderObject.RenderObject):
+ 
+     def contextMenuCallback(self, selection, text):
+         self.overlay = None
++        if text == "Return to plumOS":
++            pygame.quit()
++            sys.exit(0)
+       
+         if(text == "Mount USB"):          
+             print("Mounting USB")
+diff --git a/ResumeHandler.py b/ResumeHandler.py
+index 4d4b06e..370a628 100644
+--- a/ResumeHandler.py
++++ b/ResumeHandler.py
+@@ -12,7 +12,7 @@ def setLastUsedMain(json, index):
+ 
+ def clearResume():
+     try:
+-        os.remove("/tmp/resume.json")
++        os.remove("/tmp/plumos-pymenu-resume.json")
+     except Exception as ex:
+         return None
+ 
+@@ -32,14 +32,14 @@ def storeResume():
+         resume["line"]=lastSelectedLine
+         resume["path"]=lastPath
+         #print("Storing resume file: " + str(lastUsed) + " line:"+ str(lastSelectedLine) + " lastPath" + str(lastPath))
+-        with open('/tmp/resume.json', 'w') as fp:
++        with open('/tmp/plumos-pymenu-resume.json', 'w') as fp:
+             json.dump(resume, fp,sort_keys=True, indent=4)
+     except Exception as ex:
+         pass
+ 
+ def getResumeFile():
+     try:
+-        res = json.load(open('/tmp/resume.json'))
++        res = json.load(open('/tmp/plumos-pymenu-resume.json'))
+         return res      
+     except Exception as ex:
+         return None
+diff --git a/Runner.py b/Runner.py
+index b9d237a..719fdbc 100644
+--- a/Runner.py
++++ b/Runner.py
+@@ -31,15 +31,11 @@ def runEmu(config, rom):
+         print("cmd needs to be set to an existing executable")       
+         return
+     
+-    print("Platform is: '" + platform.processor() + "'")
+-    if(workdir == None and not cmd == None):    
+-        workdir = os.path.abspath(os.path.join(cmd, os.pardir))   
++    import pygame
++    pygame.quit()
++    invoker = "/media/data/plumos/bin/plumos-pymenu-invoker"
++    os.execv(invoker, [invoker, cmd, rom])
+ 
+-    
+-    if(platform.processor() == ""):
+-        runEmuMIPS(name, cmd, workdir, config, rom)
+-    else:
+-        runEmuHost(name, cmd, workdir, config, rom)
+ 
+ def runEmuMIPS(name, cmd, workdir, config, rom):
+     name =  config["name"]
+@@ -98,12 +94,11 @@ def runNative(config):
+         print("cmd needs to be set to an existing executable")      
+         return
+     
+-    print("Platform is: " + platform.processor())
+-        
+-    if(platform.processor() == ""):
+-        runNativeMIPS(cmd, config)
+-    else:
+-        runNativeHost(cmd, config)
++    import pygame
++    pygame.quit()
++    invoker = "/media/data/plumos/bin/plumos-pymenu-invoker"
++    os.execv(invoker, [invoker, cmd])
++
+ 
+ def runNativeMIPS(cmd, config):  
+     cmd =  config["cmd"] if "cmd" in config else None
+diff --git a/Suspend.py b/Suspend.py
+index 777147f..abc0ad9 100644
+--- a/Suspend.py
++++ b/Suspend.py
+@@ -58,6 +58,7 @@ class Suspend():
+             TaskHandler.removePeriodicTask(self.suspendTaskId)
+ 
+     def addSuspendTask(self):
++        return  # plumOS owns suspend/backlight
+         if(self.suspendTaskId is not None):
+             TaskHandler.removePeriodicTask(self.suspendTaskId)
+         suspendTime = self.config["options"]["suspendTimeout"]
+@@ -67,6 +68,7 @@ class Suspend():
+         self.suspendTaskId = TaskHandler.addPeriodicTask(0, self.suspend,  float(suspendTime) * 1000 * 60)
+     
+     def addBrignessTask(self):
++        return  # plumOS owns suspend/backlight
+         if(self.brightnessTaskId is not None):
+             TaskHandler.removePeriodicTask(self.brightnessTaskId)
+         displayTimeout = self.config["options"]["displayTimeout"]
+diff --git a/main.py b/main.py
+index 3b06bb2..b8191bb 100644
+--- a/main.py
++++ b/main.py
+@@ -1,21 +1,18 @@
+ # -*- coding: utf-8 -*-
++import pygame
++pygame.font.init()
+ import sys, Common, traceback, os
+ 
+ # catch global exception and try to enable usb
+-def except_hook(exctype, value, traceback):
+-    if(traceback != None):
+-       traceback.print_exception(exctype, value)
++def except_hook(exctype, value, tb):
++    traceback.print_exception(exctype, value, tb)
++    pygame.quit()
++    sys.exit(1)
+ 
+-    Common.mountSD(True)
+-    Common.mountUSB()
+-    import time
+-    while True:
+-        time.sleep(1)
+-    
+ sys.excepthook = except_hook
+ 
+ import pygame, MainMenu, Configuration, RenderControl, TaskHandler
+-import Suspend, BrightnessVolumeControl
++import Suspend
+ import time
+ 
+ from pygame.locals import *
+@@ -23,11 +20,11 @@ from pygame.locals import *
+ textFont = pygame.font.Font('theme/NotoSans-Regular.ttf', 10)
+ 
+ print("PyGame Init")
+-pygame.init()
++pygame.display.init()
+ pygame.font.init()
+ pygame.mouse.set_visible(False)
+ fpsClock = pygame.time.Clock()
+-pygame.key.set_repeat(50, 50)
++pygame.key.set_repeat(220, 100)
+ config = Configuration.getConfiguration()
+ 
+ 
+@@ -49,7 +46,7 @@ def init():
+     renderObject = MainMenu.MainMenu(screen, suspend)
+    
+     
+-    brightness = BrightnessVolumeControl.BrightnessVolume()
++    # Volume, brightness and power belong to the plumOS daemon.
+ 
+     
+     while True: # main game loop
+@@ -61,13 +58,11 @@ def init():
+ 
+         suspend.handleEvents(events)
+         renderObject.handleEvents(events)
+-        brightness.handleEvents(events)
+         
+         if(RenderControl.isDirty()):   
+             start = int(round(time.time() * 1000))            
+             RenderControl.setDirty(False)
+             renderObject.render(screen)
+-            brightness.render(screen)
+ 
+             if("showFPS" in config["options"] and config["options"]["showFPS"]):
+                 if(lastRenderTime == 0):
+@@ -90,4 +85,5 @@ try:
+ except Exception as err:
+     print(str(err))
+     traceback.print_exc()
+-    except_hook(None, None, None)
++    pygame.quit()
++    sys.exit(1)

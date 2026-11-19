@@ -1,0 +1,14 @@
+diff --git a/src_c/base.c b/src_c/base.c
+index 608a6e3..0d086b1 100644
+--- a/src_c/base.c
++++ b/src_c/base.c
+@@ -412,7 +412,8 @@ pg_get_init(PyObject *self, PyObject *args)
+ static int
+ pg_IntFromObj(PyObject *obj, int *val)
+ {
+-    int tmp_val = PyInt_AsLong(obj);
++    /* Python 2 accepted float pixel positions; retain that API for legacy UI. */
++    int tmp_val = PyFloat_Check(obj) ? (int)PyFloat_AsDouble(obj) : PyInt_AsLong(obj);
+ 
+     if (tmp_val == -1 && PyErr_Occurred()) {
+         PyErr_Clear();
