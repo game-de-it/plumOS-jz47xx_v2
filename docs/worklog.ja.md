@@ -1,5 +1,12 @@
 # 作業ログ
 
+## 2026-11-19 — RG350Mの暗転とSD1の照合
+
+- 本体の画面は暗いままで、MacにはUSB機器／USB Ethernetが現れなかった。直前のRG300XのADB接続はofflineだった。
+- 試験SD1の3パーティションの位置・サイズがイメージと一致。`model.txt=rg350m`、稼働用`uzImage.bin`、rootfs、modules、mininitを生成元と照合し、同梱の4機種のカーネルもSHA-256で照合した。
+- 元イメージに存在しない`plumos-boot.log`に2回分の`READY`を確認。SD1のデータ・ユーザー領域とSD2のマウント、USB gadget設定の成功、adbdのPIDが記録されていた。後段のUSB状態は`operstate=down`、`carrier=0`。ログの`RG280V`は共通rootfsの固定ラベル。
+- `S95frontend:0`はバックグラウンド起動を指示したシェルの結果。FEの描画成功は未確認。RG350Mのパネルドライバは組み込み済み。表示の切り分けには実機のDRM・バックライト情報とFEログが必要。照合時にSDへの書き込みは行っていない。
+
 ## 2026-11-19 — RG350Mの実機検証イメージを準備
 
 - 既存のRG350M用カーネル・DTBと共通環境から予備SD1用イメージを生成。RG300Xで確認したFCEUXの修正と、PicoDrive・Stella・Gambatte 2020の修正版を同梱。
