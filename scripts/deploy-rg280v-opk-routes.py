@@ -43,6 +43,7 @@ def sd_copy(source,target):
         assert digest(target)==expected,target
     return dict(source=source,target=target,sha256=expected)
 
+subprocess.run(['bash',str(ROOT/'scripts/build-rg280v-gambatte-menu.sh')],check=True)
 subprocess.run(['adb','-P','5041','connect','10.1.1.2:5555'],check=True)
 records=json.loads((OUT/'package-manifest.json').read_text())
 assert len(records)==19
@@ -55,7 +56,8 @@ shell('mkdir -p '+Q(backup))
 shell('cp -p /media/data/local/init.d/S95frontend '+Q(backup+'/S95frontend'))
 for relative in ['config/frontend/systems.json','state/frontend/core-overrides.json',
                  'state/frontend/library-index.json','bin/plumos-controller-ui','bin/plumos-text-ui',
-                 'bin/plumos-standalone-launch']:
+                 'bin/plumos-standalone-launch','bin/plumos-opk-emulator-launch',
+                 'lib/libgambatte-menu.so']:
     shell('if test -f '+Q(BASE+'/'+relative)+'; then cp -p '+Q(BASE+'/'+relative)+' '+Q(backup+'/'+relative.replace('/','_'))+'; fi')
 before=json.loads(shell('cat '+BASE+'/config/frontend/systems.json'))
 (OUT/('before-systems-'+stamp+'.json')).write_text(json.dumps(before,indent=2))
@@ -164,6 +166,7 @@ try:
         push(ROOT/'output/rg280v-fe'/name,BASE+'/bin/'+name,'0755')
     for default in (ROOT/'assets/frontend/standalone-defaults').iterdir():
         push(default,BASE+'/config/standalone/'+default.name)
+    push(ROOT/'output/rg280v-emulators/lib/libgambatte-menu.so',BASE+'/lib/libgambatte-menu.so')
     for name in ['plumos-standalone-launch','plumos-opk-emulator-launch']:
         push(ROOT/'assets/frontend/bin'/name,BASE+'/bin/'+name,'0755')
     for icon in json.loads((ROOT/'assets/frontend/logos/opk-system-icons.json').read_text())['icons']:

@@ -9,7 +9,8 @@ int SDL_PollEvent(SDL_Event *event)
     typedef int (*poll_event_fn)(SDL_Event *);
     static poll_event_fn real_poll_event;
     static int select_down;
-    static int combo_down;
+    static int start_down;
+    static SDLKey menu_key;
     int result;
 
     if (!real_poll_event)
@@ -24,14 +25,18 @@ int SDL_PollEvent(SDL_Event *event)
             if (key == SDLK_HOME || key == SDLK_END || key == SDLK_BACKSPACE ||
                 key == SDLK_RCTRL)
                 continue;
-            if (key == SDLK_ESCAPE)
-                select_down = event->type == SDL_KEYDOWN;
-            if (key == SDLK_RETURN) {
-                if (event->type == SDL_KEYDOWN && select_down) {
-                    combo_down = 1;
+            if (key == SDLK_ESCAPE || key == SDLK_RETURN) {
+                int *down = key == SDLK_ESCAPE ? &select_down : &start_down;
+                int was_down = *down;
+                *down = event->type == SDL_KEYDOWN;
+
+                if (*down && was_down && menu_key != SDLK_UNKNOWN)
+                    continue;
+                if (*down && !was_down && start_down && select_down) {
+                    menu_key = key;
                     event->key.keysym.sym = SDLK_BACKSPACE;
-                } else if (event->type == SDL_KEYUP && combo_down) {
-                    combo_down = 0;
+                } else if (!*down && key == menu_key) {
+                    menu_key = SDLK_UNKNOWN;
                     event->key.keysym.sym = SDLK_BACKSPACE;
                 }
             }

@@ -42,6 +42,9 @@ case "$id" in
     fceux223|neo4all)
         export LD_PRELOAD="$root/lib/libfceux-menu.so${LD_PRELOAD:+:$LD_PRELOAD}"
         ;;
+    gambatte2020)
+        export LD_PRELOAD="$root/lib/libgambatte-menu.so${LD_PRELOAD:+:$LD_PRELOAD}"
+        ;;
 esac
 mkdir -p "$HOME" "$root/Logs/standalone"
 sdcard=${PLUMOS_SDCARD_ROOT:-/media/data/sd2}
