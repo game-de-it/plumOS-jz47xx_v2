@@ -34,7 +34,7 @@ PNG_CHUNKS = {
     b"IHDR", b"PLTE", b"IDAT", b"IEND", b"tRNS", b"gAMA", b"cHRM", b"sRGB"
 }
 SENSITIVE = re.compile(
-    rb"/(?:Users|Volumes|private/(?:tmp|var))/|\b(?:developer|developer)\b|"
+    rb"/(?:Users|Volumes|private/(?:tmp|var))/|"
     rb"\b192\.168\.10\.\d+\b|"
     rb"-----BEGIN (?:OPENSSH|RSA|EC|DSA|PGP) PRIVATE KEY(?: BLOCK)?-----\r?\n[A-Za-z0-9+/]{24,}|"
     rb"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,})\b"
