@@ -88,4 +88,10 @@ FEと同じ起動処理へ経路とSD2上の代表ROMを指定した。各試験
 - NEO4ALLはFatal Furyの操作説明後に一度Bus error（終了138）。再試験では操作説明後もエミュレータが動作しメニューを開けた。安定性については継続確認が必要。
 - ネイティブFEのGBA一覧からCastlevaniaをReGBAで起動し、SELECT＋STARTメニューからExit。復帰直後の一枚は黒画面だったが、再試験では追加入力なしで3秒後に同じFE PID 15598のGBA一覧を確認した。最後にTOPへ戻し、エミュレータが残っていないこと、SD2の読み取り専用、CPU 996 MHzを確認した。
 
+## ユーザーによる追加確認
+
+- RG350MでSega CD、PSX（PCSX4ALL）、GnGeo、CrocoDS、UAE4All、NEO4ALLのゲームが正常動作した。
+- Gambatte 2020は本体のRボタンでメニューが開いた。
+- 上の計測表には自動試験で取得した場面と測定値を残す。NEO4ALLで自動試験中に観測した1回のBus errorも記録を維持する。
+
 生ログ・画像はGit管理外の `output/rg350m-validation/emulator-routes/` に保存した。

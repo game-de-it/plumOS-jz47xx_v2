@@ -5,6 +5,7 @@
 - FE設定にある26機種・58経路の画面、描画回数、PCMを読み取り専用のSD2で計測。初回は53経路でPCM信号を取得し、PicoArchの28経路でメニュー終了を確認した。8経路を追加確認した。
 - Gambatte 2020のゲーム音声、PC Engine CDのゲーム画面、PSXのタイトルと音声・Quitを確認。NEO4ALLのBus errorが1回発生し、再試験の短時間では再現しなかった。CrocoDSはタイトルまで、UAE4Allはロードまで。
 - ネイティブFEからGBAのReGBAを起動し、Exit後に同じFEプロセスのROM一覧へ復帰した。終了時のFE TOPとSD2の読み取り専用を確認した。全経路の測定結果は`docs/validation/rg350m-all-emulator-routes-2026-11-19.md`。
+- ユーザーの追加確認でSega CD、PSX、GnGeo、CrocoDS、UAE4All、NEO4ALLのゲームは正常動作。Gambatte 2020のメニューは物理Rボタンで開くことを確認した。
 
 ## 2026-11-19 — RG300XのApps実機確認
 
