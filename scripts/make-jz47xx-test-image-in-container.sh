@@ -48,6 +48,9 @@ cp /workspace/output/rg280v-emulationstation/runtime/emulationstation \
 cp /workspace/output/rg280v-apps/calculator-rg280v.opk "$root/apps/"
 cp /workspace/output/rg280v-apps/calculator-rg280v-source.tar.gz "$root/plumos/licenses/"
 cp /workspace/assets/frontend/S94hotkeys "$root/local/init.d/"
+if [ "$model" = multimodel ]; then
+    install -m 0755 /workspace/assets/frontend/S96remember-boot-model "$root/local/init.d/"
+fi
 # This helper scales the existing artwork to the detected framebuffer.
 /workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-gcc \
     -Os -Wall -Wextra /workspace/tools/rg280v-fbshow.c -o "$root/local/bin/rg280v-fbshow"
