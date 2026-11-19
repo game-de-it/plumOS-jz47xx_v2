@@ -94,7 +94,9 @@ rootfsとmodulesは、ビルド後のSDK内にある別状態のファイルを�
   Wi-Fiは省略、RTC時刻が未設定の場合は時計を省略する。
 - 復帰時のDRM polling警告、ゲーム経路、残る電源試験は継続対象。
   詳細は `validation/rg300x-first-boot-2026-11-19.md`。
-- RG350の実機起動は未確認。RG350MでLinux起動、USB接続、640×480の内蔵液晶、
+- RG350は実機起動、USB、320×240の内蔵液晶、FE表示、SD2の読み取り専用マウントを確認。
+  Apps・代表8エミュ経路の結果は`validation/rg350-first-boot-2026-11-19.md`。
+- RG350MでLinux起動、USB接続、640×480の内蔵液晶、
   FEの実機表示とDRMキャプチャを確認。音声・入力・電源操作・HDMI実出力は未確認。
 - RG350Mの試験イメージを生成。イメージ内の`model.txt`、連結カーネル、
   rootfs・modules・mininitを生成元と照合し、パーティション表、ext4、SHA-256を検査した。
