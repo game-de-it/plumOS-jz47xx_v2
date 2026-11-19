@@ -658,3 +658,4 @@
 - Bubble実機の`/storage/user/Images`からPNGを139枚取得し、RG280VのSD2直下の`Images/nes`と`Images/gamegear`に配置した。内訳はNES 106枚、Game Gear 33枚。
 - SD2上で全ファイルのSHA-256を照合し、読み取り専用マウントに戻した。SD1の一時転送ファイルは削除した。
 - RG280V実機のFEスキャナーで、NESは120タイトル中106、Game Gearは20タイトル中17にサムネイルが解決された。NESのギャラリーでは「Akumajou Densetsu」の画像を実機のDRMキャプチャで確認した。
+- ユーザーがRG280V本体の画面でもサムネイルが正常に表示されることを確認した。
