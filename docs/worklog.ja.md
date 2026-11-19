@@ -5,6 +5,7 @@
 - ユーザー確認に基づき、UAE4All、PC Engine CD、CrocoDS、NEO4ALL、FBA44のゲーム正常動作を検証記録へ反映した。
 - 単体PicoDriveのMaster System／Game GearとStellaを320×240の論理面で描画し、640×480の機種ではSDL側で2倍にする。RG300Xへ反映し、三経路で描画範囲の縦横2倍、メニュー、約60fps、非ゼロPCMを確認した。
 - Gambatte 2020はメニュー音が鳴る一方でゲームは無音。起動時の線形リサンプラー指定でGB／GBC両方のゲーム音PCMが復帰し、約60fpsだった。試験機に反映し、今後の共通SDイメージ生成でも修正版OPKを収録する。
+- 修正後、ユーザーがGambatte 2020のゲーム正常動作と、単体PicoDriveのHorizontal／Vertical scalingで意図した画面サイズに調整できることを確認した。
 - 詳細は `docs/validation/rg300x-all-emulator-routes-2026-11-19.md`。試験後のFE稼働、SD2読み取り専用、対象プロセスの停止を確認した。
 
 ## 2026-11-19 — RG300XのFE登録全58経路を確認
