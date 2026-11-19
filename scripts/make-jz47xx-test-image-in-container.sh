@@ -50,6 +50,11 @@ cp /workspace/output/rg280v-apps/calculator-rg280v-source.tar.gz "$root/plumos/l
 cp /workspace/assets/frontend/S94hotkeys "$root/local/init.d/"
 if [ "$model" = multimodel ]; then
     install -m 0755 /workspace/assets/frontend/S96remember-boot-model "$root/local/init.d/"
+    install -m 0755 /workspace/assets/frontend/S00expand-multimodel-user "$root/local/init.d/"
+    /workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-gcc \
+        -Os -Wall -Wextra /workspace/tools/plumos-resize-user-partition.c \
+        -o "$root/local/bin/plumos-resize-user-partition"
+    touch "$root/plumos/provision/multimodel-user-v1.pending"
 fi
 # This helper scales the existing artwork to the detected framebuffer.
 /workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-gcc \
@@ -88,9 +93,11 @@ done
 truncate -s $((data_sectors * 512)) "$stage/data.ext4"
 mkfs.ext4 -F -q -L PLUMOSDATA -d "$root" "$stage/data.ext4"
 truncate -s $((user_sectors * 512)) "$stage/user.vfat"
-mkfs.vfat -F32 -n PLUMOS "$stage/user.vfat" >/dev/null
-touch "$stage/empty/.plumos-ready"
-mcopy -i "$stage/user.vfat" "$stage/empty/.plumos-ready" ::/
+if [ "$model" != multimodel ]; then
+    mkfs.vfat -F32 -n PLUMOS "$stage/user.vfat" >/dev/null
+    touch "$stage/empty/.plumos-ready"
+    mcopy -i "$stage/user.vfat" "$stage/empty/.plumos-ready" ::/
+fi
 truncate -s $(((user_start + user_sectors) * 512)) "$destination"
 printf 'label: dos\nunit: sectors\n\nstart=%s,size=%s,type=b\nstart=%s,size=%s,type=83\nstart=%s,size=%s,type=b\n' \
     "$boot_start" "$boot_sectors" "$data_start" "$data_sectors" "$user_start" "$user_sectors" |

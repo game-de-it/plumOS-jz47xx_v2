@@ -1,0 +1,107 @@
+#!/bin/sh
+# The multimodel image ships p3 blank. Initialize it before the frontend.
+set -eu
+[ "${1:-}" = start ] || exit 0
+
+state=/media/data/plumos/provision
+pending="$state/multimodel-user-v1.pending"
+[ -f "$pending" ] || exit 0
+
+fail() {
+    printf 'SD1 user setup: %s\n' "$*" >&2
+    exit 1
+}
+
+[ "$(cat /boot/model.txt)" = multimodel ] || fail 'not a multimodel image'
+boot_device=
+for argument in $(cat /proc/cmdline); do
+    case "$argument" in root=/dev/mmcblk*p1) boot_device=${argument#root=} ;; esac
+done
+[ -b "$boot_device" ] || fail 'SD1 boot partition not found'
+disk=${boot_device%p1}
+runtime=${disk}p2
+user=${disk}p3
+awk -v device="$runtime" '$1 == device && $2 == "/media/data" && $3 == "ext4" { ok = 1 } END { exit !ok }' /proc/mounts ||
+    fail 'runtime is not on the boot card'
+[ -b "$user" ] || fail 'SD1 user partition not found'
+
+card_sys=/sys/class/block/${disk##*/}
+[ "$(cat "$card_sys/queue/logical_block_size")" = 512 ] || fail 'unsupported sector size'
+card_size=$(cat "$card_sys/size")
+user_start=3416064
+seed_size=131072
+[ "$card_size" -ge "$((user_start + seed_size))" ] && [ "$card_size" -le 4294967296 ] ||
+    fail 'unsupported SD1 capacity for the MBR layout'
+user_size=$((card_size - user_start))
+
+# Check the on-disk table, which may already be ahead of the kernel after an
+# interrupted attempt. Require all three entries and their original starts.
+read_user_size() {
+    sfdisk --dump "$disk" | awk -v p1="$boot_device" -v p2="$runtime" -v p3="$user" \
+        -v start="$user_start" -v seed="$seed_size" -v full="$user_size" '
+        /^label: dos$/ { mbr = 1 }
+        /^\// {
+            gsub(/,/, "")
+            gsub(/start= */, "start= ")
+            gsub(/size= */, "size= ")
+            partitions++
+            if ($2 != ":" || $3 != "start=" || $5 != "size=" || NF != 7) next
+            if ($1 == p1 && $4 == 8192 && $6 == 262144 && $7 == "type=b") boot = 1
+            if ($1 == p2 && $4 == 270336 && $6 == 3145728 && $7 == "type=83") data = 1
+            if ($1 == p3 && $4 == start && ($6 == seed || $6 == full) && $7 == "type=b") size = $6
+        }
+        END { if (!mbr || partitions != 3 || !boot || !data || !size) exit 1; print size }
+    '
+}
+
+mounted_user() {
+    awk -v device="$user" '$1 == device && $2 == "/media/user" && $3 == "vfat" { ok = 1 } END { exit !ok }' /proc/mounts
+}
+
+probe_fs() {
+    status=0
+    fs=$(blkid -p -s TYPE -o value "$user") || status=$?
+    case "$status:$fs" in 0:*|2:) ;; *) fail 'cannot identify the p3 filesystem' ;; esac
+}
+
+table_size=$(read_user_size) || fail 'unexpected SD1 partition layout'
+[ "$(cat "/sys/class/block/${user##*/}/start")" = "$user_start" ] || fail 'unexpected p3 start'
+intent="$state/multimodel-user-v1.intent"
+probe_fs
+if [ ! -f "$intent" ]; then
+    [ "$table_size" = "$seed_size" ] && [ -z "$fs" ] || fail 'expected an unused p3 from the seed image'
+    dd if="$disk" of="$state/multimodel-mbr-before.bin" bs=512 count=1 2>/dev/null
+    sync
+    touch "$intent"
+    sync
+fi
+
+if [ "$table_size" != "$user_size" ]; then
+    [ -z "$fs" ] || fail 'will not grow a partition with an existing filesystem'
+    printf 'start=%s, size=%s, type=b\n' "$user_start" "$user_size" |
+        sfdisk --no-reread --no-tell-kernel --wipe never --wipe-partitions never -N 3 "$disk"
+    [ "$(read_user_size)" = "$user_size" ] || fail 'p3 size did not persist'
+fi
+if [ "$(cat "/sys/class/block/${user##*/}/size")" != "$user_size" ]; then
+    /media/data/local/bin/plumos-resize-user-partition "$disk" "$user_start" "$user_size"
+    [ "$(cat "/sys/class/block/${user##*/}/size")" = "$user_size" ] || fail 'kernel did not update p3 size'
+fi
+
+if [ -z "$fs" ]; then
+    if mounted_user; then fail 'p3 is mounted before formatting'; fi
+    mkfs.fat -F 32 -n PLUMOS "$user"
+    sync
+    probe_fs
+fi
+[ "$fs" = vfat ] && [ "$(blkid -p -s LABEL -o value "$user")" = PLUMOS ] || fail 'unexpected p3 filesystem or label'
+if ! mounted_user; then
+    mount -t vfat -o rw,nosuid,nodev,utf8,umask=022 "$user" /media/user
+fi
+for directory in roms bios apps updates Images Screenshots Music; do
+    mkdir -p "/media/user/$directory"
+done
+touch /media/user/.plumos-ready
+sync
+mv "$pending" "$state/multimodel-user-v1.complete"
+sync
+printf 'SD1 user setup: complete (%s sectors)\n' "$user_size"
