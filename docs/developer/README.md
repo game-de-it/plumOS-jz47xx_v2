@@ -43,6 +43,8 @@ The shared boot build expects the reference rootfs, modules and mininit in `outp
 
 [make-jz47xx-test-image-in-container.sh](../../scripts/make-jz47xx-test-image-in-container.sh) is a **hardware-validation image builder**. Its `multimodel` mode uses an existing runtime snapshot and a known-good rootfs/modules pair. It is intended for lab validation. A clean public image must assemble redistributable artifacts from approved inputs and omit personal data.
 
+Run the [release candidate builder](../../scripts/make-jz47xx-release-image-in-container.sh) inside the SDK container with a version argument. It writes an image and SHA-256 checksum under `output/release/`. The [factory allowlist and content checks](../../scripts/stage-jz47xx-release.py) stage individual build outputs. See the [candidate validation record](../validation/jz47xx-release-candidate-2026-11-20.md) for the verification status.
+
 ## Release preparation and validation
 
 1. Record the source revision, toolchain and origins of all included components. Verify each component's redistribution rights before inclusion. Provide the required notices, source, patches and build instructions for the exact binaries shipped.

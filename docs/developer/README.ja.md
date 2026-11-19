@@ -43,6 +43,8 @@ Git、Bash、Linux ARM64コンテナを実行できるDockerを用意します�
 
 [make-jz47xx-test-image-in-container.sh](../../scripts/make-jz47xx-test-image-in-container.sh) は**実機検証用のイメージを作る**スクリプトです。`multimodel` では動作確認済みのrootfsとmodulesの組、および既存のランタイムのスナップショットを使います。配布用イメージを作るときは、配布可能と確認した成果物をクリーンな環境で組み立て、個人データを除外してください。
 
+[配布候補ビルダー](../../scripts/make-jz47xx-release-image-in-container.sh) はSDKコンテナ内でバージョンを引数に取り、`output/release/` にイメージとSHA-256を出力します。[同梱リストと検査処理](../../scripts/stage-jz47xx-release.py) が、個別のビルド成果物から初期状態を構築します。配布前の確認結果は[候補イメージの検証記録](../validation/jz47xx-release-candidate-2026-11-20.md)に記載しています。
+
 ## リリース準備と検証
 
 1. ソースのリビジョン、ツールチェーン、各コンポーネントの出所を記録します。再配布条件を確認し、同梱するバイナリに対応するライセンス表記、ソース、パッチ、ビルド手順を条件に従って用意します。
