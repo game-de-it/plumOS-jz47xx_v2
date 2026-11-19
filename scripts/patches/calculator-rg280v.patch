@@ -11,16 +11,16 @@ index f5ae7e9..11ba1a8 100644
  
  template<bool USE_SURFACE>
 diff --git a/src/sdl_helper.h b/src/sdl_helper.h
-index bee7d09..fd8a042 100644
+index bee7d09..a3adcaf 100644
 --- a/src/sdl_helper.h
 +++ b/src/sdl_helper.h
-@@ -81,13 +81,19 @@ bool SDL<EventHandler, Renderer>::init()
+@@ -81,13 +81,27 @@ bool SDL<EventHandler, Renderer>::init()
    }
  
    // SDL_WINDOW_FULLSCREEN
 -#if defined(WINDOW_SCALE)
 +#if defined(PLUMOS_RG280V)
-+  window = SDL_CreateWindow("ODCalc v0.1", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 480, SDL_WINDOW_FULLSCREEN);
++  window = SDL_CreateWindow("ODCalc v0.1", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 240, SDL_WINDOW_FULLSCREEN_DESKTOP);
 +#elif defined(WINDOW_SCALE)
    window = SDL_CreateWindow("ODCalc v0.1", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320 * WINDOW_SCALE, 240 * WINDOW_SCALE, SDL_WINDOW_OPENGL);
  #else
@@ -29,7 +29,15 @@ index bee7d09..fd8a042 100644
    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
  
 +#if defined(PLUMOS_RG280V)
-+  SDL_RenderSetScale(renderer, 1.0f, 2.0f);
++  int outputWidth = 0, outputHeight = 0;
++  if (!window || !renderer ||
++      SDL_GetRendererOutputSize(renderer, &outputWidth, &outputHeight) != 0 ||
++      SDL_RenderSetScale(renderer, outputWidth / 320.0f, outputHeight / 240.0f) != 0)
++  {
++    fprintf(stderr, "Could not configure calculator display: %s\n", SDL_GetError());
++    deinit();
++    return false;
++  }
 +#endif
 +
  #if defined(WINDOW_SCALE)

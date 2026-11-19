@@ -514,25 +514,59 @@ index 90b2729..53ece56 100644
  	}
  
  	return str;
+diff --git a/es-core/src/Renderer.h b/es-core/src/Renderer.h
+index c286974..4b66dd6 100644
+--- a/es-core/src/Renderer.h
++++ b/es-core/src/Renderer.h
+@@ -25,6 +25,8 @@ namespace Renderer
+ 
+ 	unsigned int getScreenWidth();
+ 	unsigned int getScreenHeight();
++	int getDrawableWidth();
++	int getDrawableHeight();
+ 
+ 	void buildGLColorArray(GLubyte* ptr, unsigned int color, unsigned int vertCount);
+ 
 diff --git a/es-core/src/Renderer_draw_gl.cpp b/es-core/src/Renderer_draw_gl.cpp
-index 2ca93a2..5b01274 100644
+index 2ca93a2..d66d343 100644
 --- a/es-core/src/Renderer_draw_gl.cpp
 +++ b/es-core/src/Renderer_draw_gl.cpp
-@@ -66,7 +66,7 @@ namespace Renderer {
+@@ -32,6 +32,19 @@ namespace Renderer {
+ 		}
+ 	}
+ 
++	static void setClipRect(const Eigen::Vector4i& box)
++	{
++		// Convert logical UI coordinates to the OpenGL drawable, which can
++		// scale horizontally and vertically by different amounts.
++		const float scaleX = static_cast<float>(getDrawableWidth()) / getScreenWidth();
++		const float scaleY = static_cast<float>(getDrawableHeight()) / getScreenHeight();
++		const GLint left = esRound(box[0] * scaleX);
++		const GLint bottom = esRound(box[1] * scaleY);
++		const GLint right = esRound((box[0] + box[2]) * scaleX);
++		const GLint top = esRound((box[1] + box[3]) * scaleY);
++		glScissor(left, bottom, right - left, top - bottom);
++	}
++
+ 	void pushClipRect(Eigen::Vector2i pos, Eigen::Vector2i dim)
+ 	{
+ 		Eigen::Vector4i box(pos.x(), pos.y(), dim.x(), dim.y());
+@@ -66,7 +79,7 @@ namespace Renderer {
  			box[3] = 0;
  
  		clipStack.push(box);
 -		glScissor(box[0], box[1], box[2], box[3]);
-+		glScissor(box[0], box[1] * 2, box[2], box[3] * 2);
++		setClipRect(box);
  		glEnable(GL_SCISSOR_TEST);
  	}
  
-@@ -84,13 +84,13 @@ namespace Renderer {
+@@ -83,14 +96,13 @@ namespace Renderer {
+ 		{
  			glDisable(GL_SCISSOR_TEST);
  		}else{
- 			Eigen::Vector4i top = clipStack.top();
+-			Eigen::Vector4i top = clipStack.top();
 -			glScissor(top[0], top[1], top[2], top[3]);
-+			glScissor(top[0], top[1] * 2, top[2], top[3] * 2);
++			setClipRect(clipStack.top());
  		}
  	}
  
@@ -544,10 +578,27 @@ index 2ca93a2..5b01274 100644
  
  	void drawRect(int x, int y, int w, int h, unsigned int color, GLenum blend_sfactor, GLenum blend_dfactor)
 diff --git a/es-core/src/Renderer_init_sdlgl.cpp b/es-core/src/Renderer_init_sdlgl.cpp
-index 6924749..cb2a085 100644
+index 6924749..107bf7d 100644
 --- a/es-core/src/Renderer_init_sdlgl.cpp
 +++ b/es-core/src/Renderer_init_sdlgl.cpp
-@@ -117,7 +117,6 @@ namespace Renderer
+@@ -16,12 +16,16 @@
+ namespace Renderer
+ {
+ 	static bool initialCursorState;
++	static int drawableWidth;
++	static int drawableHeight;
+ 
+ 	unsigned int display_width = 0;
+ 	unsigned int display_height = 0;
+ 
+ 	unsigned int getScreenWidth() { return display_width; }
+ 	unsigned int getScreenHeight() { return display_height; }
++	int getDrawableWidth() { return drawableWidth; }
++	int getDrawableHeight() { return drawableHeight; }
+ 
+ 	SDL_Window* sdlWindow = NULL;
+ 	SDL_GLContext sdlContext = NULL;
+@@ -117,7 +121,6 @@ namespace Renderer
  	void swapBuffers()
  	{
  		SDL_GL_SwapWindow(sdlWindow);
@@ -555,14 +606,13 @@ index 6924749..cb2a085 100644
  	}
  
  	void destroySurface()
-@@ -146,7 +145,9 @@ namespace Renderer
+@@ -146,7 +149,8 @@ namespace Renderer
  		if(!createdSurface)
  			return false;
  
 -		glViewport(0, 0, display_width, display_height);
-+		int drawableWidth = 0, drawableHeight = 0;
-+        SDL_GL_GetDrawableSize(sdlWindow, &drawableWidth, &drawableHeight);
-+        glViewport(0, 0, drawableWidth, drawableHeight);
++		SDL_GL_GetDrawableSize(sdlWindow, &drawableWidth, &drawableHeight);
++		glViewport(0, 0, drawableWidth, drawableHeight);
  
  		glMatrixMode(GL_PROJECTION);
  		glOrtho(0, display_width, display_height, 0, -1.0, 1.0);

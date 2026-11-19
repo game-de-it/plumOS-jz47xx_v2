@@ -38,6 +38,10 @@ cp /workspace/output/rg280v-emulators/PicoDrive_rg280v.opk "$root/plumos/emulato
 cp /workspace/output/rg280v-opk-integration/packages/{stella,gambatte2020}.opk \
     "$root/plumos/emulators/opk/"
 cp /workspace/output/rg280v-emulators/lib/{libfceux-menu,libgambatte-menu}.so "$root/plumos/lib/"
+cp /workspace/output/rg280v-emulationstation/runtime/emulationstation \
+    "$root/plumos/emulationstation/"
+cp /workspace/output/rg280v-apps/calculator-rg280v.opk "$root/apps/"
+cp /workspace/output/rg280v-apps/calculator-rg280v-source.tar.gz "$root/plumos/licenses/"
 cp /workspace/assets/frontend/S94hotkeys "$root/local/init.d/"
 # This helper scales the existing artwork to the detected framebuffer.
 /workspace/output/rg280v/host/bin/mipsel-gcw0-linux-uclibc-gcc \
