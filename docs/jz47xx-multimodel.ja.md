@@ -96,6 +96,7 @@ rootfsとmodulesは、ビルド後のSDK内にある別状態のファイルを�
   詳細は `validation/rg300x-first-boot-2026-11-19.md`。
 - RG350は実機起動、USB、320×240の内蔵液晶、FE表示、SD2の読み取り専用マウントを確認。
   Apps・代表8エミュ経路の結果は`validation/rg350-first-boot-2026-11-19.md`。
+  全58経路の追加確認は`validation/rg350-all-emulator-routes-2026-11-19.md`。
 - RG350MでLinux起動、USB接続、640×480の内蔵液晶、
   FEの実機表示とDRMキャプチャを確認。音声・入力・電源操作・HDMI実出力は未確認。
 - RG350Mの試験イメージを生成。イメージ内の`model.txt`、連結カーネル、
