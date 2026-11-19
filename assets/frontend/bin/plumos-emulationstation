@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+root=${PLUMOS_ROOT:-/media/data/plumos}
+export PLUMOS_ROOT="$root" HOME="$root/home/emulationstation"
+export XDG_CACHE_HOME="$HOME/.cache"
+export LD_LIBRARY_PATH="$root/emulationstation/lib:$root/lib"
+export SDL_VIDEODRIVER=kmsdrm LANG=C LC_ALL=C
+mkdir -p "$XDG_CACHE_HOME"
+"$root/bin/plumos-prepare-opk-input"
+cd "$root/emulationstation"
+exec ./emulationstation --resolution 320 240 >>"$root/Logs/emulationstation.log" 2>&1

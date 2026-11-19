@@ -60,3 +60,18 @@ ReGBAの `Image scaling = Aspect, fast` はソフトウェアで隣接画素を�
 ## 描画性能
 
 RG280V実機の `--script` 連続スクロールで、初回のPNG読み込み後のギャラリーは平均9〜10ms/フレーム（約100fps相当）、TOPは平均約13〜16ms/フレーム（約60〜75fps相当）を計測した。物理操作中はギャラリー約62fps、TOP約59〜60fpsだった。垂直同期の `FBIO_WAITFORVSYNC` は実機で成功し、その版はユーザーによる実機操作で滑らかになったと確認された。DRM版は `drmModePageFlip` が成功し、320×480の60Hzモードで平均約16ms/フレームだった。初回の画像読み込みと稀な20ms台のフレームは残る。
+
+## 追加フロントエンド（PyMenu / EmulationStation）
+
+plumOS FEのAppsから起動する。通常起動のFEは変更しない。
+
+| 項目 | PyMenu | EmulationStation |
+|---|---|---|
+| 対応経路 | 26機種・58の正規SA/PICO経路 | 26機種・現在のFE既定経路 |
+| ゲーム選択 | 左右で機種、Aで一覧、上下でROM、Aで起動 | 左右で機種、Aで一覧、上下でROM、Aで起動 |
+| コア選択 | ROM一覧でSTART、SA/PICO＋コア名 | 現在のFE既定値を導入時に取り込む |
+| FEへ戻る | メイン画面の下の電源アイコン→A→Return to plumOS→A | START→RETURN TO PLUMOS→A |
+
+エミュレータのSELECT＋STARTメニューから終了すると、起動元の追加FEへ戻る。ROM/BIOSはSD2の既存配置を使う。
+
+実装・試験範囲は [PyMenu検証記録](validation/rg280v-pymenu-2026-11-19.md) と [EmulationStation検証記録](validation/rg280v-emulationstation-2026-11-19.md) を参照。

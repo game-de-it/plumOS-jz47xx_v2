@@ -490,3 +490,11 @@
 - 推奨順の最初として、元のPyMenuソースをPython 3.11/Pygame 1.9.6の専用環境で移植。元のUIとテーマを維持し、Python 2依存の座標変換・辞書比較・scandirを修正した。
 - 26機種・58の正規SA/PICO経路を取り込み、STARTのコア選択、NES起動、SELECT＋STARTメニュー終了、PyMenuのROM一覧への復帰を実機で確認。plumOS FEのAppsからの起動とFEへの復帰も確認した。
 - 電源・音量・輝度・CPU管理はOS側を使い、既存の起動FEやSDL/ALSAは変更していない。再現用ビルド・導入スクリプト、パッチ、試験範囲をGitに保存。詳細は`docs/validation/rg280v-pymenu-2026-11-19.md`。
+
+## 2026-11-19 — EmulationStationの追加
+
+- 推奨順の2番目として、JZ4770向けのEmulationStationをソースからSoft floatでビルド。配布OPKのHard float実行ファイルは使わず、元のsimplegcwテーマを導入した。
+- 26機種のFE既定経路を生成し、Apps起動、機種/ROM一覧、NES Baseballの起動、通常メニュー終了からES一覧への復帰、STARTのRETURN TO PLUMOSから元のFEへの復帰を実機で確認。
+- UTF-8文字列の符号付きchar変換による起動時abort、現行GCCとのround衝突、320×480パネルの描画/クリップ座標を修正。専用SDL2_imageにJPEG対応を追加し、元テーマの背景を表示した。
+- 全機種ROM画面の先読みをやめ、背景画像を表示高に合わせて縮小。読み込み画面の提示直後に消去しないようクリア順を修正した。診断コードは最終版から撤去。
+- OS、カーネル、通常FE、既存フロントエンド、グローバルSDL/ALSAは変更なし。パッケージ用に一時変更したBuildroot設定も復元した。詳細は`docs/validation/rg280v-emulationstation-2026-11-19.md`。

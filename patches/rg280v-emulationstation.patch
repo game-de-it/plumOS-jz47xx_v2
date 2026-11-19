@@ -1,0 +1,822 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7b9bb8b..55d6bd7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,8 +1,8 @@
+ cmake_minimum_required(VERSION 2.8)
+ 
+-set(CMAKE_TOOLCHAIN_FILE "../CMake/mips32-linux-gcc.cmake")
++
+ set(CMAKE_BUILD_TYPE "Release")
+-set(CURL_INCLUDE_DIR "/opt/gcw0-toolchain/usr/mipsel-gcw0-linux-uclibc/sysroot/usr/include/curl")
++
+ 
+ project(emulationstation-all)
+ 
+@@ -23,7 +23,7 @@ set(GLSystem "OpenGL ES")
+ #Add compiler definition
+ add_definitions(-D__GCW0__)
+ #Link iconv
+-set(CMAKE_CXX_FLAGS "-liconv -lfreeimage")
++
+ 
+ #-------------------------------------------------------------------------------
+ #check if we're running on Raspberry Pi
+@@ -54,9 +54,9 @@ else()
+     find_package(OpenGLES REQUIRED)
+ endif()
+ find_package(Freetype REQUIRED)
+-find_package(FreeImage REQUIRED)
++find_library(SDL2_IMAGE SDL2_image REQUIRED)
+ find_package(SDL2 REQUIRED)
+-find_package(Boost REQUIRED COMPONENTS system filesystem date_time locale)
++find_package(Boost REQUIRED COMPONENTS system filesystem date_time)
+ find_package(Eigen3 REQUIRED)
+ find_package(CURL REQUIRED)
+ 
+@@ -156,7 +156,7 @@ endif()
+ set(COMMON_LIBRARIES
+     ${Boost_LIBRARIES}
+     ${FREETYPE_LIBRARIES}
+-    ${FreeImage_LIBRARIES}
++    ${SDL2_IMAGE}
+ 	${SDL2_LIBRARY}
+     ${CURL_LIBRARIES}
+     pugixml
+diff --git a/es-app/src/FileSorts.cpp b/es-app/src/FileSorts.cpp
+index b985c0a..7fd99a7 100644
+--- a/es-app/src/FileSorts.cpp
++++ b/es-app/src/FileSorts.cpp
+@@ -28,9 +28,9 @@ namespace FileSorts
+ 		unsigned int count = name1.length() > name2.length() ? name2.length() : name1.length();
+ 		for(unsigned int i = 0; i < count; i++)
+ 		{
+-			if(toupper(name1[i]) != toupper(name2[i]))
++			if(toupper(static_cast<unsigned char>(name1[i])) != toupper(static_cast<unsigned char>(name2[i])))
+ 			{
+-				return toupper(name1[i]) < toupper(name2[i]);
++				return toupper(static_cast<unsigned char>(name1[i])) < toupper(static_cast<unsigned char>(name2[i]));
+ 			}
+ 		}
+ 
+diff --git a/es-app/src/SystemData.cpp b/es-app/src/SystemData.cpp
+index 63ee445..46fdc2b 100644
+--- a/es-app/src/SystemData.cpp
++++ b/es-app/src/SystemData.cpp
+@@ -389,7 +389,7 @@ std::string SystemData::getGamelistPath(bool forWrite) const
+ 	fs::path filePath;
+ 
+ 	filePath = mRootFolder->getPath() / "gamelist.xml";
+-	if(fs::exists(filePath))
++	if(!forWrite && fs::exists(filePath))
+ 		return filePath.generic_string();
+ 
+ 	filePath = getHomePath() + "/.emulationstation/gamelists/" + mName + "/gamelist.xml";
+diff --git a/es-app/src/VolumeControl.cpp b/es-app/src/VolumeControl.cpp
+index 989d8e3..8534d4f 100644
+--- a/es-app/src/VolumeControl.cpp
++++ b/es-app/src/VolumeControl.cpp
+@@ -1,3 +1,4 @@
++#include "Util.h"
+ #include "VolumeControl.h"
+ 
+ #include "Log.h"
+@@ -284,7 +285,7 @@ int VolumeControl::getVolume() const
+ 		mixerControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+ 		if (mixerGetControlDetails((HMIXEROBJ)mixerHandle, &mixerControlDetails, MIXER_GETCONTROLDETAILSF_VALUE) == MMSYSERR_NOERROR) 
+ 		{
+-			volume = (uint8_t)round((value.dwValue * 100) / 65535);
++			volume = (uint8_t)esRound((value.dwValue * 100) / 65535);
+ 		}
+ 		else
+ 		{
+@@ -297,7 +298,7 @@ int VolumeControl::getVolume() const
+ 		float floatVolume = 0.0f; //0-1
+ 		if (endpointVolume->GetMasterVolumeLevelScalar(&floatVolume) == S_OK)
+ 		{
+-			volume = (uint8_t)round(floatVolume * 100.0f);
++			volume = (uint8_t)esRound(floatVolume * 100.0f);
+ 			LOG(LogInfo) << " getting volume as " << volume << " ( from float " << floatVolume << ")";
+ 		}
+ 		else
+diff --git a/es-app/src/components/RatingComponent.cpp b/es-app/src/components/RatingComponent.cpp
+index 29b8345..9f01e71 100644
+--- a/es-app/src/components/RatingComponent.cpp
++++ b/es-app/src/components/RatingComponent.cpp
+@@ -55,7 +55,7 @@ void RatingComponent::onSizeChanged()
+ 
+ 	if(mSize.y() > 0)
+ 	{
+-		size_t heightPx = (size_t)round(mSize.y());
++		size_t heightPx = (size_t)esRound(mSize.y());
+ 		if(filledSVG)
+ 			filledSVG->rasterizeAt(heightPx, heightPx);
+ 		if(unfilledSVG)
+@@ -69,9 +69,9 @@ void RatingComponent::updateVertices()
+ {
+ 	const float numStars = NUM_RATING_STARS;
+ 
+-	const float h = round(getSize().y()); // is the same as a single star's width
+-	const float w = round(h * mValue * numStars);
+-	const float fw = round(h * numStars);
++	const float h = esRound(getSize().y()); // is the same as a single star's width
++	const float w = esRound(h * mValue * numStars);
++	const float fw = esRound(h * numStars);
+ 
+ 	mVertices[0].pos << 0.0f, 0.0f;
+ 		mVertices[0].tex << 0.0f, 1.0f;
+diff --git a/es-app/src/components/TextListComponent.h b/es-app/src/components/TextListComponent.h
+index 8067cd7..67c43e1 100644
+--- a/es-app/src/components/TextListComponent.h
++++ b/es-app/src/components/TextListComponent.h
+@@ -135,7 +135,7 @@ void TextListComponent<T>::render(const Eigen::Affine3f& parentTrans)
+ 	if(size() == 0)
+ 		return;
+ 
+-	const float entrySize = round(font->getHeight(mLineSpacing));
++	const float entrySize = esRound(font->getHeight(mLineSpacing));
+ 
+ 	int startEntry = 0;
+ 
+diff --git a/es-app/src/guis/GuiGamelistOptions.cpp b/es-app/src/guis/GuiGamelistOptions.cpp
+index 635f97e..89db5a1 100644
+--- a/es-app/src/guis/GuiGamelistOptions.cpp
++++ b/es-app/src/guis/GuiGamelistOptions.cpp
+@@ -102,7 +102,7 @@ void GuiGamelistOptions::jumpToLetter()
+ 		if(files.at(mid)->getName().empty())
+ 			continue;
+ 
+-		char checkLetter = toupper(files.at(mid)->getName()[0]);
++		char checkLetter = toupper(static_cast<unsigned char>(files.at(mid)->getName()[0]));
+ 
+ 		if(checkLetter < letter)
+ 			min = mid + 1;
+diff --git a/es-app/src/guis/GuiMenu.cpp b/es-app/src/guis/GuiMenu.cpp
+index 417d382..c56fb4d 100644
+--- a/es-app/src/guis/GuiMenu.cpp
++++ b/es-app/src/guis/GuiMenu.cpp
+@@ -1,3 +1,4 @@
++#include "Util.h"
+ #include "EmulationStation.h"
+ #include "guis/GuiMenu.h"
+ #include "Window.h"
+@@ -33,40 +34,6 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
+ 	// [version]
+ 
+ 	auto openScrapeNow = [this] { mWindow->pushGui(new GuiScraperStart(mWindow)); };
+-	addEntry("SCRAPER", 0x777777FF, true, 
+-		[this, openScrapeNow] { 
+-			auto s = new GuiSettings(mWindow, "SCRAPER");
+-
+-			// scrape from
+-			auto scraper_list = std::make_shared< OptionListComponent< std::string > >(mWindow, "SCRAPE FROM", false);
+-			std::vector<std::string> scrapers = getScraperList();
+-			for(auto it = scrapers.begin(); it != scrapers.end(); it++)
+-				scraper_list->add(*it, *it, *it == Settings::getInstance()->getString("Scraper"));
+-
+-			s->addWithLabel("SCRAPE FROM", scraper_list);
+-			s->addSaveFunc([scraper_list] { Settings::getInstance()->setString("Scraper", scraper_list->getSelected()); });
+-
+-			// scrape ratings
+-			auto scrape_ratings = std::make_shared<SwitchComponent>(mWindow);
+-			scrape_ratings->setState(Settings::getInstance()->getBool("ScrapeRatings"));
+-			s->addWithLabel("SCRAPE RATINGS", scrape_ratings);
+-			s->addSaveFunc([scrape_ratings] { Settings::getInstance()->setBool("ScrapeRatings", scrape_ratings->getState()); });
+-
+-			// scrape now
+-			ComponentListRow row;
+-			std::function<void()> openAndSave = openScrapeNow;
+-			openAndSave = [s, openAndSave] { s->save(); openAndSave(); };
+-			row.makeAcceptInputHandler(openAndSave);
+-
+-			auto scrape_now = std::make_shared<TextComponent>(mWindow, "SCRAPE NOW", Font::get(FONT_SIZE_MEDIUM), 0x777777FF);
+-			auto bracket = makeArrow(mWindow);
+-			row.addElement(scrape_now, true);
+-			row.addElement(bracket, false);
+-			s->addRow(row);
+-
+-			mWindow->pushGui(s);
+-	});
+-
+ 	addEntry("SOUND SETTINGS", 0x777777FF, true, 
+ 		[this] {
+ 			auto s = new GuiSettings(mWindow, "SOUND SETTINGS");
+@@ -75,7 +42,7 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
+ 			auto volume = std::make_shared<SliderComponent>(mWindow, 0.f, 100.f, 1.f, "%");
+ 			volume->setValue((float)VolumeControl::getInstance()->getVolume());
+ 			s->addWithLabel("SYSTEM VOLUME", volume);
+-			s->addSaveFunc([volume] { VolumeControl::getInstance()->setVolume((int)round(volume->getValue())); });
++			s->addSaveFunc([volume] { VolumeControl::getInstance()->setVolume((int)esRound(volume->getValue())); });
+ 			
+ 			// disable sounds
+ 			auto sounds_enabled = std::make_shared<SwitchComponent>(mWindow);
+@@ -94,7 +61,7 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
+ 			auto screensaver_time = std::make_shared<SliderComponent>(mWindow, 0.f, 30.f, 1.f, "m");
+ 			screensaver_time->setValue((float)(Settings::getInstance()->getInt("ScreenSaverTime") / (1000 * 60)));
+ 			s->addWithLabel("SCREENSAVER AFTER", screensaver_time);
+-			s->addSaveFunc([screensaver_time] { Settings::getInstance()->setInt("ScreenSaverTime", (int)round(screensaver_time->getValue()) * (1000 * 60)); });
++			s->addSaveFunc([screensaver_time] { Settings::getInstance()->setInt("ScreenSaverTime", (int)esRound(screensaver_time->getValue()) * (1000 * 60)); });
+ 
+ 			// screensaver behavior
+ 			auto screensaver_behavior = std::make_shared< OptionListComponent<std::string> >(mWindow, "TRANSITION STYLE", false);
+@@ -170,51 +137,9 @@ GuiMenu::GuiMenu(Window* window) : GuiComponent(window), mMenu(window, "MAIN MEN
+ 			mWindow->pushGui(new GuiDetectDevice(mWindow, false, nullptr));
+ 	});
+ 
+-	addEntry("QUIT", 0x777777FF, true, 
+-		[this] {
+-			auto s = new GuiSettings(mWindow, "QUIT");
+-			
+-			Window* window = mWindow;
+-
+-			ComponentListRow row;
+-			row.makeAcceptInputHandler([window] {
+-				window->pushGui(new GuiMsgBox(window, "REALLY RESTART?", "YES", 
+-				[] { 
+-					if(runRestartCommand() != 0)
+-						LOG(LogWarning) << "Restart terminated with non-zero result!";
+-				}, "NO", nullptr));
+-			});
+-			row.addElement(std::make_shared<TextComponent>(window, "RESTART SYSTEM", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+-			s->addRow(row);
+-
+-			row.elements.clear();
+-			row.makeAcceptInputHandler([window] {
+-				window->pushGui(new GuiMsgBox(window, "REALLY SHUTDOWN?", "YES", 
+-				[] { 
+-					if(runShutdownCommand() != 0)
+-						LOG(LogWarning) << "Shutdown terminated with non-zero result!";
+-				}, "NO", nullptr));
+-			});
+-			row.addElement(std::make_shared<TextComponent>(window, "SHUTDOWN SYSTEM", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+-			s->addRow(row);
+-
+-			if(Settings::getInstance()->getBool("ShowExit"))
+-			{
+-				row.elements.clear();
+-				row.makeAcceptInputHandler([window] {
+-					window->pushGui(new GuiMsgBox(window, "REALLY QUIT?", "YES", 
+-					[] { 
+-						SDL_Event ev;
+-						ev.type = SDL_QUIT;
+-						SDL_PushEvent(&ev);
+-					}, "NO", nullptr));
+-				});
+-				row.addElement(std::make_shared<TextComponent>(window, "QUIT EMULATIONSTATION", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
+-				s->addRow(row);
+-			}
+-
+-			mWindow->pushGui(s);
+-	});
++	addEntry("RETURN TO PLUMOS", 0x777777FF, false, [] {
++        SDL_Event ev = {}; ev.type = SDL_QUIT; SDL_PushEvent(&ev);
++    });
+ 
+ 	mVersion.setFont(Font::get(FONT_SIZE_SMALL));
+ 	mVersion.setColor(0xC6C6C6FF);
+diff --git a/es-app/src/main.cpp b/es-app/src/main.cpp
+index 393f199..6f33f49 100644
+--- a/es-app/src/main.cpp
++++ b/es-app/src/main.cpp
+@@ -18,7 +18,7 @@
+ #include "Settings.h"
+ #include "ScraperCmdLine.h"
+ #include <sstream>
+-#include <boost/locale.hpp>
++#include <locale>
+ 
+ #ifdef WIN32
+ #include <Windows.h>
+@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
+ 	unsigned int width = 0;
+ 	unsigned int height = 0;
+ 
+-	std::locale::global(boost::locale::generator().generate(""));
++	std::locale::global(std::locale::classic());
+ 	boost::filesystem::path::imbue(std::locale());
+ 
+ 	if(!parseArgs(argc, argv, &width, &height))
+@@ -262,7 +262,8 @@ int main(int argc, char* argv[])
+ 
+ 	// preload what we can right away instead of waiting for the user to select it
+ 	// this makes for no delays when accessing content, but a longer startup time
+-	ViewController::get()->preload();
++	// Build each ROM list lazily; avoid loading all 26 views before first input.
++    ViewController::get()->getSystemListView();
+ 
+ 	//choose which GUI to open depending on if an input configuration already exists
+ 	if(errorMsg == NULL)
+diff --git a/es-app/src/scrapers/Scraper.cpp b/es-app/src/scrapers/Scraper.cpp
+index c827a47..2928435 100644
+--- a/es-app/src/scrapers/Scraper.cpp
++++ b/es-app/src/scrapers/Scraper.cpp
+@@ -1,7 +1,7 @@
+ #include "scrapers/Scraper.h"
+ #include "Log.h"
+ #include "Settings.h"
+-#include <FreeImage.h>
++
+ #include <boost/filesystem.hpp>
+ #include <boost/assign.hpp>
+ 
+@@ -213,59 +213,9 @@ void ImageDownloadHandle::update()
+ //you can pass 0 for width or height to keep aspect ratio
+ bool resizeImage(const std::string& path, int maxWidth, int maxHeight)
+ {
+-	// nothing to do
+-	if(maxWidth == 0 && maxHeight == 0)
+-		return true;
+-
+-	FREE_IMAGE_FORMAT format = FIF_UNKNOWN;
+-	FIBITMAP* image = NULL;
+-	
+-	//detect the filetype
+-	format = FreeImage_GetFileType(path.c_str(), 0);
+-	if(format == FIF_UNKNOWN)
+-		format = FreeImage_GetFIFFromFilename(path.c_str());
+-	if(format == FIF_UNKNOWN)
+-	{
+-		LOG(LogError) << "Error - could not detect filetype for image \"" << path << "\"!";
+-		return false;
+-	}
+-
+-	//make sure we can read this filetype first, then load it
+-	if(FreeImage_FIFSupportsReading(format))
+-	{
+-		image = FreeImage_Load(format, path.c_str());
+-	}else{
+-		LOG(LogError) << "Error - file format reading not supported for image \"" << path << "\"!";
+-		return false;
+-	}
+-
+-	float width = (float)FreeImage_GetWidth(image);
+-	float height = (float)FreeImage_GetHeight(image);
+-
+-	if(maxWidth == 0)
+-	{
+-		maxWidth = (int)((maxHeight / height) * width);
+-	}else if(maxHeight == 0)
+-	{
+-		maxHeight = (int)((maxWidth / width) * height);
+-	}
+-
+-	FIBITMAP* imageRescaled = FreeImage_Rescale(image, maxWidth, maxHeight, FILTER_BILINEAR);
+-	FreeImage_Unload(image);
+-
+-	if(imageRescaled == NULL)
+-	{
+-		LOG(LogError) << "Could not resize image! (not enough memory? invalid bitdepth?)";
+-		return false;
+-	}
+-
+-	bool saved = FreeImage_Save(format, imageRescaled, path.c_str());
+-	FreeImage_Unload(imageRescaled);
+-
+-	if(!saved)
+-		LOG(LogError) << "Failed to save resized image!";
+-
+-	return saved;
++    // This offline frontend does not download/resize network artwork.
++    LOG(LogWarning) << "Network artwork resizing is unavailable on RG280V";
++    return maxWidth == 0 && maxHeight == 0;
+ }
+ 
+ std::string getSaveAsPath(const ScraperSearchParams& params, const std::string& suffix, const std::string& url)
+diff --git a/es-app/src/views/gamelist/ISimpleGameListView.h b/es-app/src/views/gamelist/ISimpleGameListView.h
+index 9022cde..9be3298 100644
+--- a/es-app/src/views/gamelist/ISimpleGameListView.h
++++ b/es-app/src/views/gamelist/ISimpleGameListView.h
+@@ -1,3 +1,4 @@
++#include <stack>
+ #pragma once
+ 
+ #include "views/gamelist/IGameListView.h"
+diff --git a/es-core/src/ImageIO.cpp b/es-core/src/ImageIO.cpp
+index b6b5c80..c920311 100644
+--- a/es-core/src/ImageIO.cpp
++++ b/es-core/src/ImageIO.cpp
+@@ -5,76 +5,23 @@
+ #include "Log.h"
+ 
+ 
+-std::vector<unsigned char> ImageIO::loadFromMemoryRGBA32(const unsigned char * data, const size_t size, size_t & width, size_t & height)
++#include <SDL_image.h>
++std::vector<unsigned char> ImageIO::loadFromMemoryRGBA32(const unsigned char* data, const size_t size, size_t& width, size_t& height)
+ {
+-	std::vector<unsigned char> rawData;
+-	width = 0;
+-	height = 0;
+-	FIMEMORY * fiMemory = FreeImage_OpenMemory((BYTE *)data, size);
+-	if (fiMemory != nullptr) {
+-		//detect the filetype from data
+-		FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeFromMemory(fiMemory);
+-		if (format != FIF_UNKNOWN && FreeImage_FIFSupportsReading(format))
+-		{
+-			//file type is supported. load image
+-			FIBITMAP * fiBitmap = FreeImage_LoadFromMemory(format, fiMemory);
+-			if (fiBitmap != nullptr)
+-			{
+-				//loaded. convert to 32bit if necessary
+-				FIBITMAP * fiConverted = nullptr;
+-				if (FreeImage_GetBPP(fiBitmap) != 32)
+-				{
+-					FIBITMAP * fiConverted = FreeImage_ConvertTo32Bits(fiBitmap);
+-					if (fiConverted != nullptr)
+-					{
+-						//free original bitmap data
+-						FreeImage_Unload(fiBitmap);
+-						fiBitmap = fiConverted;
+-					}
+-				}
+-				if (fiBitmap != nullptr)
+-				{
+-					width = FreeImage_GetWidth(fiBitmap);
+-					height = FreeImage_GetHeight(fiBitmap);
+-					unsigned int pitch = FreeImage_GetPitch(fiBitmap);
+-					//loop through scanlines and add all pixel data to the return vector
+-					//this is necessary, because width*height*bpp might not be == pitch
+-					unsigned char * tempData = new unsigned char[width * height * 4];
+-					for (size_t i = 0; i < height; i++)
+-					{
+-						const BYTE * scanLine = FreeImage_GetScanLine(fiBitmap, i);
+-						memcpy(tempData + (i * width * 4), scanLine, width * 4);
+-					}
+-					//convert from BGRA to RGBA
+-					for(size_t i = 0; i < width*height; i++)
+-					{
+-						RGBQUAD bgra = ((RGBQUAD *)tempData)[i];
+-						RGBQUAD rgba;
+-						rgba.rgbBlue = bgra.rgbRed;
+-						rgba.rgbGreen = bgra.rgbGreen;
+-						rgba.rgbRed = bgra.rgbBlue;
+-						rgba.rgbReserved = bgra.rgbReserved;
+-						((RGBQUAD *)tempData)[i] = rgba;
+-					}
+-					rawData = std::vector<unsigned char>(tempData, tempData + width * height * 4);
+-					//free bitmap data
+-					FreeImage_Unload(fiBitmap);
+-					delete[] tempData;
+-				}
+-			}
+-			else
+-			{
+-				LOG(LogError) << "Error - Failed to load image from memory!";
+-			}
+-		}
+-		else
+-		{
+-			LOG(LogError) << "Error - File type " << (format == FIF_UNKNOWN ? "unknown" : "unsupported") << "!";
+-		}
+-		//free FIMEMORY again
+-		FreeImage_CloseMemory(fiMemory);
+-	}
+-	return rawData;
++    width = height = 0;
++    SDL_Surface* image = IMG_Load_RW(SDL_RWFromConstMem(data, size), 1);
++    if (!image) { LOG(LogError) << "Image: " << IMG_GetError(); return {}; }
++    SDL_Surface* rgba = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGBA32, 0);
++    SDL_FreeSurface(image);
++    if (!rgba) return {};
++    width = rgba->w; height = rgba->h;
++    std::vector<unsigned char> out(width * height * 4);
++    // FreeImage provided bottom-up pixels. Keep the existing texture convention.
++    for (size_t y = 0; y < height; ++y)
++        memcpy(out.data() + (height - 1 - y) * width * 4,
++               (unsigned char*)rgba->pixels + y * rgba->pitch, width * 4);
++    SDL_FreeSurface(rgba);
++    return out;
+ }
+ 
+ void ImageIO::flipPixelsVert(unsigned char* imagePx, const size_t& width, const size_t& height)
+diff --git a/es-core/src/ImageIO.h b/es-core/src/ImageIO.h
+index ca48d70..c33986c 100644
+--- a/es-core/src/ImageIO.h
++++ b/es-core/src/ImageIO.h
+@@ -1,7 +1,7 @@
+ #pragma once
+ 
+ #include <vector>
+-#include <FreeImage.h>
++#include <cstddef>
+ 
+ class ImageIO
+ {
+diff --git a/es-core/src/InputConfig.cpp b/es-core/src/InputConfig.cpp
+index 90b2729..53ece56 100644
+--- a/es-core/src/InputConfig.cpp
++++ b/es-core/src/InputConfig.cpp
+@@ -42,7 +42,7 @@ std::string toLower(std::string str)
+ {
+ 	for(unsigned int i = 0; i < str.length(); i++)
+ 	{
+-		str[i] = tolower(str[i]);
++		str[i] = tolower(static_cast<unsigned char>(str[i]));
+ 	}
+ 
+ 	return str;
+diff --git a/es-core/src/Renderer_draw_gl.cpp b/es-core/src/Renderer_draw_gl.cpp
+index 2ca93a2..5b01274 100644
+--- a/es-core/src/Renderer_draw_gl.cpp
++++ b/es-core/src/Renderer_draw_gl.cpp
+@@ -66,7 +66,7 @@ namespace Renderer {
+ 			box[3] = 0;
+ 
+ 		clipStack.push(box);
+-		glScissor(box[0], box[1], box[2], box[3]);
++		glScissor(box[0], box[1] * 2, box[2], box[3] * 2);
+ 		glEnable(GL_SCISSOR_TEST);
+ 	}
+ 
+@@ -84,13 +84,13 @@ namespace Renderer {
+ 			glDisable(GL_SCISSOR_TEST);
+ 		}else{
+ 			Eigen::Vector4i top = clipStack.top();
+-			glScissor(top[0], top[1], top[2], top[3]);
++			glScissor(top[0], top[1] * 2, top[2], top[3] * 2);
+ 		}
+ 	}
+ 
+ 	void drawRect(float x, float y, float w, float h, unsigned int color, GLenum blend_sfactor, GLenum blend_dfactor)
+ 	{
+-		drawRect((int)round(x), (int)round(y), (int)round(w), (int)round(h), color, blend_sfactor, blend_dfactor);
++		drawRect((int)esRound(x), (int)esRound(y), (int)esRound(w), (int)esRound(h), color, blend_sfactor, blend_dfactor);
+ 	}
+ 
+ 	void drawRect(int x, int y, int w, int h, unsigned int color, GLenum blend_sfactor, GLenum blend_dfactor)
+diff --git a/es-core/src/Renderer_init_sdlgl.cpp b/es-core/src/Renderer_init_sdlgl.cpp
+index 6924749..cb2a085 100644
+--- a/es-core/src/Renderer_init_sdlgl.cpp
++++ b/es-core/src/Renderer_init_sdlgl.cpp
+@@ -117,7 +117,6 @@ namespace Renderer
+ 	void swapBuffers()
+ 	{
+ 		SDL_GL_SwapWindow(sdlWindow);
+-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+ 	}
+ 
+ 	void destroySurface()
+@@ -146,7 +145,9 @@ namespace Renderer
+ 		if(!createdSurface)
+ 			return false;
+ 
+-		glViewport(0, 0, display_width, display_height);
++		int drawableWidth = 0, drawableHeight = 0;
++        SDL_GL_GetDrawableSize(sdlWindow, &drawableWidth, &drawableHeight);
++        glViewport(0, 0, drawableWidth, drawableHeight);
+ 
+ 		glMatrixMode(GL_PROJECTION);
+ 		glOrtho(0, display_width, display_height, 0, -1.0, 1.0);
+diff --git a/es-core/src/Util.cpp b/es-core/src/Util.cpp
+index 198e10a..7c650dc 100644
+--- a/es-core/src/Util.cpp
++++ b/es-core/src/Util.cpp
+@@ -8,14 +8,14 @@ std::string strToUpper(const char* from)
+ {
+ 	std::string str(from);
+ 	for(unsigned int i = 0; i < str.size(); i++)
+-		str[i] = toupper(from[i]);
++		str[i] = toupper(static_cast<unsigned char>(from[i]));
+ 	return str;
+ }
+ 
+ std::string& strToUpper(std::string& str)
+ {
+ 	for(unsigned int i = 0; i < str.size(); i++)
+-		str[i] = toupper(str[i]);
++		str[i] = toupper(static_cast<unsigned char>(str[i]));
+ 
+ 	return str;
+ }
+@@ -27,7 +27,7 @@ std::string strToUpper(const std::string& str)
+ 
+ 
+ #if _MSC_VER < 1800
+-float round(float num)
++float esRound(float num)
+ {
+ 	return (float)((int)(num + 0.5f));
+ }
+@@ -35,8 +35,8 @@ float round(float num)
+ 
+ Eigen::Affine3f& roundMatrix(Eigen::Affine3f& mat)
+ {
+-	mat.translation()[0] = round(mat.translation()[0]);
+-	mat.translation()[1] = round(mat.translation()[1]);
++	mat.translation()[0] = esRound(mat.translation()[0]);
++	mat.translation()[1] = esRound(mat.translation()[1]);
+ 	return mat;
+ }
+ 
+@@ -50,17 +50,17 @@ Eigen::Affine3f roundMatrix(const Eigen::Affine3f& mat)
+ Eigen::Vector3f roundVector(const Eigen::Vector3f& vec)
+ {
+ 	Eigen::Vector3f ret = vec;
+-	ret[0] = round(ret[0]);
+-	ret[1] = round(ret[1]);
+-	ret[2] = round(ret[2]);
++	ret[0] = esRound(ret[0]);
++	ret[1] = esRound(ret[1]);
++	ret[2] = esRound(ret[2]);
+ 	return ret;
+ }
+ 
+ Eigen::Vector2f roundVector(const Eigen::Vector2f& vec)
+ {
+ 	Eigen::Vector2f ret = vec;
+-	ret[0] = round(ret[0]);
+-	ret[1] = round(ret[1]);
++	ret[0] = esRound(ret[0]);
++	ret[1] = esRound(ret[1]);
+ 	return ret;
+ }
+ 
+diff --git a/es-core/src/Util.h b/es-core/src/Util.h
+index 5bf2a12..3d205d3 100644
+--- a/es-core/src/Util.h
++++ b/es-core/src/Util.h
+@@ -15,7 +15,7 @@ Eigen::Affine3f roundMatrix(const Eigen::Affine3f& mat);
+ Eigen::Vector3f roundVector(const Eigen::Vector3f& vec);
+ Eigen::Vector2f roundVector(const Eigen::Vector2f& vec);
+ 
+-float round(float num);
++float esRound(float num);
+ 
+ std::string getCanonicalPath(const std::string& str);
+ 
+diff --git a/es-core/src/Window.cpp b/es-core/src/Window.cpp
+index 76bb175..9f54a5e 100644
+--- a/es-core/src/Window.cpp
++++ b/es-core/src/Window.cpp
+@@ -1,3 +1,4 @@
++#include "Util.h"
+ #include "Window.h"
+ #include <iostream>
+ #include "Renderer.h"
+@@ -173,6 +174,8 @@ void Window::update(int deltaTime)
+ 
+ void Window::render()
+ {
++    // Keep the loading frame visible while scanning; clear before drawing.
++    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+ 	Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+ 
+ 	mRenderedHelpPrompts = false;
+@@ -238,8 +241,8 @@ void Window::renderLoadingScreen()
+ 
+ 	auto& font = mDefaultFonts.at(1);
+ 	TextCache* cache = font->buildTextCache("LOADING...", 0, 0, 0x656565FF);
+-	trans = trans.translate(Eigen::Vector3f(round((Renderer::getScreenWidth() - cache->metrics.size.x()) / 2.0f), 
+-		round(Renderer::getScreenHeight() * 0.835f), 0.0f));
++	trans = trans.translate(Eigen::Vector3f(esRound((Renderer::getScreenWidth() - cache->metrics.size.x()) / 2.0f), 
++		esRound(Renderer::getScreenHeight() * 0.835f), 0.0f));
+ 	Renderer::setMatrix(trans);
+ 	font->renderTextCache(cache);
+ 	delete cache;
+diff --git a/es-core/src/components/ComponentList.cpp b/es-core/src/components/ComponentList.cpp
+index a16bcb0..21dce53 100644
+--- a/es-core/src/components/ComponentList.cpp
++++ b/es-core/src/components/ComponentList.cpp
+@@ -167,10 +167,10 @@ void ComponentList::render(const Eigen::Affine3f& parentTrans)
+ 	Eigen::Vector3f dim(mSize.x(), mSize.y(), 0);
+ 	dim = trans * dim - trans.translation();
+ 	Renderer::pushClipRect(Eigen::Vector2i((int)trans.translation().x(), (int)trans.translation().y()), 
+-		Eigen::Vector2i((int)round(dim.x()), (int)round(dim.y() + 1)));
++		Eigen::Vector2i((int)esRound(dim.x()), (int)esRound(dim.y() + 1)));
+ 
+ 	// scroll the camera
+-	trans.translate(Eigen::Vector3f(0, -round(mCameraOffset), 0));
++	trans.translate(Eigen::Vector3f(0, -esRound(mCameraOffset), 0));
+ 
+ 	// draw our entries
+ 	std::vector<GuiComponent*> drawAfterCursor;
+diff --git a/es-core/src/components/HelpComponent.cpp b/es-core/src/components/HelpComponent.cpp
+index fdaecd3..1d807fc 100644
+--- a/es-core/src/components/HelpComponent.cpp
++++ b/es-core/src/components/HelpComponent.cpp
+@@ -68,7 +68,7 @@ void HelpComponent::updateGrid()
+ 	std::vector< std::shared_ptr<TextComponent> > labels;
+ 
+ 	float width = 0;
+-	const float height = round(font->getLetterHeight() * 1.25f);
++	const float height = esRound(font->getLetterHeight() * 1.25f);
+ 	for(auto it = mPrompts.begin(); it != mPrompts.end(); it++)
+ 	{
+ 		auto icon = std::make_shared<ImageComponent>(mWindow);
+diff --git a/es-core/src/components/ImageComponent.cpp b/es-core/src/components/ImageComponent.cpp
+index 2898c6f..60e2697 100644
+--- a/es-core/src/components/ImageComponent.cpp
++++ b/es-core/src/components/ImageComponent.cpp
+@@ -69,7 +69,7 @@ void ImageComponent::resize()
+ 			}
+ 
+ 			// for SVG rasterization, always calculate width from rounded height (see comment above)
+-			mSize[1] = round(mSize[1]);
++			mSize[1] = esRound(mSize[1]);
+ 			mSize[0] = (mSize[1] / textureSize.y()) * textureSize.x();
+ 
+ 		}else{
+@@ -81,11 +81,11 @@ void ImageComponent::resize()
+ 			// for SVG rasterization, we always calculate width from rounded height (see comment above)
+ 			if(!mTargetSize.x() && mTargetSize.y())
+ 			{
+-				mSize[1] = round(mTargetSize.y());
++				mSize[1] = esRound(mTargetSize.y());
+ 				mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
+ 			}else if(mTargetSize.x() && !mTargetSize.y())
+ 			{
+-				mSize[1] = round((mTargetSize.x() / textureSize.x()) * textureSize.y());
++				mSize[1] = esRound((mTargetSize.x() / textureSize.x()) * textureSize.y());
+ 				mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
+ 			}
+ 		}
+@@ -94,7 +94,7 @@ void ImageComponent::resize()
+ 	if(svg)
+ 	{
+ 		// mSize.y() should already be rounded
+-		svg->rasterizeAt((int)round(mSize.x()), (int)round(mSize.y()));
++		svg->rasterizeAt((int)esRound(mSize.x()), (int)esRound(mSize.y()));
+ 	}
+ 
+ 	onSizeChanged();
+@@ -186,8 +186,8 @@ void ImageComponent::updateVertices()
+ 	Eigen::Vector2f topLeft(-mSize.x() * mOrigin.x(), -mSize.y() * mOrigin.y());
+ 	Eigen::Vector2f bottomRight(mSize.x() * (1 -mOrigin.x()), mSize.y() * (1 - mOrigin.y()));
+ 
+-	const float width = round(bottomRight.x() - topLeft.x());
+-	const float height = round(bottomRight.y() - topLeft.y());
++	const float width = esRound(bottomRight.x() - topLeft.x());
++	const float height = esRound(bottomRight.y() - topLeft.y());
+ 
+ 	topLeft[0] = floor(topLeft[0]);
+ 	topLeft[1] = floor(topLeft[1]);
+diff --git a/es-core/src/components/MenuComponent.cpp b/es-core/src/components/MenuComponent.cpp
+index 589bc6f..57f2149 100644
+--- a/es-core/src/components/MenuComponent.cpp
++++ b/es-core/src/components/MenuComponent.cpp
+@@ -1,3 +1,4 @@
++#include "Util.h"
+ #include "components/MenuComponent.h"
+ #include "components/ButtonComponent.h"
+ 
+@@ -128,6 +129,6 @@ std::shared_ptr<ImageComponent> makeArrow(Window* window)
+ {
+ 	auto bracket = std::make_shared<ImageComponent>(window);
+ 	bracket->setImage(":/arrow.svg");
+-	bracket->setResize(0, round(Font::get(FONT_SIZE_MEDIUM)->getLetterHeight()));
++	bracket->setResize(0, esRound(Font::get(FONT_SIZE_MEDIUM)->getLetterHeight()));
+ 	return bracket;
+ }
+diff --git a/es-core/src/resources/Font.cpp b/es-core/src/resources/Font.cpp
+index 7e02249..a876904 100644
+--- a/es-core/src/resources/Font.cpp
++++ b/es-core/src/resources/Font.cpp
+@@ -384,7 +384,8 @@ std::vector<std::string> getFallbackFontPaths()
+ 
+ 	// TODO
+ 	const char* paths[] = {
+-		"/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf" // japanese, chinese, present on Debian
++		"/media/data/plumos/config/frontend/cjk-fallback.ttc",
++        "/media/data/plumos/config/frontend/default.otf" // japanese, chinese, present on Debian
+ 	};
+ 
+ 	std::vector<std::string> fontPaths;
+@@ -722,7 +723,7 @@ float Font::getNewlineStartOffset(const std::string& text, const unsigned int& c
+ 
+ inline float font_round(float v)
+ {
+-	return round(v);
++	return esRound(v);
+ }
+ 
+ TextCache* Font::buildTextCache(const std::string& text, Eigen::Vector2f offset, unsigned int color, float xLen, Alignment alignment, float lineSpacing)
+diff --git a/es-core/src/resources/SVGResource.cpp b/es-core/src/resources/SVGResource.cpp
+index 1a4ea16..3530173 100644
+--- a/es-core/src/resources/SVGResource.cpp
++++ b/es-core/src/resources/SVGResource.cpp
+@@ -47,7 +47,7 @@ void SVGResource::initFromMemory(const char* file, size_t length)
+ 	if(mLastWidth && mLastHeight)
+ 		rasterizeAt(mLastWidth, mLastHeight);
+ 	else
+-		rasterizeAt((size_t)round(mSVGImage->width), (size_t)round(mSVGImage->height));
++		rasterizeAt((size_t)esRound(mSVGImage->width), (size_t)esRound(mSVGImage->height));
+ }
+ 
+ void SVGResource::rasterizeAt(size_t width, size_t height)
+@@ -58,14 +58,14 @@ void SVGResource::rasterizeAt(size_t width, size_t height)
+ 	if(width == 0)
+ 	{
+ 		// auto scale width to keep aspect
+-		width = (size_t)round((height / mSVGImage->height) * mSVGImage->width);
++		width = (size_t)esRound((height / mSVGImage->height) * mSVGImage->width);
+ 	}else if(height == 0)
+ 	{
+ 		// auto scale height to keep aspect
+-		height = (size_t)round((width / mSVGImage->width) * mSVGImage->height);
++		height = (size_t)esRound((width / mSVGImage->width) * mSVGImage->height);
+ 	}
+ 
+-	if(width != (size_t)round(mSVGImage->width) && height != (size_t)round(mSVGImage->height))
++	if(width != (size_t)esRound(mSVGImage->width) && height != (size_t)esRound(mSVGImage->height))
+ 	{
+ 		mLastWidth = width;
+ 		mLastHeight = height;
