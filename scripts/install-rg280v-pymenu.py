@@ -15,7 +15,8 @@ if stage.exists():shutil.rmtree(stage)
 ui=stage/'pymenu/ui';ui.mkdir(parents=True)
 source=WORK/'source'
 for p in source.glob('*.py'):shutil.copyfile(p,ui/p.name)
-shutil.copytree(WORK/'runtime/python',stage/'pymenu/python',symlinks=True)
+if '--ui-only' not in __import__('sys').argv:
+ shutil.copytree(WORK/'runtime/python',stage/'pymenu/python',symlinks=True)
 shutil.copytree(source/'theme',ui/'theme')
 shutil.copytree(source/'images',ui/'images')
 # Reuse the existing FE Japanese font; FreeType detects OTF regardless of suffix.
@@ -67,6 +68,15 @@ for theme_path in (ui/'theme/themes').glob('*.json'):
  for item in config['mainMenu']:
   if item['name'] not in theme and item.get('icon'):
    theme[item['name']]=dict(icon=item['icon'],folderIcon=item['icon'],background='theme/defaultBackground.png')
+  artwork=theme.get(item['name'],{})
+  for key in ['icon','folderIcon','background','preview']:
+   if key=='preview' and key not in artwork:continue
+   old=artwork.get(key)
+   if old and (ui/old).is_file():continue
+   # Upstream Pixel's Neo Geo entry references a non-existent images/pixel tree.
+   corrected=old.replace('images/pixel/','images/pixel97/') if isinstance(old,str) else None
+   if corrected and (ui/corrected).is_file():artwork[key]=corrected
+   else:artwork[key]='theme/defaultBackground.png' if key=='background' else item['icon']
  writejson(theme_path,theme)
 config['mainMenu'] += [dict(name='Last Played',description='Last played games',type='lastPlayed'),dict(name='Favourites',description='Favourite games',type='favourites',data=[])]
 seed=stage/'pymenu/seed';seed.mkdir()

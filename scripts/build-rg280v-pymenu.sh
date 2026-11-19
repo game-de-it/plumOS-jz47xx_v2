@@ -8,7 +8,7 @@ if [ ! -d "$work/source/.git" ]; then git clone https://github.com/JackD83/PyMen
 if [ ! -d "$work/pygame-source/.git" ]; then git clone https://github.com/pygame/pygame.git "$work/pygame-source"; fi
 [ "$(git -C "$work/source" rev-parse HEAD)" = 68ceb9d17c4016d68abd6cd7c382eea5cbfd2009 ] || git -C "$work/source" checkout 68ceb9d17c4016d68abd6cd7c382eea5cbfd2009
 [ "$(git -C "$work/pygame-source" rev-parse HEAD)" = 34f25f42f7c44774460eb8cbc8de19c1903e1e66 ] || git -C "$work/pygame-source" checkout 34f25f42f7c44774460eb8cbc8de19c1903e1e66
-for pair in 'source:0001-plumos-runtime-and-launch.patch' 'pygame-source:0002-pygame-python3-pixel-coordinates.patch'; do
+for pair in 'source:0001-plumos-runtime-and-launch.patch' 'pygame-source:0002-pygame-python3-pixel-coordinates.patch' 'source:0003-missing-artwork-and-clean-return.patch'; do
  repo=${pair%%:*}; patch="$PWD/patches/pymenu/${pair#*:}"
  if ! git -C "$work/$repo" apply --reverse --check "$patch" 2>/dev/null; then git -C "$work/$repo" apply "$patch"; fi
 done

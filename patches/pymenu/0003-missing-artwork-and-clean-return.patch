@@ -1,0 +1,47 @@
+--- a/MainMenu.py
++++ b/MainMenu.py
+@@ -61,12 +61,29 @@
+         entry = self.config["mainMenu"][index]
+       
+      
+-        if entry["visible"] and "icon" in entry and entry["icon"] != None and os.path.exists(entry["icon"]):
+-            self.systems[index] = Common.aspect_scale(Common.loadCachedImage( entry["icon"]), 140, 70)
+-        
+-        if entry["visible"] and "background" in entry and os.path.exists(entry["background"]):
+-            self.systembackgrounds[index] = pygame.transform.scale(Common.loadCachedImage( entry["background"]), ( self.config["screenWidth"],self.config["screenHeight"]) )
+-          
++        if not entry.get("visible", False):
++            return
++
++        icon = None
++        if entry.get("icon") and os.path.isfile(entry["icon"]):
++            icon = Common.loadCachedImage(entry["icon"])
++        if icon is None or (icon.get_width() <= 1 and icon.get_height() <= 1):
++            font = pygame.font.Font('theme/NotoSans-Regular.ttf', 16)
++            icon = font.render(entry.get("description") or entry["name"], True,
++                               Theme.getColor("main/textColor", (255,255,255)))
++        self.systems[index] = Common.aspect_scale(icon, 140, 70)
++
++        background = entry.get("background")
++        if not background or not os.path.isfile(background):
++            background = "theme/defaultBackground.png"
++        image = Common.loadCachedImage(background)
++        if image.get_width() <= 1 and image.get_height() <= 1:
++            image = pygame.Surface((self.config["screenWidth"], self.config["screenHeight"]))
++            image.fill(Theme.getColor("main/backgroundColor", (0,0,0)))
++        self.systembackgrounds[index] = pygame.transform.scale(
++            image, (self.config["screenWidth"], self.config["screenHeight"]))
++        RenderControl.setDirty()
++
+ 
+     def loadImagesAsync(self):
+         for index, systemImage in enumerate(self.systems):
+@@ -609,6 +626,8 @@
+         if(self.subComponent != None):
+             self.subComponent.render(screen)
+             return     
++        # ROM lists share this surface; clear it even while artwork is unavailable.
++        screen.fill(Theme.getColor("main/backgroundColor", (0,0,0)))
+         if(self.systembackgrounds[self.currentIndex] is not None):
+             screen.blit(self.systembackgrounds[self.currentIndex], (0, 0))
+         else:
