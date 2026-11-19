@@ -1,5 +1,7 @@
 # JZ47xx版 plumOS の構成
 
+> 開発初期の設計・検証記録です。現在の共通イメージは[開発者ガイド](developer/README.ja.md)を参照してください。
+
 ## 起動とユーザー環境
 
 UBIBoot、OpenDingux Linux 6.8、RG280V DTB、mininit の起動引き渡しを

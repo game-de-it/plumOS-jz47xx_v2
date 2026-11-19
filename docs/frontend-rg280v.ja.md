@@ -1,5 +1,7 @@
 # RG280V向けplumOS FE
 
+> 開発初期の設計・検証記録です。現在の共通イメージは[開発者ガイド](developer/README.ja.md)を参照してください。
+
 V90S公開版の `plumos_controller_ui.c`、fbdevレンダラー、ROMスキャナーを移植し、JZ47xx用にクロスビルドする。ソースのMITライセンスは `src/frontend/LICENSE.V90S`、同梱フォントのライセンスは `assets/frontend/licenses/` に保持する。
 
 ## 置き場所と起動

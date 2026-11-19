@@ -57,4 +57,4 @@ python3 scripts/fetch-rg280v-simplequest.py
 python3 scripts/install-rg280v-simplemenu.py
 ```
 
-ビルドは既存の`plumos-jz47xx-build:bookworm`コンテナとMIPS SDKを使う。導入時は実機のSimpleMenuを終了し、ADBサーバー5041・`10.1.1.2:5555`へ接続する。インストーラはその時点の実機の有効な機種・コアから設定を生成する。初回のみHOMEをseedから作成し、再実行では既存のテーマ選択やお気に入り等を上書きしない。テーマデータを公開イメージへ埋め込む処理は追加していない。
+ビルドは既存の`plumos-jz47xx-build:bookworm`コンテナとMIPS SDKを使う。導入時は実機のSimpleMenuを終了し、対象端末にADBで接続する。インストーラはその時点の実機の有効な機種・コアから設定を生成する。初回のみHOMEをseedから作成し、再実行では既存のテーマ選択やお気に入り等を上書きしない。テーマデータを公開イメージへ埋め込む処理は追加していない。

@@ -1,5 +1,7 @@
 # RG280V bring-up
 
+> 開発初期の設計・検証記録です。現在の共通イメージは[開発者ガイド](developer/README.ja.md)を参照してください。
+
 ## 起動画面と起動時間（2026-11-16）
 
 初回セットアップ画面が毎回表示された原因は、SD1上の `rootfs.squashfs` が
@@ -43,7 +45,7 @@ SD2のFAT読み取り専用マウントとFEプロセスの起動は再起動後
 Linux 6.8、mininit、plumOS `rcS` はRG280Vで起動し、SD1 p2のext4、
 モジュール領域、診断シェルまで進む。2026-11-15に、データ通信できる
 USBケーブルでMacからping、ADB connect、shell、pushを実機確認した。
-Mac側は `en106` に `10.1.1.1/30`、端末側は `usb0` に `10.1.1.2/30`。
+ホスト側のUSB Ethernetと端末側の `usb0` に対向するアドレスを設定した。
 ADBが起動しなかった原因はloopback未設定で、`127.0.0.1/8` を設定して解決した。
 SD2の16GB FATカードは読み取り専用でマウントし、`bios` と `roms` を確認した。
 FBDEVへ描く開発用の大きな状態画面は再起動後の自動表示まで実機確認した。
@@ -73,11 +75,10 @@ SD1 p2へ同梱する。2026-11-15に初回セットアップ用seedを実機で
 ## USBと開発ループ
 
 Macとの接続はplumOSの初期化処理からCDC Ethernetを先に使う。RG280VのUSB
-ポートがperipheralとして認識されれば、`usb0` を `10.1.1.2/30` にし、
-`adbd` をTCP 5555で起動する。ホスト側は `10.1.1.1/30` に設定して
-`adb connect 10.1.1.2:5555` を試す。ADBが失敗した場合は起動用FAT領域の
-`plumos-boot.log` を読む。開発用構成のため、無線ネットワークは含めない。
-MacではUSB Ethernetとして現れたインターフェースに `10.1.1.1/30` を設定する。
+ポートがperipheralとして認識されれば、端末側の `usb0` にアドレスを設定し、
+`adbd` をTCP 5555で起動する。ホスト側のUSB Ethernetに対向アドレスを設定して
+`adb connect "$DEVICE_USB_IP:5555"` を試す。ADBが失敗した場合は起動用FAT領域の
+`plumos-boot.log` を読む。開発用構成ではUSB Ethernetを使用する。
 ADB接続後は `scripts/capture-rg280v.sh` で基本ログを保存できる。
 `scripts/deploy-rg280v-status.sh` は起動ロゴと描画ツールをADBで配布する。
 RG280VのFBDEVは320×480行として見え、物理画面では縦が半分に縮むため、

@@ -32,10 +32,11 @@ Linuxが起動して内蔵画面と操作入力が使える状態で、DTに対�
 | ↓ | RG350 | `RG350.BIN` |
 | ← | RG350M | `RG350M.BIN` |
 
-機種固定版の試験イメージには、Macで対象を切り替える手順もある。
+機種固定版の試験イメージには、接続した起動領域を指定して対象を切り替える手順もある。
+コマンドの前に `BOOT_VOLUME` に起動領域のマウント先を設定する。
 
 ```sh
-python3 scripts/select-jz47xx-boot-model.py --boot-volume <local-path> --model rg300x
+python3 scripts/select-jz47xx-boot-model.py --boot-volume "$BOOT_VOLUME" --model rg300x
 ```
 
 このツールは機種固定版の`/models`内のハッシュを照合し、

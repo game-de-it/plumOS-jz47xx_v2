@@ -8,7 +8,7 @@
 | FBA44 | Kung-Fu Master / Battle Chopper / Ninja Spirit | Kung-Fu Masterは色化け・音声ゼロ。残り2本は未判定 |
 | Temper | Air Zonk / Blazing Lazers / Bonk's Revenge | Air Zonkは黒画面。残り2本は未判定 |
 
-AtariとFBAのROMは `<local-path>` から試験用ディレクトリへコピーし、Temperは既存SD2のROMを参照する。旧readline/ncurses/OpenSSL/libaoは `/media/data/local/rg350-visual-tests/lib` だけに隔離し、製品の共通ライブラリには追加しない。FBA44は監査で使った、ROM引数を受ける試験用OPKを使用する。ROM、OPK、旧ライブラリはGitへ含めない。
+AtariとFBAのROMは 検証用ROMセットから試験用ディレクトリへコピーし、Temperは既存SD2のROMを参照する。旧readline/ncurses/OpenSSL/libaoは `/media/data/local/rg350-visual-tests/lib` だけに隔離し、製品の共通ライブラリには追加しない。FBA44は監査で使った、ROM引数を受ける試験用OPKを使用する。ROM、OPK、旧ライブラリはGitへ含めない。
 
 配置コマンドは `python3 scripts/setup-rg350-visual-tests.py`。各転送後にホストと端末のSHA-256を照合し、Apps設定の9件を読み戻して確認した。FEプロセスが起動中であることも確認した。作業前のApps設定はGit管理外の `output/rg280v-apps/rg350-visual-tests/apps-before.json` に保管する。試験後は `python3 scripts/setup-rg350-visual-tests.py --remove` でこの9項目と試験用ファイルだけを撤去できる。
 
