@@ -2058,6 +2058,12 @@ static void plumos_fbdev_battery_label(char *out, size_t out_size) {
   snprintf(out, out_size, "%s %ld", prefix, percent);
 }
 
+static int plumos_fbdev_is_jz47xx(void) {
+  const char *id = getenv("PLUMOS_DEVICE_ID");
+  return id && (!strcmp(id, "rg280v") || !strcmp(id, "rg300x") ||
+                !strcmp(id, "rg350") || !strcmp(id, "rg350m"));
+}
+
 static void plumos_fbdev_rg280v_status_label(char *out, size_t out_size) {
   static time_t cached_at = (time_t)-1;
   static char cached[48];
@@ -2159,14 +2165,27 @@ static void plumos_fbdev_draw_rg280v_header_glyph(
 static void plumos_fbdev_draw_rg280v_header_text(
     struct plumos_fbdev_renderer *r, const char *title, const char *status,
     int y, uint32_t title_color, uint32_t status_color) {
-  const char *left = title && title[0] ? title : "plumOS RG280V";
+  const char *left = title && title[0] ? title : "plumOS";
+  char device_title[40];
   const char *p;
   int width = (int)r->var.xres;
   int right_x;
   int x;
 
-  if (strcmp(left, "plumOS") == 0) {
-    left = "plumOS RG280V";
+  if (strcmp(left, "plumOS") == 0 || strcmp(left, "plumOS RG280V") == 0) {
+    const char *id = getenv("PLUMOS_DEVICE_ID");
+    size_t i;
+    snprintf(device_title, sizeof(device_title), "plumOS %s", id ? id : "rg280v");
+    for (i = 7; device_title[i]; ++i) {
+      if (device_title[i] >= 'a' && device_title[i] <= 'z') device_title[i] -= 'a' - 'A';
+    }
+    left = device_title;
+  }
+  if (width >= 640) {
+    right_x = width - 14 - plumos_fbdev_text_width(status, 2);
+    plumos_fbdev_draw_text(r, 16, y - 2, left, 2, title_color, right_x - 8);
+    plumos_fbdev_draw_text(r, right_x, y - 2, status, 2, status_color, width - 12);
+    return;
   }
   /* Keep the original 5x7 glyphs, scaled to 8x11 for the 320px screen. */
   right_x = width - 8 - (int)strlen(status) * 9;
@@ -2192,8 +2211,7 @@ static void plumos_fbdev_draw_graphic_top_bar_overlay(
   int w = (int)r->var.xres;
   int right_width;
   int title_max_x;
-  int rg280v = getenv("PLUMOS_DEVICE_ID") &&
-               strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0;
+  int rg280v = plumos_fbdev_is_jz47xx();
 
   if (rg280v) {
     plumos_fbdev_rg280v_status_label(right, sizeof(right));
@@ -2240,8 +2258,7 @@ static void plumos_fbdev_draw_tty_top_bar(struct plumos_fbdev_renderer *r) {
   char right[80];
   int w = (int)r->var.xres;
   int right_width;
-  int rg280v = getenv("PLUMOS_DEVICE_ID") &&
-               strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0;
+  int rg280v = plumos_fbdev_is_jz47xx();
   uint32_t bg = plumos_fbdev_pack_color(r, 0, 5, 4);
   uint32_t border = plumos_fbdev_pack_color(r, 31, 82, 56);
   uint32_t prompt = plumos_fbdev_pack_color(r, 158, 255, 199);
@@ -3241,8 +3258,7 @@ static void plumos_fbdev_draw_gallery_top_bar(
   int w = (int)r->var.xres;
   int right_width;
   int title_max_x;
-  int rg280v = getenv("PLUMOS_DEVICE_ID") &&
-               strcmp(getenv("PLUMOS_DEVICE_ID"), "rg280v") == 0;
+  int rg280v = plumos_fbdev_is_jz47xx();
 
   if (rg280v) {
     plumos_fbdev_rg280v_status_label(right, sizeof(right));
