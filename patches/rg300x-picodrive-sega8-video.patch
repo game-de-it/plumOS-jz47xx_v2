@@ -1,0 +1,17 @@
+diff --git a/plat_sdl.c b/plat_sdl.c
+--- a/plat_sdl.c
++++ b/plat_sdl.c
+@@ -261,6 +261,13 @@
+    * menu recreates the SDL surface. */
+   if (fs_w == 320 && fs_h == 480)
+     g_menuscreen_h = 240;
++  /* Sega 8-bit layouts use the handheld's 320x240 canvas. Let the SDL
++   * KMSDRM backend scale it on VGA panels rather than centering a tiny
++   * native game rectangle in a 640x480 software surface. */
++  if (fs_w == 640 && fs_h == 480 && getenv("PLUMOS_PICODRIVE_SEGA8_CANVAS")) {
++    fs_w = g_menuscreen_w = 320;
++    fs_h = g_menuscreen_h = 240;
++  }
+ #endif
+   plat_sdl_screen = SDL_SetVideoMode(g_menuscreen_w, g_menuscreen_h, 0,
+       (flags = get_screen_flags()));

@@ -47,6 +47,13 @@ for route in SOURCES:
     elif slug == 'pokemini':
         prepare = 'mkdir -p "$HOME/saves"\n'
         body = 'exec /opk/pokemini -eeprom "$HOME/saves/$(basename "$1").eep" -eepromshare -state "$HOME/saves/$(basename "$1").sta" "$1"'
+    elif slug == 'gambatte2020':
+        body = 'exec /opk/gambatte-dms.opendingux --resampler 0 "$@"'
+    elif slug == 'stella':
+        prepare = """case "$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)" in
+    640,*) set -- -maxres 320x240 "$@" ;;
+esac
+"""
     elif slug == 'gngeo':
         prepare = 'mkdir -p "$HOME/roms"\nln -sfn "$root/bios/standalone/gngeo/neogeo.zip" "$HOME/roms/neogeo.zip"\nln -sfn "$1" "$HOME/roms/$(basename "$1")"\n'
         body = 'exec /opk/plumos-emulator --biospath="$root/bios/standalone/gngeo" --rompath="$HOME/roms" "$1"'

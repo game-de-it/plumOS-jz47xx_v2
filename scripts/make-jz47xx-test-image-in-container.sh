@@ -30,7 +30,11 @@ cp /workspace/output/rg280v-fe/plumos-controller-ui \
     /workspace/output/rg280v-fe/plumos-rg280v-power-menu "$root/plumos/bin/"
 cp /workspace/assets/frontend/bin/plumos-fe-launch \
     /workspace/assets/frontend/bin/plumos-jz47xx-device-env \
+    /workspace/assets/frontend/bin/plumos-standalone-launch \
     /workspace/assets/frontend/bin/plumos-opk-emulator-launch "$root/plumos/bin/"
+cp /workspace/output/rg280v-emulators/PicoDrive_rg280v.opk "$root/plumos/emulators/"
+cp /workspace/output/rg280v-opk-integration/packages/{stella,gambatte2020}.opk \
+    "$root/plumos/emulators/opk/"
 cp /workspace/output/rg280v-emulators/lib/libfceux-menu.so "$root/plumos/lib/"
 cp /workspace/assets/frontend/S94hotkeys "$root/local/init.d/"
 # This helper scales the existing artwork to the detected framebuffer.

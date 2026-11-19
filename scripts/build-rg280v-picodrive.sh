@@ -16,11 +16,14 @@ fi
 git -C "$src" checkout --detach "$revision"
 git -C "$src" submodule update --init --depth 1
 
+libpicofe="$src/platform/libpicofe"
 patch="$repo_root/patches/rg280v-picodrive.patch"
-if git -C "$src/platform/libpicofe" apply --reverse --check "$patch" 2>/dev/null; then
-    :
-else
-    git -C "$src/platform/libpicofe" apply "$patch"
+vga_patch="$repo_root/patches/rg300x-picodrive-sega8-video.patch"
+if ! git -C "$libpicofe" apply --reverse --check "$vga_patch" 2>/dev/null; then
+    if ! git -C "$libpicofe" apply --reverse --check "$patch" 2>/dev/null; then
+        git -C "$libpicofe" apply "$patch"
+    fi
+    git -C "$libpicofe" apply "$vga_patch"
 fi
 sega8_patch="$repo_root/patches/rg280v-picodrive-sega8.patch"
 if git -C "$src" apply --reverse --check "$sega8_patch" 2>/dev/null; then

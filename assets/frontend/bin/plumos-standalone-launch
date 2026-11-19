@@ -38,7 +38,7 @@ case "$1" in
         export PICOFE_GL=0
         case "$2" in
             */roms/mastersystem/*|*/roms/gamegear/*|*.sms|*.SMS|*.gg|*.GG)
-                export PLUMOS_SEGA8_NO_FF=1
+                export PLUMOS_SEGA8_NO_FF=1 PLUMOS_PICODRIVE_SEGA8_CANVAS=1
                 ;;
         esac
         ;;

@@ -108,3 +108,17 @@ FPS欄は短い計測窓の終盤値。「更新」はモード遷移や複数�
 | amiga | standalone:uae4all | Baby Jo.adf | 46.5 | 無音区間 | STARTを押さず約1分待機。ディスク読込から本編へ進まず。試験用停止 |
 
 試験終了時はRG300XのFEが稼働し、確認対象のエミュレータが残っていないことを確認した。SD2は読み取り専用、CPUは996 MHzだった。
+
+## 本体での追加確認と修正
+
+ユーザーはUAE4All、PC Engine CD、CrocoDS、NEO4ALL、FBA44のゲームが正常に動作することを確認した。UAE4Allはロードに時間がかかる。PC Engine CDはSTART、CrocoDSはAを押すとゲームが進む。自動試験の到達場面は上の表に残す。
+
+Gambatte 2020ではユーザーがゲーム中の無音とメニュー操作音を確認した。Gambatte 2020のOPKの起動時に `--resampler 0` を渡した。既存Gambatteと同じ線形リサンプラーで、ゲーム中のPCMの最大絶対値はGB・GBCとも4から30,720に増えた。Super Mario LandとAkumanor Gaiden DXで59.7／59.9fps、96kHzの音声データに信号があり、計測上のクリップ・ALSA書き込みエラーは0だった。修正後のスピーカー聴取は未確認。
+
+| 経路 | 試験ROM | 640×480出力上の非黒描画範囲（修正前 → 修正後） | 修正後 |
+| --- | --- | --- | --- |
+| 単体PicoDrive / Master System | Frontier Force | 214×135 → 428×270 | 約60fps、音声データとメニューあり |
+| 単体PicoDrive / Game Gear | Puyo Puyo | 160×144 → 320×288 | 約60fps、音声データとメニューあり |
+| Stella / Atari 2600 | Centipede | 262×178 → 524×356 | 約60fps、音声データとメニューあり |
+
+同じ場面の取得画像を黒背景と比較した。修正後はいずれも320×240の描画面を640×480に拡大し、ゲームの縦横比を維持する。PicoDriveはSega 8-bit経路で640×480を検出した場合の論理寸法を調整。Stellaは640幅のフレームバッファで内部描画を320×240に制限する起動オプションを渡す。RG300Xへ配置した三つのOPKとPicoDrive起動スクリプトはSHA-256を照合した。元ファイルは試験SDの `plumos/backups/rg300x-emulator-fixes/` に保存した。追加試験後は対象プロセスを停止し、FEを復帰した。
