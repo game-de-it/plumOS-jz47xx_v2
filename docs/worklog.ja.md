@@ -6,6 +6,7 @@
 - SD2の挿入後に再起動し、読み取り専用でマウント。音量PCM 45→39→45%、輝度8→6→8を入力注入で確認。ALSAからステレオのテスト音を正常に送出した。
 - 代表8経路を短時間計測し、7経路で音声信号を取得。PCSX4ALLは起動演出とメニューまで。FEのGBA一覧から起動したReGBAはExitで同じFEへ復帰した。
 - EmulationStationのSTARTメニューとUI SETTINGS、計算機で`777`が枠内に表示されることを320×240のDRMキャプチャで確認。詳細は`docs/validation/rg350-first-boot-2026-11-19.md`。
+- 内蔵スピーカーのテスト音と電源短押しによるSleep復帰をユーザーが確認。ADBでdeep suspend入出、同一FE PID、SD2の読み取り専用を確認した。Sleep移行時にDRM polling警告を1回記録した。
 
 ## 2026-11-19 — RG350の試験イメージを準備
 
