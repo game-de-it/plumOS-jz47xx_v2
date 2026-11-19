@@ -1,6 +1,7 @@
 """Storage helpers: test ROM payloads live on SD2; runtime state stays on SD1."""
 import contextlib
 import hashlib
+import os
 import pathlib
 import shlex
 import subprocess
@@ -8,6 +9,13 @@ import subprocess
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
 ROM_ROOT = '/media/data/sd2/.plumos-rg350-tests-20261118/relocated'
 CANDIDATES = ROM_ROOT + '/rom-candidates'
+
+def host_rom_root():
+    root = os.environ.get("PLUMOS_ROM2_ROOT")
+    if not root:
+        raise SystemExit("Set PLUMOS_ROM2_ROOT to the test ROM directory.")
+    return pathlib.Path(root)
+
 
 def shell(command):
     return subprocess.check_output(ADB + ['shell', command], text=True, errors='replace').strip()

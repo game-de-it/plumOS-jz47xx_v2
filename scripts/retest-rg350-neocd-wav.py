@@ -6,11 +6,11 @@ import pathlib
 import shlex
 import subprocess
 import argparse
-from rg350_test_rom_storage import ROM_ROOT, stage_file
+from rg350_test_rom_storage import ROM_ROOT, stage_file, host_rom_root
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
-NAS = pathlib.Path('<local-path>')
+NAS = host_rom_root()
 HOME = '/media/data/local/rg350-missing-rom-retest/home-15'
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--prepare-only', action='store_true')

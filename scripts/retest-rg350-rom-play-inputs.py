@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Use emulator-specific controls instead of mistaking START menus for gameplay."""
 import pathlib,json,subprocess,hashlib,shlex
-from rg350_test_rom_storage import CANDIDATES, stage_file
+from rg350_test_rom_storage import CANDIDATES, stage_file, host_rom_root
 R=pathlib.Path(__file__).resolve().parents[1]
 subprocess.run(['adb','-P','5041','connect','10.1.1.2:5555'],check=True)
 groups=json.loads((R/'output/rg280v-apps/rg350-rom-candidates.json').read_text())
@@ -10,7 +10,7 @@ adb=['adb','-P','5041','-s','10.1.1.2:5555']
 # action games so that sound is exercised rather than calling silence a pass.
 stella=next(g for g in groups if 28 in g['catalog_numbers'])
 for i,name in enumerate(['Asteroids.bin','Centipede.bin','Breakout.bin'],4):
- src=pathlib.Path('<local-path>')/name
+ src=(host_rom_root() / 'ATARI/2600')/name
  dest=f'{CANDIDATES}/atari2600/{i:02d}.bin'
  stage_file(src,dest)
  stella['candidates'].append(dict(source='ATARI/2600/'+name,remote=dest))

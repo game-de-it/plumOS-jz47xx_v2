@@ -5,14 +5,13 @@ from pathlib import Path
 from rg350_test_rom_storage import CANDIDATES, writable_sd2
 ROOT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--rom-root',type=Path,default=Path('<local-path>'))
+parser.add_argument('--rom-root', type=Path, required=True)
 parser.add_argument('--deploy',action='store_true')
 parser.add_argument('--refresh-inventory',action='store_true')
 args=parser.parse_args(); NAS=args.rom_root
-inventory=ROOT/'output/rg280v-apps/rg350-rom-inventory.json'
+root_key = hashlib.sha256(os.fsencode(NAS.resolve())).hexdigest()[:16]
+inventory = ROOT / f'output/rg280v-apps/rg350-rom-inventory-{root_key}.json'
 if not NAS.is_dir(): parser.error('ROM root is not mounted')
-if args.rom_root != Path('<local-path>'):
- args.refresh_inventory=True
 if args.refresh_inventory or not inventory.exists():
  files=[]
  for base,dirs,names in os.walk(NAS):

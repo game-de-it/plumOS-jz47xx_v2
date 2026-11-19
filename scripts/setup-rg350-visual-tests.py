@@ -10,10 +10,10 @@ import json
 import pathlib
 import subprocess
 import sys
-from rg350_test_rom_storage import ROM_ROOT as SD2_TEST_ROOT, stage_file
+from rg350_test_rom_storage import ROM_ROOT as SD2_TEST_ROOT, stage_file, host_rom_root
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-ROM_ROOT = pathlib.Path("<local-path>")
+ROM_ROOT = host_rom_root()
 REMOTE = "/media/data/local/rg350-visual-tests"
 APPS = "/media/data/plumos/config/frontend/apps.json"
 ADB = ["adb", "-P", "5041", "-s", "10.1.1.2:5555"]

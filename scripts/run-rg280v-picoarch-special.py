@@ -9,10 +9,10 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from rg350_test_rom_storage import host_rom_root
+
 
 ROOT = Path(__file__).resolve().parent.parent
-ROM2 = Path(os.environ.get("PLUMOS_ROM2_ROOT",
-                           "<local-path>"))
 OUT = ROOT / "output/validation/rg280v-picoarch-20261115/smoke"
 REMOTE = os.environ.get("PLUMOS_PICOARCH_SPECIAL_REMOTE",
                         "/media/data/plumos/smoke/special")
@@ -57,6 +57,7 @@ def main():
     parser.add_argument("--cores", help="comma-separated core IDs")
     parser.add_argument("--out-dir", type=Path, default=OUT)
     args = parser.parse_args()
+    ROM2 = host_rom_root()
     OUT = args.out_dir.resolve()
     WANTED = set(args.cores.split(",")) if args.cores else None
     OUT.mkdir(parents=True, exist_ok=True)

@@ -4,10 +4,10 @@ import hashlib
 import pathlib
 import shlex
 import subprocess
-from rg350_test_rom_storage import ROM_ROOT, stage_file
+from rg350_test_rom_storage import ROM_ROOT, stage_file, host_rom_root
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-NAS = pathlib.Path('<local-path>')
+NAS = (host_rom_root() / 'scummvm')
 ADB = ['adb', '-P', '5041', '-s', '10.1.1.2:5555']
 BASE = ROM_ROOT + '/extra-roms/scumm-corrected'
 subprocess.run(['adb', '-P', '5041', 'connect', '10.1.1.2:5555'], check=True)

@@ -3,9 +3,10 @@
 set -euo pipefail
 cd /workspace
 version=${1:?usage: make-jz47xx-release-image-in-container.sh VERSION}
-[[ $version =~ ^[0-9A-Za-z][0-9A-Za-z._-]*$ ]]
+version=${version#v}
+[[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]
 out=output/release
-name="plumos-jz47xx-$version.img"
+name="plumOS-JZ47xx-$version.img"
 mkdir -p "$out"
 test ! -e "$out/$name"
 sdk=output/rg280v
@@ -21,6 +22,8 @@ bash scripts/build-jz47xx-multimodel-ubiboot-in-container.sh
 root="$stage/data"
 mkdir -p "$root/local/bin"
 python3 scripts/stage-jz47xx-release.py "$root" --stage "$stage"
+printf '%s\n' "$version" > "$root/plumos/VERSION"
+install -Dm0644 LICENSE "$root/plumos/licenses/plumOS-MIT.txt"
 "$cc" -Os -Wall -Wextra -Werror tools/plumos-resize-user-partition.c \
     -o "$root/local/bin/plumos-resize-user-partition"
 "$cc" -Os -Wall -Wextra tools/rg280v-fbshow.c -o "$root/local/bin/rg280v-fbshow"

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Copy the complete Fatal Fury WAV test set into one new, isolated SD2 directory."""
 import hashlib,json,pathlib,shlex,subprocess,signal,time
+from rg350_test_rom_storage import host_rom_root
 ROOT=pathlib.Path(__file__).resolve().parents[1]
-SOURCE=pathlib.Path('<local-path> Fury WAV')
+SOURCE=(host_rom_root() / '_etc/neogeocd/Fatal Fury WAV')
 DEST='/media/data/sd2/.plumos-rg350-tests-20261118/Fatal Fury WAV'
 ADB=['adb','-P','5041','-s','10.1.1.2:5555']
 def sh(s):

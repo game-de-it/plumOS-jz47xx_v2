@@ -6,9 +6,9 @@
 
 You need an RG280V, RG300X, RG350 or RG350M, a microSD card of at least 4 GB, and a card reader. Keep your original system card as a backup. Writing an image erases the destination card, including saves and settings.
 
-1. Download the SD image and its SHA-256 checksum from the same release. If the image is compressed, follow the release instructions for which file to verify and whether to extract it.
+1. Download `plumOS-JZ47xx-v0.1.0-sd-image.7z` and `SHA256SUMS` from the same release.
 2. Verify the checksum before writing. For an individual file, use `shasum -a 256 <image-file>` on macOS, `sha256sum <image-file>` on Linux or `Get-FileHash <image-file> -Algorithm SHA256` in PowerShell. Compare the digest with the one published for that file.
-3. Select the image in a raw disk image writer. Check the destination card's name and capacity, write the image, let the writer finish verification and safely eject the card.
+3. Extract `plumOS-JZ47xx-0.1.0.img` from the 7-Zip archive. Select the IMG in a raw disk image writer. Check the destination card's name and capacity, write the image, let the writer finish verification and safely eject the card.
 4. With the handheld powered off, insert the card into **SD1**, the system card slot. Hold the direction for your model while turning it on. Release the direction when the plumOS logo appears.
 
 | Handheld | Hold at power-on |
