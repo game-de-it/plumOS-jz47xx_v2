@@ -1,6 +1,6 @@
 # JZ4770の4機種で共通SDを使う構成
 
-対象はRG300X、RG350、RG280V、RG350M。RG300Xに続き、RG350Mを予備SD1で検証する。
+対象はRG300X、RG350、RG280V、RG350M。RG300XとRG350Mに続き、RG350を予備SD1で検証する。
 現在のRG280VのSD1には試験用起動ファイルを書き込まない。
 
 ## 起動方式
@@ -98,6 +98,9 @@ rootfsとmodulesは、ビルド後のSDK内にある別状態のファイルを�
   FEの実機表示とDRMキャプチャを確認。音声・入力・電源操作・HDMI実出力は未確認。
 - RG350Mの試験イメージを生成。イメージ内の`model.txt`、連結カーネル、
   rootfs・modules・mininitを生成元と照合し、パーティション表、ext4、SHA-256を検査した。
+- RG350の試験イメージ`output/jz47xx-multimodel/plumos-jz47xx-rg350-test.img`を生成。
+  起動領域の`model.txt=rg350`、`ylm,rg350`のDTB、UBIBoot、rootfs・modules・mininitを照合した。
+  イメージのext4を確認し、EmulationStation・計算機・Gambatteメニュー修正版の同梱を検証した。
 
 RG300Xでは、起動→DT/パネル/入力の取得→FE表示とABXY→音声とエミュ起動/復帰→
 音量/輝度→電源メニュー→Reboot/Shutdown→Sleep/復帰の順に確認する。
