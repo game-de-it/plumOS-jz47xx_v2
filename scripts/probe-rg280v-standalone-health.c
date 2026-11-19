@@ -39,33 +39,40 @@ static uint64_t now_ns(void)
     return (uint64_t)ts.tv_sec * 1000000000ULL + ts.tv_nsec;
 }
 
+/* Integer-only printf arguments also work with legacy Hard float OPKs. */
+static unsigned scaled(double value, unsigned scale)
+{
+    return value > 0 && value < 1000000 ? (unsigned)(value * scale) : 0;
+}
+
 static void report(const char *kind)
 {
     const char *path = getenv("PLUMOS_STANDALONE_HEALTH_LOG");
     FILE *out;
     if (!path || !(out = fopen(path, "a"))) return;
     if (kind[0] == 'v') {
-        fprintf(out, "video\tflips=%u\tfps=%.2f\tfps_window=%.2f\tflip_avg_ms=%.3f\tflip_max_ms=%.3f\twaits_ge_8ms=%u\n",
-                flips, flips > 1 ? (double)(flips - 1) * 1e9 / (flip_last - flip_first) : 0.0,
-                flip_report_count && flip_last > flip_report_time
-                    ? (double)(flips - flip_report_count) * 1e9 / (flip_last - flip_report_time)
-                    : (flips > 1 ? (double)(flips - 1) * 1e9 / (flip_last - flip_first) : 0.0),
-                flips ? (double)flip_wait_ns / flips / 1e6 : 0.0,
-                (double)flip_max_ns / 1e6, flip_waits_8ms);
-    } else {
-        fprintf(out, "audio\tcallbacks=%u\trate=%u\tchannels=%u\tformat=0x%x\tframes=%llu\tseconds=%.3f\tzero_frac=%.4f\tclipped_frac=%.4f\tpeak=%u\tenergy=%llu\tmin=%d\tmax=%d\talsa_write_errors=%u\talsa_underruns=%u\n",
-                audio_callbacks, audio_rate, audio_channels, audio_format,
-                (unsigned long long)audio_frames,
-                audio_last > audio_first ? (double)(audio_last - audio_first) / 1e9 : 0.0,
-                audio_frames ? (double)audio_zero / (audio_frames * audio_channels) : 0.0,
-                audio_frames ? (double)audio_clipped / (audio_frames * audio_channels) : 0.0,
-                audio_peak, (unsigned long long)audio_energy, audio_min, audio_max, alsa_write_errors, alsa_underruns);
-    }
-    fclose(out);
-    if (kind[0] == 'v') {
+        unsigned fps = scaled(flips > 1 ? (double)(flips - 1) * 1e9 / (flip_last - flip_first) : 0, 1000);
+        unsigned window = scaled(flip_report_count && flip_last > flip_report_time
+            ? (double)(flips - flip_report_count) * 1e9 / (flip_last - flip_report_time)
+            : (flips > 1 ? (double)(flips - 1) * 1e9 / (flip_last - flip_first) : 0), 1000);
+        unsigned avg = flips ? (unsigned)(flip_wait_ns / flips / 1000) : 0;
+        unsigned max = (unsigned)(flip_max_ns / 1000);
+        fprintf(out, "video\tflips=%u\tfps=%u.%03u\tfps_window=%u.%03u\tflip_avg_ms=%u.%03u\tflip_max_ms=%u.%03u\twaits_ge_8ms=%u\n",
+            flips, fps/1000, fps%1000, window/1000, window%1000,
+            avg/1000, avg%1000, max/1000, max%1000, flip_waits_8ms);
         flip_report_count = flips;
         flip_report_time = flip_last;
+    } else {
+        unsigned elapsed = audio_last > audio_first ? (unsigned)((audio_last - audio_first) / 1000000) : 0;
+        unsigned zero = audio_frames ? (unsigned)(audio_zero * 10000 / (audio_frames * audio_channels)) : 0;
+        unsigned clipped = audio_frames ? (unsigned)(audio_clipped * 10000 / (audio_frames * audio_channels)) : 0;
+        fprintf(out, "audio\tcallbacks=%u\trate=%u\tchannels=%u\tformat=0x%x\tframes=%llu\tseconds=%u.%03u\tzero_frac=%u.%04u\tclipped_frac=%u.%04u\tpeak=%u\tenergy=%llu\tmin=%d\tmax=%d\talsa_write_errors=%u\talsa_underruns=%u\n",
+            audio_callbacks, audio_rate, audio_channels, audio_format,
+            (unsigned long long)audio_frames, elapsed/1000, elapsed%1000,
+            zero/10000, zero%10000, clipped/10000, clipped%10000, audio_peak,
+            (unsigned long long)audio_energy, audio_min, audio_max, alsa_write_errors, alsa_underruns);
     }
+    fclose(out);
 }
 
 /* Optional bounded PCM evidence; normal runtime never sets this variable. */

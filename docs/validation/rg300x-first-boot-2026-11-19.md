@@ -27,9 +27,9 @@ The original binary is retained on that test card under
 
 ## Remaining checks and findings
 
-- Reboot/Shutdown menu actions, emulator display/audio/return, and game sleep
-  have not yet been verified on this model. There is no SD2 currently inserted,
-  so no ROM was copied to SD1 for this test.
+- Reboot/Shutdown menu actions and game sleep were not verified in this initial
+  session. Subsequent SD2 game checks and FE round-trip results are recorded in
+  `rg300x-games-2026-11-19.md`. No ROM was copied to SD1 for the initial test.
 - Suspend succeeds, but the kernel logs a warning in `__flush_work` called by
   `drm_kms_helper_poll_disable`. Source inspection shows that the Ingenic
   suspend hook calls `drm_mode_config_helper_suspend`, while the driver has no
