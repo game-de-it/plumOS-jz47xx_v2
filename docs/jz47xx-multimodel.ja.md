@@ -37,7 +37,9 @@ python3 scripts/select-jz47xx-boot-model.py --boot-volume <local-path> --model r
 モードは固定した上流カーネル`3181c26b25ab`のDTSとパネルドライバから確認。
 RG300Xの`focaltech,gpt3`、RG350Mの`leadtek,ltk035c5444t`、
 RG350の`frida,frd350h54004`に必要なパネルドライバは現行カーネルで有効。
-RG300XはDTSでHDMIのI2CをGPIO方式に切り替えているので、この定義も維持する。
+RG300XとRG350MはDTSでHDMIブリッジのI²CをGPIO方式に切り替える。
+RG350MではハードウェアI²CのままだとHDMIブリッジが認識されず、内蔵液晶の
+DRM初期化も保留された。GPIO方式ではブリッジと内蔵液晶が初期化された。
 
 ## ユーザー環境の変更
 
@@ -93,8 +95,8 @@ rootfsとmodulesは、ビルド後のSDK内にある別状態のファイルを�
   Wi-Fiは省略、RTC時刻が未設定の場合は時計を省略する。
 - 復帰時のDRM polling警告、ゲーム経路、残る電源試験は継続対象。
   詳細は `validation/rg300x-first-boot-2026-11-19.md`。
-- RG350の実機起動は未確認。RG350MはSD上のログでLinuxの初期化完了まで確認。
-  実機の画面表示、USB接続、音声・入力・電源操作は未確認。
+- RG350の実機起動は未確認。RG350MでLinux起動、USB接続、640×480の内蔵液晶、
+  FEの実機表示とDRMキャプチャを確認。音声・入力・電源操作・HDMI実出力は未確認。
 - RG350Mの試験イメージを生成。イメージ内の`model.txt`、連結カーネル、
   rootfs・modules・mininitを生成元と照合し、パーティション表、ext4、SHA-256を検査した。
 

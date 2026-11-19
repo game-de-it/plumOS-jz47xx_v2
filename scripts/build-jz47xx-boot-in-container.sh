@@ -6,6 +6,10 @@ kernel="$sdk/build/linux-custom"
 out=/workspace/output/jz47xx-multimodel/boot
 reference=/workspace/output/jz47xx-multimodel/reference-boot
 mkdir -p "$out"
+patch_file=/workspace/patches/jz47xx-rg350m-i2c-gpio.patch
+if ! git -C "$kernel" apply --reverse --check "$patch_file" 2>/dev/null; then
+    git -C "$kernel" apply "$patch_file"
+fi
 make -C "$kernel" ARCH=mips CROSS_COMPILE="$sdk/host/bin/mipsel-gcw0-linux-uclibc-" \
     -j "${JOBS:-8}" ingenic/rg280v.dtb ingenic/rg300x.dtb ingenic/rg350.dtb ingenic/rg350m.dtb
 cp "$sdk/images/uzImage.bin" "$out/kernel.bin"

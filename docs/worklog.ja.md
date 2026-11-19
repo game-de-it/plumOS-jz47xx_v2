@@ -1,5 +1,11 @@
 # 作業ログ
 
+## 2026-11-19 — RG350MのGPIO I²Cで内蔵液晶が復旧
+
+- RG350MのHDMI用I²CをRG300Xと同じPD30/PD31のGPIO方式へ変更。既存の機種共通定義をDTSIに移し、RG280V・RG300X・RG350の連結カーネルが元イメージとバイト単位で一致することを確認した。
+- RG350Mの試験SD1で元の起動ファイルを退避し、新しい`uzImage.bin`をSHA-256照合して再起動。診断rootfsを維持した。再起動後は新しいADBサーバーで実機を確認した。
+- IT66121 revision 1のprobe成功、Ingenic DRMと`/dev/fb0`の生成、内蔵DPI 640×480、`bl_power=0`を確認。FEプロセスと640×480のTOP画面を取得し、ユーザーも内蔵画面の表示を確認した。HDMIの実出力、音声・入力・電源操作はこの試験の対象外。
+
 ## 2026-11-19 — RG350MのADB接続と暗転ログを確認
 
 - 別のSD1でRG350Mを起動し、MacのUSB Ethernet経由でADBに接続。実機のDTモデルは`Anbernic RG-350M`、`/boot/model.txt`は`rg350m`。診断レポート4件を取得した。
