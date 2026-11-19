@@ -299,7 +299,8 @@ int main(int argc, char **argv) {
   if (!save_plane(drmfd, &original_plane)) goto resume;
   if (!create_buffer(drmfd, &original_plane, &buffers[0]) ||
       !create_buffer(drmfd, &original_plane, &buffers[1])) goto restore;
-  inputfd = open("/dev/input/event2", O_RDONLY | O_CLOEXEC);
+  inputfd = open(getenv("PLUMOS_INPUT_EVENT") ? getenv("PLUMOS_INPUT_EVENT") :
+                 "/dev/input/event2", O_RDONLY | O_CLOEXEC);
   if (inputfd < 0) goto restore;
   draw_menu(&original_plane, &buffers[visible], cursor);
   if (!show_buffer(drmfd, &original_plane, &buffers[visible])) goto restore;

@@ -1,0 +1,36 @@
+#!/bin/sh
+# Source this file: model selection comes from the DTB chosen before Linux.
+# PLUMOS_SYSFS_ROOT also permits read-only profile checks on the build host.
+plumos_sysfs=${PLUMOS_SYSFS_ROOT:-/sys}
+plumos_compatible=$(tr '\000' '\n' <"$plumos_sysfs/firmware/devicetree/base/compatible") || return 1
+PLUMOS_DEVICE_ID=
+for plumos_compat in $plumos_compatible; do
+    case "$plumos_compat" in
+        ylm,rg280v) PLUMOS_DEVICE_ID=rg280v; break ;;
+        ylm,rg300x) PLUMOS_DEVICE_ID=rg300x; break ;;
+        ylm,rg350) PLUMOS_DEVICE_ID=rg350; break ;;
+        ylm,rg350m) PLUMOS_DEVICE_ID=rg350m; break ;;
+    esac
+done
+[ -n "$PLUMOS_DEVICE_ID" ] || {
+    echo 'Unsupported plumOS JZ47xx device tree' >&2
+    return 1
+}
+PLUMOS_DEVICE_NAME="ANBERNIC $(printf '%s' "$PLUMOS_DEVICE_ID" | tr '[:lower:]' '[:upper:]')"
+PLUMOS_INPUT_EVENT=
+for plumos_event in "$plumos_sysfs"/class/input/event*; do
+    [ -r "$plumos_event/device/name" ] || continue
+    [ "$(cat "$plumos_event/device/name")" = gpio-keys ] || continue
+    PLUMOS_INPUT_EVENT="/dev/input/${plumos_event##*/}"
+    break
+done
+[ -n "$PLUMOS_INPUT_EVENT" ] || {
+    echo 'plumOS gpio-keys input device not found' >&2
+    return 1
+}
+PLUMOS_POWER_INPUT_EVENT=$PLUMOS_INPUT_EVENT
+PLUMOS_FBDEV_VERTICAL_SCALE=1
+[ "$PLUMOS_DEVICE_ID" != rg280v ] || PLUMOS_FBDEV_VERTICAL_SCALE=2
+export PLUMOS_DEVICE_ID PLUMOS_DEVICE_NAME PLUMOS_INPUT_EVENT
+export PLUMOS_POWER_INPUT_EVENT PLUMOS_FBDEV_VERTICAL_SCALE
+unset plumos_sysfs plumos_compatible plumos_compat plumos_event

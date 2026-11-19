@@ -77,14 +77,18 @@ int main(int argc, char **argv) {
                                 MAP_SHARED, fd, 0);
     if (framebuffer == MAP_FAILED) { perror("mmap"); return 1; }
     unsigned bytes = var.bits_per_pixel / 8;
-    unsigned draw_width = width < var.xres ? width : var.xres;
-    unsigned draw_height = height < var.yres ? height : var.yres;
+    /* The same artwork covers 320x240, 320x480 and 640x480 panels.
+     * RG280V's non-square pixels are accounted for by filling its scanout. */
+    unsigned draw_width = var.xres;
+    unsigned draw_height = var.yres;
     for (unsigned page = 0; page * var.yres + draw_height <= var.yres_virtual; ++page) {
         for (unsigned y = 0; y < draw_height; ++y) {
             for (unsigned x = 0; x < draw_width; ++x) {
                 size_t offset = ((size_t)page * var.yres + y) * fix.line_length + x * bytes;
                 if (offset + bytes > fix.smem_len) continue;
-                const uint8_t *rgb = pixels + ((size_t)y * width + x) * 3;
+                unsigned source_x = (unsigned)((uint64_t)x * width / draw_width);
+                unsigned source_y = (unsigned)((uint64_t)y * height / draw_height);
+                const uint8_t *rgb = pixels + ((size_t)source_y * width + source_x) * 3;
                 uint32_t color = channel(rgb[0], var.red) | channel(rgb[1], var.green) |
                                  channel(rgb[2], var.blue) | channel(255, var.transp);
                 memcpy(framebuffer + offset, &color, bytes);

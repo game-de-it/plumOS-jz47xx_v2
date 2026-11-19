@@ -2417,7 +2417,12 @@ static int runtime_device_is_v90s(void) {
 static int runtime_device_is_rg280v(void) {
   const char *device_id = getenv("PLUMOS_DEVICE_ID");
 
-  return device_id && strcmp(device_id, "rg280v") == 0;
+  /* Historical name: these settings/input backends are shared by the
+   * supported JZ4770 boards. Geometry is selected separately at launch. */
+  return device_id && (strcmp(device_id, "rg280v") == 0 ||
+                       strcmp(device_id, "rg300x") == 0 ||
+                       strcmp(device_id, "rg350") == 0 ||
+                       strcmp(device_id, "rg350m") == 0);
 }
 
 static int runtime_device_is_mmf(void) {

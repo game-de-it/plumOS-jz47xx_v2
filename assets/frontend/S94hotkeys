@@ -7,7 +7,8 @@ case "${1:-}" in
         if [ -r "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
             exit 0
         fi
-        nohup setsid "$root/bin/plumos-rg280v-hotkeys" /dev/input/event2 </dev/null >>"$root/Logs/hotkeys.log" 2>&1 &
+        . "$root/bin/plumos-jz47xx-device-env" || exit 1
+        nohup setsid "$root/bin/plumos-rg280v-hotkeys" "$PLUMOS_INPUT_EVENT" </dev/null >>"$root/Logs/hotkeys.log" 2>&1 &
         echo "$!" >"$pidfile"
         ;;
     stop)
