@@ -1,5 +1,15 @@
 # 作業ログ
 
+## 2026-11-19 — RG350MのFE登録全58エミュ経路を確認
+
+- FE設定にある26機種・58経路の画面、描画回数、PCMを読み取り専用のSD2で計測。初回は53経路でPCM信号を取得し、PicoArchの28経路でメニュー終了を確認した。8経路を追加確認した。
+- Gambatte 2020のゲーム音声、PC Engine CDのゲーム画面、PSXのタイトルと音声・Quitを確認。NEO4ALLのBus errorが1回発生し、再試験の短時間では再現しなかった。CrocoDSはタイトルまで、UAE4Allはロードまで。
+- ネイティブFEからGBAのReGBAを起動し、Exit後に同じFEプロセスのROM一覧へ復帰した。終了時のFE TOPとSD2の読み取り専用を確認した。全経路の測定結果は`docs/validation/rg350m-all-emulator-routes-2026-11-19.md`。
+
+## 2026-11-19 — RG300XのApps実機確認
+
+- ユーザーによる確認で、EmulationStationのSTARTメニューと計算機アプリに表示の異常があった。その他のAppsは正常との報告。2件の再現条件と原因は未確認。
+
 ## 2026-11-19 — RG350MのGPIO I²Cで内蔵液晶が復旧
 
 - RG350MのHDMI用I²CをRG300Xと同じPD30/PD31のGPIO方式へ変更。既存の機種共通定義をDTSIに移し、RG280V・RG300X・RG350の連結カーネルが元イメージとバイト単位で一致することを確認した。
