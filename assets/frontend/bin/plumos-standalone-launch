@@ -8,7 +8,7 @@ fi
 
 root=${PLUMOS_ROOT:-/media/data/plumos}
 case "$1" in
-    atari800|fba44|temper|fceux223|genesisgx|pokemini|race|crocods|gambatte2020|ohboy|stella|neo4all|handy|oswan|smsplusgg|smsplusms|unrealspeccy|gngeo|uae4all)
+    atari800|fba44|fceux223|genesisgx|pokemini|race|crocods|gambatte2020|ohboy|stella|neo4all|handy|oswan|smsplusgg|smsplusms|unrealspeccy|gngeo|uae4all)
         exec "$root/bin/plumos-opk-emulator-launch" "$@"
         ;;
     pcsx4all) binary="$root/bin/pcsx4all" ;;
@@ -56,9 +56,12 @@ mkdir -p "$root/home"
 export HOME="$root/home"
 export LD_LIBRARY_PATH="$root/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 if [ "$1" = pcsx4all ]; then
+    . "$root/bin/plumos-jz47xx-media-env"
+    plumos_select_media
     mkdir -p "$HOME/.pcsx4all"
-    if [ ! -e "$HOME/.pcsx4all/bios" ]; then
-        ln -s "$root/bios" "$HOME/.pcsx4all/bios"
+    psx_bios="$HOME/.pcsx4all/bios"
+    if [ -L "$psx_bios" ] || [ ! -e "$psx_bios" ]; then
+        ln -sfn "$(plumos_effective_bios_root "$root/bios")" "$psx_bios"
     fi
     rom=$2
     case "$rom" in

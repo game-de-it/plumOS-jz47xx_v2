@@ -18,15 +18,6 @@
     "source_sha256": "357215645ba9f9a4ed8874acfa2afd83d96cf68e59ccec65060b184b5ba50e55"
   },
   {
-    "id": "temper",
-    "name": "Temper",
-    "systems": [
-      "pcengine"
-    ],
-    "source": "output/rg280v-apps/rg350-visual-tests/temper-rg280v-noipu.opk",
-    "source_sha256": "82f5404834e161c8fb4fd0c3d2006447bd8ed28ee18248a719038cfdcebc5ee8"
-  },
-  {
     "id": "fceux223",
     "name": "FCEUX 2.2.3",
     "systems": [

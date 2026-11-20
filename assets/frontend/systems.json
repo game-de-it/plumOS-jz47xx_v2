@@ -766,8 +766,7 @@
       },
       "launch_profiles": [
         "picoarch:mednafen_pce_fast",
-        "picoarch:mednafen_supergrafx",
-        "standalone:temper"
+        "picoarch:mednafen_supergrafx"
       ],
       "default_launch_profile": "picoarch:mednafen_pce_fast",
       "default_cpu_policy": "ondemand",

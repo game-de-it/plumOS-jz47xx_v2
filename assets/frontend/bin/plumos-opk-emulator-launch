@@ -6,7 +6,7 @@ root=${PLUMOS_ROOT:-/media/data/plumos}
 id=$1
 rom=$2
 case "$id" in
-    atari800|fba44|temper|fceux223|genesisgx|pokemini|race|crocods|gambatte2020|ohboy|stella|neo4all|handy|oswan|smsplusgg|smsplusms|unrealspeccy|gngeo|uae4all) ;;
+    atari800|fba44|fceux223|genesisgx|pokemini|race|crocods|gambatte2020|ohboy|stella|neo4all|handy|oswan|smsplusgg|smsplusms|unrealspeccy|gngeo|uae4all) ;;
     *) echo "unsupported OPK emulator: $id" >&2; exit 2 ;;
 esac
 opk="$root/emulators/opk/$id.opk"
@@ -47,16 +47,36 @@ case "$id" in
         ;;
 esac
 mkdir -p "$HOME" "$root/Logs/standalone"
-sdcard=${PLUMOS_SDCARD_ROOT:-/media/data/sd2}
+bios=
 case "$id" in
+    atari800|unrealspeccy)
+        . "$root/bin/plumos-jz47xx-media-env"
+        plumos_select_media
+        firmware="$PLUMOS_BIOS_ROOT/opk/$id"
+        if [ "$id" = unrealspeccy ]; then
+            for name in sos128_0.rom sos128_1.rom sos48.rom service.rom dos513f.rom; do
+                if [ ! -r "$firmware/$name" ] || [ "$(wc -c <"$firmware/$name")" -ne 16384 ]; then
+                    printf 'Unreal Speccy needs bios/opk/unrealspeccy/%s (16384 bytes).\n' "$name" >>"$root/Logs/standalone/$id.log"
+                    exit 1
+                fi
+            done
+        fi
+        mkdir -p "$root/bios/standalone"
+        ln -sfn "$firmware" "$root/bios/standalone/$id"
+        ;;
     gngeo) bios=neogeo.zip ;;
     neo4all) bios=neocd.bin ;;
     uae4all) bios=kick.rom ;;
-    *) bios= ;;
 esac
-if [ -n "$bios" ] && [ ! -e "$root/bios/standalone/$id/$bios" ]; then
+if [ -n "$bios" ]; then
+    . "$root/bin/plumos-jz47xx-media-env"
+    plumos_select_media
     mkdir -p "$root/bios/standalone/$id"
-    ln -sfn "$sdcard/bios/opk/$id/$bios" "$root/bios/standalone/$id/$bios"
+    bios_link="$root/bios/standalone/$id/$bios"
+    bios_source="$PLUMOS_BIOS_ROOT/opk/$id/$bios"
+    if [ -r "$bios_source" ] && { [ -L "$bios_link" ] || [ ! -e "$bios_link" ]; }; then
+        ln -sfn "$bios_source" "$bios_link"
+    fi
 fi
 case "$id" in
     fceux223)

@@ -41,7 +41,7 @@ plumOS独自のコードとフロントエンドには[MITライセンス](LICEN
 - **fMSX**は非商用の独自ライセンスです。現在の候補にはfMSX標準FM音源を使用する版を収録しています。fMSX本体の再配布条件は確認中です。 [ライセンス原文](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) [再配布監査](docs/validation/jz47xx-v0.1.0-release-rights.ja.md#fmsx-の再配布条件とfm音源)
 - **PicoDrive**には非商用の条件があります。単体版とLibretroコアの両方について、改変版のソースと著作権表示を配布する条件を`COPYING`で確認できます。 [PicoDriveのライセンス原文](https://github.com/irixxxx/picodrive/blob/master/COPYING)
 - **Snes9x 2005、Snes9x 2005 Plus、ChimeraSNES**には非商用条件のあるSnes9x由来のコードが含まれます。バイナリ再配布と著作権表記の条件は各`copyright`または`LICENSES`を参照してください。 [Snes9x 2005の著作権表記](https://github.com/libretro/snes9x2005/blob/master/copyright)
-- **Temper**の改変GCW0版は、バイナリと対応ソースの再配布許諾を確認中です。静的に組み込むTremorにはXiph.org FoundationのBSD 3条項の表記が必要です。 [Temperの再配布監査](docs/validation/jz47xx-v0.1.0-release-rights.ja.md#temper-の再配布条件)
+- **Temper**は今回の配布候補から外しました。PC Engineの既定経路はBeetle PCE Fastです。[過去の再配布監査](docs/validation/jz47xx-v0.1.0-release-rights.ja.md#temper-の再配布条件)
 - **FBA44**は非商用です。配布候補に収録します。ライセンス全文の掲載、変更の公開、利益・寄付、発売時期の近いゲームへの対応、ROMの同梱、動的ライブラリの利用に関する条件があります。`runtime-sources/FBA44/src/license.txt`の全文と、取り込まれたMAMEその他のコードの表記を維持します。
 - **blueMSX**には複数のライセンスが適用されます。`runtime-sources/libretro-bluemsx/license.txt`と、各ソースファイルの表記を参照してください。
 

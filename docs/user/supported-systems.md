@@ -2,7 +2,7 @@
 
 [日本語](supported-systems.ja.md) · [User guide](README.md) · [SD card layout](storage.md)
 
-The standard frontend in plumOS JZ47xx_v2 v0.1.0 registers 26 systems and 58 launch profiles. Create the folders below at the root of SD1's `PLUMOS` volume or of the first partition on SD2. [How plumOS chooses a card](storage.md#how-plumos-selects-roms-and-bios)
+The standard frontend in plumOS JZ47xx_v2 v0.1.0 registers 26 systems and 57 launch profiles. Create the folders below at the root of SD1's `PLUMOS` volume or of the first partition on SD2. [How plumOS chooses a card](storage.md#how-plumos-selects-roms-and-bios)
 
 - Use one recommended folder per system to avoid duplicate entries from copies of the same game under aliases. On ext4, match the capitalization of the folder names shown here.
 - The extensions determine which files appear in the frontend. Extension matching is case-insensitive. Launch support depends on the emulator, BIOS and game set.
@@ -19,7 +19,7 @@ The standard frontend in plumOS JZ47xx_v2 v0.1.0 registers 26 systems and 58 lau
 | Master System | `roms/mastersystem/` | `roms/MS/`, `roms/MD/` | `.sms`, `.bin`, `.zip`, `.7z` | **`SA: picodrive`**, `PICO: genesis_plus_gx`, `PICO: picodrive`, `PICO: gearsystem`, `SA: smsplusms` |
 | Game Gear | `roms/gamegear/` | `roms/GG/`, `roms/GameGear/`, `roms/MD/` | `.gg`, `.zip`, `.7z` | **`SA: picodrive`**, `PICO: genesis_plus_gx`, `PICO: picodrive`, `PICO: gearsystem`, `SA: smsplusgg` |
 | Sega CD | `roms/segacd/` | `roms/SEGACD/`, `roms/megacd/` | `.cue`, `.chd`, `.iso`, `.m3u`, `.bin` | **`PICO: picodrive`** |
-| PC Engine | `roms/pcengine/` | `roms/PCE/`, `roms/tg16/` | `.pce`, `.sgx`, `.zip`, `.7z` | **`PICO: mednafen_pce_fast`**, `PICO: mednafen_supergrafx`, `SA: temper` |
+| PC Engine | `roms/pcengine/` | `roms/PCE/`, `roms/tg16/` | `.pce`, `.sgx`, `.zip`, `.7z` | **`PICO: mednafen_pce_fast`**, `PICO: mednafen_supergrafx` |
 | SuperGrafx | `roms/supergrafx/` | `roms/SGX/`, `roms/PCE/` | `.sgx`, `.pce`, `.zip`, `.7z` | **`PICO: mednafen_supergrafx`** |
 | PC Engine CD | `roms/pcenginecd/` | `roms/PCECD/`, `roms/tg16cd/` | `.cue`, `.chd`, `.iso`, `.m3u` | **`PICO: mednafen_pce_fast`** |
 | PlayStation | `roms/psx/` | `roms/PS/` | `.cue`, `.chd`, `.iso`, `.pbp`, `.m3u` | **`SA: pcsx4all`** |

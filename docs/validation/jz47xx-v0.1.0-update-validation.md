@@ -28,3 +28,11 @@ RG350MにADBで試験用の実行ファイルと鍵を一時導入し、FEから
 ### 配布用アーカイブ
 
 確認したIMGを同一バイト列のまま `plumOS-JZ47xx-v0.1.0-sd-image.7z` に梱包した。7zのSHA-256は `40c6158a97a7347683cb3706ba70ec86b8f4689885beae1f231162a8f2f6bf38`。展開後のIMGのSHA-256は上記の確認済みIMGと一致した。
+
+## Temperを除外した候補
+
+`plumOS-JZ47xx-0.1.0-no-temper-test.img` のSHA-256は `a93b84b53389bac4300d966e6a81f14f943a8cb922475a6b3192a9d559033821`。
+
+更新機能入りの検証済みIMGを保管し、別のIMGからTemperのOPK、初期設定、FEとSimpleMenuの起動経路を除外した。PC Engineの既定はBeetle PCE Fastで、候補に残っていたTemperの選択設定をBeetle PCE Fastへ変更した。標準FEの登録は26システム・57起動経路。ブート領域、パーティション表、p3、更新処理の実行ファイルとFE起動スクリプトは旧候補と一致した。
+
+RG350Mに新候補と一致する設定を一時適用し、標準FEからBeetle PCE FastでPC Engineのゲームを起動した。ステージ画面、音声デバイスのオープン、メニューのExitから同じFEプロセスへの復帰をADBで確認した。候補IMGと実機の対応ファイル9点のSHA-256が一致した。試験後、一時データを除去して元の設定に戻した。この試験ではSD1の再書き込みは行っていない。

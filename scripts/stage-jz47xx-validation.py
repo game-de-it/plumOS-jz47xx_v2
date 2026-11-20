@@ -25,7 +25,7 @@ STANDALONE = {
     "picodrive": "PicoDrive_rg280v.opk",
 }
 OPKS = (
-    "temper fceux223 gambatte2020 ohboy stella handy oswan smsplusgg "
+    "fceux223 gambatte2020 ohboy stella handy oswan smsplusgg "
     "smsplusms pokemini race uae4all fba44"
 ).split()
 APPLICATIONS = "calculator commander bard ffplay gmu st-sdl pdfviewer".split()
