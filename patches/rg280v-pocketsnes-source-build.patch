@@ -1,0 +1,47 @@
+--- a/Makefile
++++ b/Makefile
+@@ -25,13 +25,11 @@
+ CFLAGS += -DFAST_LSB_WORD_ACCESS -DNO_ROM_BROWSER
+ ifdef PROFILE_GEN
+ CFLAGS += -fprofile-generate -fprofile-dir=/media/data/profile/pocketsnes
+-else
+-CFLAGS += -fprofile-use -fprofile-dir=./profile
+ endif
+ 
+ CXXFLAGS = $(CFLAGS) -std=gnu++03 -fno-exceptions -fno-rtti -fno-math-errno -fno-threadsafe-statics
+ 
+-LDFLAGS = $(CXXFLAGS) -lz -lpng $(SDL_LIBS) -Wl,--as-needed
++LDFLAGS = $(CXXFLAGS) -lz -lpng $(SDL_LIBS) -Wl,--as-needed -static-libgcc -static-libstdc++
+ ifndef PROFILE_GEN
+ LDFLAGS += -Wl,--gc-sections -s
+ endif
+--- a/menu/main.cpp
++++ b/menu/main.cpp
+@@ -239,6 +239,7 @@
+ 	}
+ 
+ 	sal_VideoFlip(0);
++	return TRUE;
+ }
+ 
+ const char *S9xGetFilename (const char *ex)
+@@ -415,7 +416,8 @@
+ 
+ bool8_32 S9xOpenSoundDevice(int a, unsigned char b, int c)
+ {
+-
++	// Run() opens SDL audio through sal_AudioInit before calling S9xInitSound.
++	return TRUE;
+ }
+ 
+ void S9xAutoSaveSRAM (void)
+--- a/sal/sal_common.c
++++ b/sal/sal_common.c
+@@ -11,6 +11,7 @@
+ 
+ #include <sal.h>
+ #include <png.h>
++#include <sys/stat.h>
+ #include <unzip.h>
+ #include <zip.h>
+ 

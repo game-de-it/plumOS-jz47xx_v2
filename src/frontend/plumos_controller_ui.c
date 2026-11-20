@@ -2572,7 +2572,7 @@ static void update_device_backend_status(struct device_settings *device) {
                 "sunxi backlight + disp enhance");
   } else if (v90s_backlight_available) {
     copy_string(device->brightness_backend, sizeof(device->brightness_backend),
-                runtime_device_is_rg280v() ? "RG280V backlight" : "sunxi backlight");
+                runtime_device_is_rg280v() ? "LCD backlight" : "sunxi backlight");
   } else if (runtime_v90s_enhance_backend_available()) {
     copy_string(device->brightness_backend, sizeof(device->brightness_backend),
                 lcd_available ? "disp enhance+lcdbl" : "disp enhance");
@@ -4249,6 +4249,9 @@ static void init_device_settings(struct device_settings *device) {
   copy_string(device->theme, sizeof(device->theme), "default");
   copy_string(device->timezone, sizeof(device->timezone), plumos_default_timezone());
   device_name = getenv("PLUMOS_DEVICE_NAME");
+  if ((!device_name || !device_name[0]) && runtime_device_is_rg280v()) {
+    device_name = getenv("PLUMOS_DEVICE_ID");
+  }
   copy_string(device->model, sizeof(device->model),
               device_name && device_name[0] ? device_name : "POWKIDDY V90S");
   copy_string(device->plumos_version, sizeof(device->plumos_version), "unknown");
@@ -5683,6 +5686,8 @@ static void add_system_settings_entries(struct ui_state *ui) {
   const struct device_settings *device = &ui->device;
 
   if (runtime_device_is_rg280v()) {
+    char update_helper[PATH_MAX];
+
     format_runtime_number_setting_value("system_volume", device->volume, value,
                                         sizeof(value));
     add_setting_entry(ui, "system_volume", "Volume", value);
@@ -5693,6 +5698,11 @@ static void add_system_settings_entries(struct ui_state *ui) {
                       setting_choice_display_value("system_timezone", device->timezone));
     add_setting_entry(ui, "system_language", "Language",
                       setting_choice_display_value("system_language", device->language));
+    if (join_path(update_helper, sizeof(update_helper), ui->plumos_root,
+                  "bin/plumos-jz47xx-system-update") &&
+        access(update_helper, X_OK) == 0) {
+      add_setting_entry(ui, "system_update", "System Update", device->plumos_version);
+    }
     add_setting_entry(ui, "system_information", "INFORMATION", "");
     return;
   }
@@ -9309,7 +9319,7 @@ static void setting_help_lines(const struct ui_state *ui,
     } else if (strcmp(id, "system_brightness") == 0) {
       copy_string(line1, line1_size, "Screen brightness setting.");
       copy_string(line2, line2_size, runtime_device_is_rg280v()
-                  ? "Uses the RG280V display backlight."
+                  ? "Uses the built-in LCD backlight."
                   : "Uses the V90S StockOS sunxi backlight in six steps.");
     } else if (strcmp(id, "system_lumination") == 0) {
       copy_string(line1, line1_size, "Display lumination setting.");
@@ -9383,7 +9393,7 @@ static void setting_help_lines(const struct ui_state *ui,
         copy_string(line2, line2_size, "Compatible StockOS-derived vendor runtime.");
       } else if (strcmp(id, "system_display_backend") == 0 ||
                  strcmp(id, "system_audio_backend") == 0) {
-        copy_string(line2, line2_size, "Live runtime backend selected for V90S.");
+        copy_string(line2, line2_size, "Backend currently used by this device.");
       } else if (strcmp(id, "system_firmware") == 0) {
         copy_string(line2, line2_size,
                     "Read from StockOS/Batocera or rootfs release metadata.");
@@ -9584,7 +9594,7 @@ static void render_power_menu(struct ui_state *ui) {
 
 static void render_help(struct ui_state *ui) {
   if (runtime_device_is_rg280v()) {
-    ui_printf(ui, "plumOS RG280V - HELP\n");
+    ui_printf(ui, "plumOS - HELP\n");
     ui_printf(ui, "help_screen=1\n");
     ui_printf(ui, "D-Pad: Move\n");
     ui_printf(ui, "A / B: Open / Back\n");
@@ -11806,13 +11816,20 @@ static int run_power_action(struct ui_state *ui, const char *action, int powerof
 }
 
 static int request_latest_system_update(struct ui_state *ui) {
+  char helper[PATH_MAX];
   char log_dir[PATH_MAX];
   char log_path[PATH_MAX];
   char cmd[UI_COMMAND_MAX];
   size_t pos = 0;
   int rc;
 
-  if (!file_exists("/usr/sbin/plumos-system-update")) {
+  int jz47xx = runtime_device_is_rg280v();
+
+  if (!(jz47xx
+        ? join_path(helper, sizeof(helper), ui->plumos_root,
+                    "bin/plumos-jz47xx-system-update")
+        : copy_string(helper, sizeof(helper), "/usr/sbin/plumos-system-update")) ||
+      access(helper, X_OK) != 0) {
     set_status(ui, "System Update helper missing");
     return 0;
   }
@@ -11830,10 +11847,13 @@ static int request_latest_system_update(struct ui_state *ui) {
       !append_shell_quoted(cmd, sizeof(cmd), &pos, log_dir) ||
       !append_string(cmd, sizeof(cmd), &pos, "; PLUMOS_ROOT=") ||
       !append_shell_quoted(cmd, sizeof(cmd), &pos, ui->plumos_root) ||
-      !append_string(cmd, sizeof(cmd), &pos,
+      !append_string(cmd, sizeof(cmd), &pos, jz47xx
+                     ? " PLUMOS_USERDATA_ROOT=/media/user "
+                     :
                      " PLUMOS_USERDATA_ROOT=/mnt/plumos-user"
-                     " PLUMOS_BOOT_ROOT=/mnt/plumos-boot"
-                     " /usr/sbin/plumos-system-update request-latest >") ||
+                     " PLUMOS_BOOT_ROOT=/mnt/plumos-boot ") ||
+      !append_shell_quoted(cmd, sizeof(cmd), &pos, helper) ||
+      !append_string(cmd, sizeof(cmd), &pos, " request-latest >") ||
       !append_shell_quoted(cmd, sizeof(cmd), &pos, log_path) ||
       !append_string(cmd, sizeof(cmd), &pos, " 2>&1")) {
     set_status(ui, "System Update command too long");

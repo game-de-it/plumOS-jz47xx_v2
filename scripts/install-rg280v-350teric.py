@@ -6,6 +6,7 @@ WORK=ROOT/'output/rg280v-350teric'
 BASE='/media/data/plumos'
 HOME=BASE+'/home/350teric/.esoteric'
 ADB=['adb','-P','5041','-s','10.1.1.2:5555']
+LEGACY_FONT_SHA256 = 'db5b86c44b31406e306cd3dde23ff4b44722c3ce7061a313915229d6d88a2ac6'
 Q=shlex.quote
 def shell(s): return subprocess.check_output(ADB+['shell',s],text=True).strip()
 if shell("pidof esoteric || true"): raise SystemExit('350teric is running')
@@ -25,9 +26,10 @@ if project_skins.exists():
 for d in ['applications','emulators','settings','favorites']:(seed/'sections'/d).mkdir(parents=True)
 shutil.copyfile(source/'about.txt',seed/'about.txt')
 shutil.copyfile(source/'COPYING',seed/'COPYING')
-# Original stock font is included in the common assets, outside skin directories.
-for f in (source/'assets').rglob('*.ttf'):
- print('Font',f)
+# SDL_ttf reads the font format from the file. Esoteric expects this shared filename.
+frontend_assets = ROOT / 'assets/frontend'
+shutil.copyfile(frontend_assets / 'default.otf', seed / 'skins/font.ttf')
+shutil.copyfile(frontend_assets / 'licenses/NotoSansJP-OFL.txt', seed / 'skins/font-license.txt')
 conf=(source/'assets/rg-350/esoteric.conf').read_text()
 for a,b in [('resolutionX=-1','resolutionX=320'),('resolutionY=-1','resolutionY=240'),('videoBpp=32','videoBpp=16'),('backlightTimeout=30','backlightTimeout=0'),('powerTimeout=10','powerTimeout=0'),('cpuMenu=0','cpuMenu="Default"'),('globalVolume=60','globalVolume=40'),('buttonRepeatRate=50','buttonRepeatRate=100')]:conf=conf.replace(a,b)
 (seed/'esoteric.conf').write_text(conf)
@@ -104,6 +106,20 @@ with tarfile.open(archive,'w') as tar:
 subprocess.run(ADB+['push',str(archive),BASE+'/350teric-install.tar'],check=True)
 assert shell('sha256sum '+BASE+'/350teric-install.tar').split()[0]==hashlib.sha256(archive.read_bytes()).hexdigest()
 shell('set -e; rm -rf '+BASE+'/350teric/seed; tar -xf '+BASE+'/350teric-install.tar -C '+BASE+'; rm '+BASE+'/350teric-install.tar; mkdir -p '+BASE+'/home/350teric; if ! test -d '+HOME+'; then cp -a '+BASE+'/350teric/seed/.esoteric '+BASE+'/home/350teric/; fi')
+# Upgrade the original shared font while retaining any user's own replacement.
+shell(f'''set -e
+skins={Q(HOME + '/skins')}
+seed_skins={Q(BASE + '/350teric/seed/.esoteric/skins')}
+if ! test -L "$skins/font.ttf"; then
+    if ! test -e "$skins/font.ttf" ||
+       printf '%s  %s\\n' {LEGACY_FONT_SHA256} "$skins/font.ttf" | sha256sum -c >/dev/null 2>&1; then
+        mkdir -p "$skins"
+        cp -p "$seed_skins/font.ttf" "$skins/font.ttf.new"
+        cp -p "$seed_skins/font-license.txt" "$skins/font-license.txt.new"
+        mv "$skins/font-license.txt.new" "$skins/font-license.txt"
+        mv "$skins/font.ttf.new" "$skins/font.ttf"
+    fi
+fi''')
 # Project-owned skins are available on fresh installs; existing skin edits survive.
 if project_skins.exists():
  for skin in project_skins.iterdir():

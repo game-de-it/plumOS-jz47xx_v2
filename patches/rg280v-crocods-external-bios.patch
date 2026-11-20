@@ -1,0 +1,622 @@
+diff --git a/build/Makefile b/build/Makefile
+index 5764f5d..6d78eb6 100644
+--- a/build/Makefile
++++ b/build/Makefile
+@@ -47,7 +47,8 @@ AR  	    =$(PREFIX)ar
+ 
+ SRCROOT = ..
+ 
+-CFLAGS 	   += -Wall ${DEFINES} -DCROCOVERSION=${CROCOVERSION} -g -Os -Wfatal-errors
++OPTIMIZATION ?= -Os
++CFLAGS 	   += -Wall ${DEFINES} -DCROCOVERSION=${CROCOVERSION} -g ${OPTIMIZATION} -Wfatal-errors
+ 
+ 
+ EMUL		= crocods$(EXT)
+diff --git a/crocods-core/cpc_external_font.h b/crocods-core/cpc_external_font.h
+new file mode 100644
+index 0000000..5aecc53
+--- /dev/null
++++ b/crocods-core/cpc_external_font.h
+@@ -0,0 +1,15 @@
++#ifndef CROCODS_EXTERNAL_FONT_H
++#define CROCODS_EXTERNAL_FONT_H
++
++#define FNT_CHAR_WIDTH 8
++#define FNT_CHAR_HEIGHT 8
++#define FNT_CHARS 96
++#define FNT_MIN_CHAR 32
++#define FNT_MAX_CHAR (FNT_MIN_CHAR + FNT_CHARS - 1)
++#define FNT_BAD_CHAR 95
++
++/* CPC glyphs come from the BIOS supplied by the user. */
++extern unsigned char cpc6128_bin[32768];
++#define bFont (cpc6128_bin + 0x3900)
++
++#endif
+diff --git a/crocods-core/plateform.c b/crocods-core/plateform.c
+index 9d3c6f9..1f198a1 100644
+--- a/crocods-core/plateform.c
++++ b/crocods-core/plateform.c
+@@ -25,7 +25,7 @@
+ #include "gif.h"
+ #include "monitor.h"
+ 
+-#include "cpcfont.h"
++#include "cpc_external_font.h"
+ 
+ #include "gifenc.h"
+ 
+@@ -79,8 +79,6 @@ extern const int shortcuts_gif_length;
+ //  );
+ // }
+ 
+-#define MAX_ROM_MODS 3
+-#include "rom_mods.h"
+ 
+ // Modules
+ 
+@@ -121,21 +119,6 @@ void filenameWithoutExtension(char *out, char *filename);
+  * }
+  */
+ 
+-int emulator_patch_ROM(core_crocods_t *core, u8 *pbROMlo)
+-{
+-    u8 *pbPtr;
+-
+-    int CPCkeyboard = core->keyboardLayout;
+-
+-    // pbPtr = pbROMlo + 0x1d69; // location of the keyboard translation table on 664 or 6128
+-    pbPtr = pbROMlo + 0x1eef; // location of the keyboard translation table on 6128
+-    memcpy(pbPtr, cpc_keytrans[CPCkeyboard], 240); // patch the CPC OS ROM with the chosen keyboard layout
+-
+-    pbPtr = pbROMlo + 0x3800;
+-    memcpy(pbPtr, cpc_charset[CPCkeyboard], 2048); // add the corresponding character set
+-
+-    return 0;
+-}
+ 
+ #define MAXFILE 1024
+ 
+@@ -1339,8 +1322,37 @@ void SoftResetCPC(core_crocods_t *core)
+     Reset8912(core);
+ }
+ 
+-extern const unsigned char cpc6128_bin[];
+-extern const unsigned char romdisc_bin[];
++/* Load before starting video so a bad firmware set exits with a diagnostic. */
++unsigned char cpc6128_bin[32768];
++static unsigned char romdisc_bin[16384];
++
++static int read_firmware(const char *directory, const char *name,
++                         unsigned char *image, size_t size)
++{
++    char path[4096];
++    int length = snprintf(path, sizeof(path), "%s/%s", directory, name);
++    if (length < 0 || (size_t)length >= sizeof(path)) {
++        fprintf(stderr, "CrocoDS: firmware path is too long\n");
++        return 0;
++    }
++    FILE *file = fopen(path, "rb");
++    if (!file) {
++        fprintf(stderr, "CrocoDS: missing firmware %s (%zu bytes)\n", path, size);
++        return 0;
++    }
++    int valid = fread(image, 1, size, file) == size &&
++                fgetc(file) == EOF && !ferror(file);
++    fclose(file);
++    if (!valid)
++        fprintf(stderr, "CrocoDS: invalid firmware %s (expected %zu bytes)\n", path, size);
++    return valid;
++}
++
++int CrocoDSLoadFirmware(const char *directory)
++{
++    return read_firmware(directory, "cpc6128.rom", cpc6128_bin, sizeof(cpc6128_bin)) &&
++           read_firmware(directory, "amsdos.rom", romdisc_bin, sizeof(romdisc_bin));
++}
+ 
+ void HardResetCPC(core_crocods_t *core)
+ {
+diff --git a/crocods-core/plateform.h b/crocods-core/plateform.h
+index f591e12..bc8e381 100644
+--- a/crocods-core/plateform.h
++++ b/crocods-core/plateform.h
+@@ -653,7 +653,6 @@ void InitCalcPoints(core_crocods_t *core);
+ 
+ void videoinit(void);
+ 
+-int emulator_patch_ROM(core_crocods_t *core, u8 *pbROMlo);
+ 
+ int nds_ReadKey(core_crocods_t *core);
+ 
+@@ -785,6 +784,7 @@ void CPC_SetScanCode(core_crocods_t *core, CPC_SCANCODE cpc_scancode);
+ void CPC_ClearScanCode(core_crocods_t *core, CPC_SCANCODE cpc_scancode);
+ 
+ void SoftResetCPC(core_crocods_t *core);     // Reset CPC without modifiy ROM
++int CrocoDSLoadFirmware(const char *directory);
+ void HardResetCPC(core_crocods_t *core);     // Reset CPC AND modifiy ROM
+ 
+ void CalcPoints(core_crocods_t *core);
+diff --git a/crocods-core/snapshot.c b/crocods-core/snapshot.c
+index 0e33e62..789cbfe 100644
+--- a/crocods-core/snapshot.c
++++ b/crocods-core/snapshot.c
+@@ -271,11 +271,42 @@ void SauveScreen(char *Nom)
+ * Variables globales modifi�es : Z80, PenSenect, RegPSGSel, RomExt, RegCRTCSel
+ *
+ ********************************************************** !0! ****************/
++static int load_memory_chunk(u8 *ram, size_t bank_size, const u8 *data, size_t size)
++{
++    size_t offset = 0;
++    while (size != 0) {
++        u8 value = *data++;
++        size--;
++        size_t count = 1;
++        if (value == 0xe5) {
++            if (size == 0)
++                return 0;
++            count = *data++;
++            size--;
++            if (count == 0) {
++                count = 1;
++            } else {
++                if (size == 0)
++                    return 0;
++                value = *data++;
++                size--;
++            }
++        }
++        if (count > bank_size - offset)
++            return 0;
++        memset(ram + offset, value, count);
++        offset += count;
++    }
++    return offset == bank_size;
++}
++
+ void LireSnapshotMem(core_crocods_t *core, u8 *snap, u32 snapsize)
+ {
+     int i;
+     StSnapShot SnapShot;
+ 
++    if (snapsize < sizeof(SnapShot))
++        return;
+     memcpy(&SnapShot, snap, sizeof(SnapShot));
+     if (!strncmp(SnapShot.Id, "MV - SNA", 8)) {
+ 
+@@ -294,18 +325,12 @@ void LireSnapshotMem(core_crocods_t *core, u8 *snap, u32 snapsize)
+             return;
+         }
+ 
+-        int dwSnapSize;
+-        dwSnapSize = SnapShot.ram_size[0] + (SnapShot.ram_size[1] * 256); // memory dump size
+-        dwSnapSize &= ~0x3f; // limit to multiples of 64
+-
+-
+-        if (dwSnapSize != 0) { // We don't have compressed chunk after the header
+-            if ((core->cliGetInfo) || (core->cliVerbose > 0)) {
+-                ddlog(core, 0, "Snapsize: %d bytes\n", dwSnapSize);
+-            }
+-
+-            memcpy(core->MemCPC, snap + sizeof(SnapShot), dwSnapSize * 1024);
+-        }
++        size_t ram_kib = SnapShot.ram_size[0] | (SnapShot.ram_size[1] << 8);
++        size_t ram_size = (ram_kib & ~(size_t)0x3f) * 1024;
++        if (ram_size > CK_MAXMEM || ram_size > snapsize - sizeof(SnapShot))
++            return;
++        if (ram_size != 0)
++            memcpy(core->MemCPC, snap + sizeof(SnapShot), ram_size);
+ 
+         if (SnapShot.Version >= 1) {        // Load v1 specific
+             if ((croco_cpu_doFrame == cap32_cpu_doFrame) || (croco_cpu_doFrame == cap32_cpu_doFrame_debug)) {
+@@ -397,62 +422,24 @@ void LireSnapshotMem(core_crocods_t *core, u8 *snap, u32 snapsize)
+         }
+         if (SnapShot.Version >= 2) {        // Load v2 specific
+         }
+-        if (SnapShot.Version >= 3) {        // Load v3 specific
+-
+-            u8 chunkid[4]; // chunk ID (4 character code - cb00, cb01, cb02... upto cb31 (max 512kB), other chunks are ignored)
+-            u8 chunklen[4]; // chunk length (always little-endian)
+-            u32 chunksize; // chunk length, calcaulated from the above
+-
+-
+-            u32 pos = 0x100;
+-
+-            u32 bytes_to_read = snapsize - 0x100;
+-
+-
+-            while (bytes_to_read > 0) {
+-                memcpy(chunkid, snap + pos, 4);
+-                pos += 4;
+-
+-                memcpy(chunklen, snap + pos, 4);
+-                pos += 4;
+-
+-                chunksize = chunklen[0] + (chunklen[1] << 8) + (chunklen[2] << 16) + (chunklen[3] << 24);     // calculate little-endian value, just to be sure
+-
+-                bytes_to_read -= 8;
+-                bytes_to_read -= chunksize;
+-
+-                if ((core->cliGetInfo) || (core->cliVerbose > 0)) {
+-                    ddlog(core, 0, "%c%c%c%c: %d bytes\n", chunkid[0], chunkid[1], chunkid[2], chunkid[3], chunksize);
+-                }
+-
+-                if (!memcmp(chunkid, "MEM0", 4)) {
+-                    u8 byte;
+-                    int mempos = 0;
+-                    do {
+-                        byte = snap[pos];
+-                        if (byte != 0xe5) {
+-                            core->MemCPC[mempos] = byte;
+-                            mempos++;
+-                            pos++;
+-                            chunksize--;
+-                        } else {
+-                            u8 n, count;
+-                            count = snap[pos + 1];
+-                            byte = snap[pos + 2];
+-                            for (n = 0; n < count; n++) {
+-                                core->MemCPC[mempos] = byte;
+-                                mempos++;
+-                            }
+-                            pos += 3;
+-                            chunksize -= 3;
+-                        }
+-                    } while (chunksize > 0);
+-
+-                } else if (!memcmp(chunkid, "BRKS", 4)) {
+-
+-                } else if (!memcmp(chunkid, "BRKC", 4)) {
+-
++        if (SnapShot.Version >= 3) {
++            size_t pos = sizeof(SnapShot) + ram_size;
++            const size_t bank_size = 64 * 1024;
++
++            while (snapsize - pos >= 8) {
++                const u8 *chunk = snap + pos;
++                size_t chunk_size = (u32)chunk[4] | ((u32)chunk[5] << 8) |
++                                    ((u32)chunk[6] << 16) | ((u32)chunk[7] << 24);
++                pos += 8;
++                if (chunk_size > snapsize - pos)
++                    return;
++                if (!memcmp(chunk, "MEM", 3) && (chunk[3] == '0' || chunk[3] == '1')) {
++                    size_t bank = chunk[3] - '0';
++                    if (!load_memory_chunk(core->MemCPC + bank * bank_size, bank_size,
++                                           snap + pos, chunk_size))
++                        return;
+                 }
++                pos += chunk_size;
+             }
+         }
+ 
+diff --git a/crocods-core/vga.c b/crocods-core/vga.c
+index fc7b7eb..e721eb1 100644
+--- a/crocods-core/vga.c
++++ b/crocods-core/vga.c
+@@ -5,8 +5,6 @@
+ #include "plateform.h"
+ #include "monitor.h"
+ 
+-// #define CK_MAXMEM 0x20000
+-#define CK_MAXMEM    (2 * 0x10000)
+ 
+ #define   ROMINF_OFF 0x04
+ #define   ROMSUP_OFF 0x08
+@@ -239,7 +237,6 @@ BOOL InitMemCPC(core_crocods_t *core, const char *cpc6128_bin, const char *romdi
+         memcpy(core->ROMEXT[0], cpc6128_bin + 0x4000, sizeof(core->ROMEXT[0]));
+         memcpy(core->ROMEXT[7], romdisc_bin, sizeof(core->ROMEXT[7]));
+ 
+-        emulator_patch_ROM(core, core->ROMINF); // Patch de la langue (entre autres)
+     }
+ 
+     WriteVGA(core, 0, 0x89);
+diff --git a/crocods-core/vga.h b/crocods-core/vga.h
+index 066b6fa..50c5553 100644
+--- a/crocods-core/vga.h
++++ b/crocods-core/vga.h
+@@ -38,6 +38,8 @@ void WriteVGA( core_crocods_t *core, u16 port, u8 val );
+ void WriteROM( core_crocods_t *core, u8 val );
+ void AddRom(core_crocods_t *core, const char *rom,int i);
+ 
++#define CK_MAXMEM (2 * 0x10000)
++
+ BOOL InitMemCPC(core_crocods_t *core, const char *cpc6128_bin, const char *romdisc_bin);
+ 
+     
+diff --git a/main/guest_sdl2.c b/main/guest_sdl2.c
+index 836ff3d..7ce9827 100644
+--- a/main/guest_sdl2.c
++++ b/main/guest_sdl2.c
+@@ -5,7 +5,10 @@
+ #endif
+ 
+ #include "SDL.h"
+-#include "cpcfont.h"
++#include "cpc_external_font.h"
++#ifdef PLUMOS_HANDHELD
++#include "plumos_handheld.h"
++#endif
+ 
+ void refreshJoystickConfig(void);
+ 
+@@ -25,19 +28,28 @@ u32 bufferWidth, bufferHeight;
+ // #define PAD_A      SDL_SCANCODE_LCTRL
+ // #define PAD_B      SDL_SCANCODE_LALT
+ 
++#ifdef PLUMOS_HANDHELD
++#define PAD_A      SDL_SCANCODE_LCTRL
++#define PAD_B      SDL_SCANCODE_LALT
++#define PAD_X      SDL_SCANCODE_SPACE
++#define PAD_Y      SDL_SCANCODE_LSHIFT
++#else
+ #define PAD_A      SDL_SCANCODE_SPACE
+ #define PAD_B      SDL_SCANCODE_ESCAPE
+-
+ #define PAD_X      SDL_SCANCODE_LSHIFT
+ #define PAD_Y      SDL_SCANCODE_X
++#endif
+ 
+ #define PAD_L      SDL_SCANCODE_TAB
+ #define PAD_R      SDL_SCANCODE_BACKSPACE
+ 
+ #define PAD_START  SDL_SCANCODE_RETURN
+ 
+-// #define PAD_SELECT SDL_SCANCODE_F12
++#ifdef PLUMOS_HANDHELD
++#define PAD_SELECT SDL_SCANCODE_ESCAPE
++#else
+ #define PAD_SELECT SDL_SCANCODE_F12
++#endif
+ 
+ #define PAD_QUIT   SDL_SCANCODE_C
+ 
+@@ -71,6 +83,14 @@ void guestInit(void)
+ 
+     ddlog(&gb, 2, "Guest Init\n");
+ 
++#ifdef PLUMOS_HANDHELD
++    /* SDL handles audio and events. Scanout uses plumOS DRM. */
++    if (SDL_Init(SDL_INIT_EVENTS) != 0 || !plumos_crocods_open()) {
++        fprintf(stderr, "CrocoDS: could not open handheld display/input (%s)\n", SDL_GetError());
++        exit(EXIT_FAILURE);
++    }
++    atexit(plumos_crocods_close);
++#else
+     mySDLflags = SDL_SWSURFACE;
+ 
+     uint16_t w = 320, h = 240;
+@@ -79,10 +99,7 @@ void guestInit(void)
+ 
+     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+         ddlog(&gb, 0, "Erreur lors de l'initialisation de la SDL : %s\n", SDL_GetError());
+-        ExecuteMenu(&gb, ID_EXIT, NULL);
+-
+-        // SDL_Quit();
+-        // exit;
++        exit(EXIT_FAILURE);
+     }
+ 
+ #ifdef RPI
+@@ -149,7 +166,7 @@ void guestInit(void)
+     // printf("Init SDL\n");
+ 
+     // mySDLflags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+-    mySDLflags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE; // | SDL_WINDOW_FULLSCREEN_DESKTOP
++    mySDLflags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+ 
+ #ifdef EMSCRIPTEN
+     ddlog(&gb, 2, "Using emscripten\n");
+@@ -217,6 +234,8 @@ void guestInit(void)
+     actualScreen = SDL_SetVideoMode(w, h, 16, mySDLflags);
+ #endif
+ 
++#endif /* PLUMOS_HANDHELD */
++
+     // SDL_FillRect(actualScreen, NULL, 0);
+ 
+     incX = (u32 *)malloc(384 * 2 * sizeof(u32));     // malloc the max width
+@@ -588,20 +607,18 @@ SDL_keyMapping SDLkeysymFromCPCkeys_us[] = {
+ 
+ char guestIsFullscreen(core_crocods_t *core)
+ {
+-    if (SDL_GetWindowFlags(sdlWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP) {
+-        return 1;
+-    } else {
+-        return 0;
+-    }
++#ifdef PLUMOS_HANDHELD
++    return 1;
++#else
++    return (SDL_GetWindowFlags(sdlWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
++#endif
+ }
+ 
+ void guestFullscreen(core_crocods_t *core, char on)
+ {
+-    if (on) {
+-        SDL_SetWindowFullscreen(sdlWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+-    } else {
+-        SDL_SetWindowFullscreen(sdlWindow, 0);
+-    }
++#ifndef PLUMOS_HANDHELD
++    SDL_SetWindowFullscreen(sdlWindow, on ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
++#endif
+ }
+ 
+ 
+@@ -1235,13 +1252,19 @@ void guestButtons(core_crocods_t *core,  frk_keyPress fct, frk_keyWasHandled han
+         }
+     }             /* switch */
+ 
++#ifdef PLUMOS_HANDHELD
++    const uint8_t *keys = plumos_crocods_keys();
++    /* SELECT and START are reserved as a pair for the emulator menu. */
++    const int menu_chord = keys[PAD_SELECT] && keys[PAD_START];
++#else
+     const uint8_t *keys = SDL_GetKeyboardState(NULL);
++#endif
+     // printf("keys: %p\n", keys);
+     // return;
+ 
+     pad = pad2 = pad3 = 0;
+ 
+-    for (i = 0; i < 18; i++) {
++    for (i = 0; i < 15; i++) {
+         switch (i) {
+             case 0:
+                 pad = PAD_LEFT;
+@@ -1343,14 +1366,18 @@ void guestButtons(core_crocods_t *core,  frk_keyPress fct, frk_keyWasHandled han
+          * }
+          */
+ 
+-        if ((i == 11) && (CHECK_PAD)) {
+-            printf("guestButtons: select pressed %d\n", sdlframe);
+-        }
++        int pressed = CHECK_PAD;
++#ifdef PLUMOS_HANDHELD
++        if (i == 11)
++            pressed = menu_chord;
++        if (i == 10 && menu_chord)
++            pressed = 0;
++#endif
+ 
+         switch (button_state[i]) {
+             /* To avoid for the button for being pressed again */
+             case -1:
+-                if (!(CHECK_PAD)) {
++                if (!(pressed)) {
+                     button_time[i]++;
+                 }
+ 
+@@ -1361,7 +1388,7 @@ void guestButtons(core_crocods_t *core,  frk_keyPress fct, frk_keyWasHandled han
+                 break;
+ 
+             case 0:
+-                if (CHECK_PAD) {
++                if (pressed) {
+                     button_state[i] = 1;
+                     button_time[i] = 0;
+                 }
+@@ -1377,7 +1404,7 @@ void guestButtons(core_crocods_t *core,  frk_keyPress fct, frk_keyWasHandled han
+                 break;
+ 
+             case 2:
+-                if (!(CHECK_PAD)) {
++                if (!(pressed)) {
+                     button_state[i] = 0;
+                     button_time[i] = 0;
+                 }
+@@ -1439,9 +1466,16 @@ uint32_t guestGetMilliSeconds(void)
+ 
+ #endif
+ 
++#ifdef PLUMOS_HANDHELD
++/* Two SDL audio periods give the renderer room across LCD refresh boundaries. */
++#define CROCODS_AUDIO_QUEUE_BYTES 8192
++#else
++#define CROCODS_AUDIO_QUEUE_BYTES 4000
++#endif
++
+ char guestCouldSendAudio(void)
+ {
+-    return (SDL_GetQueuedAudioSize(sdl_dev) < 4000);
++    return SDL_GetQueuedAudioSize(sdl_dev) < CROCODS_AUDIO_QUEUE_BYTES;
+ }
+ 
+ void guestSleep(u32 milisec)
+@@ -1464,7 +1498,7 @@ void guestSleep(u32 milisec)
+ // #else
+ 
+     if (milisec == 0) {
+-        while (SDL_GetQueuedAudioSize(sdl_dev) > 4000)
++        while (SDL_GetQueuedAudioSize(sdl_dev) > CROCODS_AUDIO_QUEUE_BYTES)
+             SDL_Delay(2);
+     }
+ 
+@@ -1668,11 +1702,13 @@ void guestScreenDraw(core_crocods_t *core)
+ 
+         printf("changeSize (%d) %dx%d\n", core->resize, width2, height2);
+ 
+-// free texture ?
++#ifndef PLUMOS_HANDHELD
++        SDL_DestroyTexture(sdlTexture);
+         sdlTexture = SDL_CreateTexture(sdlRenderer,
+                                        SDL_PIXELFORMAT_RGB565,
+                                        SDL_TEXTUREACCESS_STREAMING,
+                                        bufferWidth, bufferHeight);
++#endif
+     }
+ 
+     int x, y;
+@@ -2188,15 +2224,15 @@ void guestScreenDraw(core_crocods_t *core)
+ 
+     }
+ 
+-// printf("SDL_RenderClear\n");
++#ifdef PLUMOS_HANDHELD
++    if (!plumos_crocods_present(textureBytes, width2, height2)) {
++        fprintf(stderr, "CrocoDS: display update failed\n");
++        exit(EXIT_FAILURE);
++    }
++#else
+     SDL_RenderClear(sdlRenderer);
+-
+-//    SDL_UpdateTexture(ctx->display->tex, NULL, ctx->display->pixels, 64*sizeof(uint32_t));
+-
+-// printf("SDL_UpdateTexture\n");
+-    SDL_UpdateTexture(sdlTexture, NULL, textureBytes, width2  * sizeof(uint16_t));
+-
++    SDL_UpdateTexture(sdlTexture, NULL, textureBytes, width2 * sizeof(uint16_t));
+     SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
+-
+     SDL_RenderPresent(sdlRenderer);
++#endif
+ }         /* screen_draw */
+diff --git a/main/main.c b/main/main.c
+index a476751..9171084 100644
+--- a/main/main.c
++++ b/main/main.c
+@@ -149,6 +149,15 @@ void WsRun(void)
+         currentTick = guestGetMilliSeconds();
+         int32_t crwait = (nextTick - currentTick);
+ 
++#ifdef PLUMOS_HANDHELD
++        /* Pace CPC frames steadily even when ALSA consumes chunks of audio. */
++        if (crwait >= 1000 && crwait <= 20000) {
++            guestSleep(crwait / 1000);
++        } else if (crwait < -20000) {
++            nextTick = currentTick;
++        }
++#endif
++
+ // printf("%d - %d = %d (%d)\n", nextTick, currentTick, crwait, interval);
+ 
+         if (crwait > 0) {
+@@ -519,6 +528,14 @@ int main(int argc, char **argv)
+         exit(EXIT_SUCCESS);
+     }
+ 
++    const char *firmware = getenv("CROCODS_FIRMWARE_DIR");
++    if (!firmware || !*firmware) {
++        fprintf(stderr, "CrocoDS: set CROCODS_FIRMWARE_DIR to the BIOS folder\n");
++        return EXIT_FAILURE;
++    }
++    if (!CrocoDSLoadFirmware(firmware))
++        return EXIT_FAILURE;
++
+     loadIniGuest(&gb); // Force loading ini to read width & height for guest
+     guestInit();
+ 
+diff --git a/makefile.shared b/makefile.shared
+index ea661d9..49fc76c 100644
+--- a/makefile.shared
++++ b/makefile.shared
+@@ -1,6 +1,6 @@
+ 
+-CROCODS      = $(wildcard ${SRCROOT}/crocods-core/*.c) $(wildcard ${SRCROOT}/crocods-core/iniparser/*.c)
+-SDLMAIN 	 = ${SRCROOT}/main/main.c ${SRCROOT}/main/menu.c ${SRCROOT}/main/game_input.c ${SRCROOT}/main/resources.c ${SRCROOT}/main/guest_sdl2.c ${SRCROOT}/main/multitools.c
++CROCODS      = $(filter-out %.bin.c,$(wildcard ${SRCROOT}/crocods-core/*.c)) $(wildcard ${SRCROOT}/crocods-core/iniparser/*.c)
++SDLMAIN 	 = ${SRCROOT}/main/main.c ${SRCROOT}/main/menu.c ${SRCROOT}/main/game_input.c ${SRCROOT}/main/resources.c ${SRCROOT}/main/guest_sdl2.c ${SRCROOT}/main/plumos_handheld.c ${SRCROOT}/main/multitools.c
+ TOOLSMAIN 	 = ${SRCROOT}/main/main.c ${SRCROOT}/main/menu.c ${SRCROOT}/main/game_input.c ${SRCROOT}/main/guest_cli.c ${SRCROOT}/main/multitools.c
+ 
+ 

@@ -29,6 +29,10 @@ FCEUX、Gambatte、PocketSNES、ReGBA、PicoDrive、PCSX4ALLは `/media/data/plu
 | PokeMini | `home/opk/pokemini/saves/`。EEPROMは `.eep`、ステートは `.sta`。 |
 | その他の単体OPK | `home/opk/<エミュレーターID>/` の配下。フォルダー名と形式はエミュレーターごとに異なります。 |
 
+## 設定と履歴の保存先
+
+`/media/data/plumos/` 配下の `config/frontend/settings.json` にFE設定、`config/system/settings.json` にシステム設定があります。エミュレーターごとの設定や代替FEの設定は `home/`、標準FEのお気に入りや履歴は `state/frontend/` にあります。関連データをまとめて残す場合はSD1全体をバックアップしてください。
+
 ## バックアップと復元
 
 1. エミュレーターをメニューの **Exit** または **Quit** で終了し、FEの電源メニューで **Shutdown** を選びます。

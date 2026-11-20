@@ -41,3 +41,5 @@ plumOS JZ47xx_v2 v0.1.0の標準フロントエンドに登録されている26�
 
 - CD系では、`.cue` や `.m3u` が参照するディスク・トラックのファイルも一緒に置き、参照先の名前と相対位置を維持します。PlayStationの起動用に `.cue` を使う場合、組になる `.bin` や `.img` も必要です。PlayStationとNeo Geo CDのランチャーは `.m3u` の空行とコメントを飛ばし、最初の項目を起動します。
 - サムネイルはROMと同じカードの `Images/<システムID>/` に置きます。たとえば `roms/FC/My Game.nes` のシステムIDは `nes` なので、`Images/nes/My Game.png` に置きます。システムIDは表の推奨フォルダー名の末尾です。
+
+BIOSやシステムカードが必要な経路は、[エミュレーター別のBIOS配置](storage.ja.md#エミュレーター別のbios配置)を参照してください。

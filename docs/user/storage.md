@@ -42,6 +42,10 @@ Place these files under the `bios/` folder selected above. Use firmware you have
 | blueMSX | Put the complete `Machines/` and `Databases/` directories under `bios/` for the original MSX hardware profiles. The bundled C-BIOS fallback supports cartridge games. |
 | Atari800 | Uses the built-in Altirra firmware by default. Optional original ROMs use `bios/opk/atari800/` with the names `5200.rom`, `ataribas.rom`, `atariosb.rom` and `atarixl.rom`. |
 | Unreal Speccy | `bios/opk/unrealspeccy/` must contain `sos128_0.rom`, `sos128_1.rom`, `sos48.rom`, `service.rom` and `dos513f.rom`. Each file is 16 KiB. |
+| PC Engine CD (Beetle PCE Fast) | The standard System Card filename is `bios/syscard3.pce`. |
+| Sega CD (PicoDrive) | Use `bios/bios_CD_J.bin` for Japan, `bios/bios_CD_U.bin` for North America or `bios/bios_CD_E.bin` for Europe according to the disc region. |
+| CrocoDS (standalone and PicoArch) | Put `cpc6128.rom` (32 KiB) and `amsdos.rom` (16 KiB) in `bios/opk/crocods/`. Both files are required. |
+| RACE | Optional external BIOS files are `bios/opk/race/npbiosb.bin` for Neo Geo Pocket and `bios/opk/race/npbiosc.bin` for Neo Geo Pocket Color. |
 | UAE4All, GnGeo, NEO4ALL | `bios/opk/uae4all/kick.rom`, `bios/opk/gngeo/neogeo.zip`, and `bios/opk/neo4all/neocd.bin`, respectively. |
 
 ## User folders
@@ -53,6 +57,7 @@ Place these files under the `bios/` folder selected above. Use firmware you have
 | `Images/` | Game artwork under `Images/<system-id>/`. |
 | `Screenshots/` | A folder for screenshots created during setup. Emulator-specific capture features may save elsewhere. |
 | `Music/` | Music files. |
-| `apps/` and `updates/` | Folders created on SD1 during first boot. See the [user guide](README.md#opk-apps) for how OPK apps are installed. |
+| `apps/` | Reserved folder on SD1. See the [OPK app instructions](README.md#opk-apps). |
+| `updates/` | Signed runtime update package on SD1. [Update instructions](README.md#update-the-runtime-from-sd1) |
 
 Include SD1's `PLUMOSDATA` partition when backing up saves, states and settings. [Save paths and backups](save-data.md)

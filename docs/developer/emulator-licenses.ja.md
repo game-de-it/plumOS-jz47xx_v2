@@ -15,7 +15,7 @@
 | エミュレーター | ライセンス原文 | 上流リビジョン | 対応ソース・照合 |
 | --- | --- | --- | --- |
 | FBA44 | [非商用（FB Alpha）／追加条件あり](https://github.com/plrguez/fba-sdl/blob/9448a9c6f1040ad8ec204b5e9cb83e25574ac0c8/src/license.txt) | [`9448a9c6f104`](https://github.com/plrguez/fba-sdl/tree/9448a9c6f1040ad8ec204b5e9cb83e25574ac0c8) | ビルド成果物一致<br>A `runtime-sources/FBA44` |
-| FCEUX 2.2.3-interim | [GPLv2（候補ソース）](https://github.com/soarqin/fceux-for-retrogame/blob/bf89b7fd8b879cae6390bb1bbf41e71a88d53b03/COPYING) | [`bf89b7fd8b87`](https://github.com/soarqin/fceux-for-retrogame/tree/bf89b7fd8b879cae6390bb1bbf41e71a88d53b03) | 候補を再ビルド済み／旧版との対応未確定<br>B `sources/FCEUX-2.2.3-bf89b7fd-rebuild-source.tar.gz` |
+| FCEUX 2.2.3-interim | [GPLv2（候補ソース）](https://github.com/soarqin/fceux-for-retrogame/blob/bf89b7fd8b879cae6390bb1bbf41e71a88d53b03/COPYING) | [`bf89b7fd8b87`](https://github.com/soarqin/fceux-for-retrogame/tree/bf89b7fd8b879cae6390bb1bbf41e71a88d53b03) | 旧版との対応未確定<br>再ビルド版をRG350Mで確認。[対応ソースと試験記録](../validation/jz47xx-v0.1.0-release-rights.ja.md#fceux-223-interim-の差し替え候補)を参照。 |
 | FCEUX 2.6.6 GCW0 | [GPLv2](https://github.com/plrguez/fceux-for-retrogame/blob/fbeaad2ddcdae3563c1093b08668f8b8f4bd4e2e/COPYING) | [`fbeaad2ddcda`](https://github.com/plrguez/fceux-for-retrogame/tree/fbeaad2ddcdae3563c1093b08668f8b8f4bd4e2e) | 上流配布版一致<br>A `runtime-sources/fceux-2.6.6` |
 | Gambatte-DMS 2020 | [GPLv2](https://github.com/bardeci/gambatte-dms/blob/f78a4c3131bb02cd1001a1f4502ce514607388f5/COPYING) | [`f78a4c3131bb`](https://github.com/bardeci/gambatte-dms/tree/f78a4c3131bb02cd1001a1f4502ce514607388f5) | 上流配布版一致<br>A `runtime-sources/gambatte-dms-2020` |
 | Gambatte-DMS 2021 | [GPLv2](https://github.com/bardeci/gambatte-dms/blob/b333155c05d32bd0960c51dd5026942493093d81/COPYING) | [`b333155c05d3`](https://github.com/bardeci/gambatte-dms/tree/b333155c05d32bd0960c51dd5026942493093d81) | 上流配布版一致<br>A `runtime-sources/gambatte-dms-2021` |
@@ -25,12 +25,12 @@
 | PCSX4ALL | [GPLv2以降（主要ソースのヘッダー）](https://github.com/jdgleaver/RG350_pcsx4all/blob/ab17108051d2178465da58ce377225575d680e5e/src/cdrom.h) | [`ab17108051d2`](https://github.com/jdgleaver/RG350_pcsx4all/tree/ab17108051d2178465da58ce377225575d680e5e) | 保存済み成果物一致<br>A `runtime-sources/PCSX4ALL` |
 | PicoDrive | [非商用（PicoDrive）](https://github.com/irixxxx/picodrive/blob/9f46ee4e9680d108e548fb427e7c7e1aa1bb9d5a/COPYING) | [`9f46ee4e9680`](https://github.com/irixxxx/picodrive/tree/9f46ee4e9680d108e548fb427e7c7e1aa1bb9d5a) | ビルド成果物一致<br>A `runtime-sources/PicoDrive` |
 | PokeMini GCW0 | [GPLv3以降](https://github.com/gameblabla/pokemini/blob/37e3324ebf481a5f6ece725ae5c052332e3b84d1/LICENSE) | [`37e3324ebf48`](https://github.com/gameblabla/pokemini/tree/37e3324ebf481a5f6ece725ae5c052332e3b84d1) | 上流実行ファイル一致／PokeMiniのソース2点参照<br>B `sources/PokeMini-GCW0-37e3324-source.tar.gz` + `sources/PokeMini-0.60-minizip-source.tar.gz` |
-| PocketSNES 2019-12-12 | 同梱版の適用条件は未確定 | [`58bff8e49d4a`](https://github.com/soarqin/PocketSNES/tree/58bff8e49d4a33915b88a341399e8daa058c9bdf) | 別の上流リリース／同梱リビジョン不明 |
-| RACE GCW-ZERO V1.2 | [GPLv2（参考ツリー）](https://github.com/alekmaul/race/blob/ed8deb0223c76a63dda53f34cdda9ed15c5573a1/License.txt) | [`ed8deb0223c7`](https://github.com/alekmaul/race/tree/ed8deb0223c76a63dda53f34cdda9ed15c5573a1) | 参考のみ／同梱リビジョン不明 |
+| PocketSNES 2019-12-12 | [Snes9xの非商用条件（差し替え版）](https://github.com/soarqin/PocketSNES/blob/1a627d83288721fba1eb14d08eefa22860a05e0e/dist/PocketSNES.man.txt) | [`1a627d832887`（差し替え版）](https://github.com/soarqin/PocketSNES/tree/1a627d83288721fba1eb14d08eefa22860a05e0e) | 旧版との対応未確定<br>差し替え版の[ソースと試験記録](../validation/jz47xx-v0.1.0-release-rights.ja.md#pocketsnes-の差し替え候補) |
+| RACE GCW-ZERO V1.2 | [GPLv2原文（再ビルド版）](https://github.com/retrofw/race-od/blob/7fe3dacba61a14da76d1cc1c6b7fb12b6f912870/License.txt) | [`7fe3dacba61a`](https://github.com/retrofw/race-od/tree/7fe3dacba61a14da76d1cc1c6b7fb12b6f912870) | 旧版との厳密な対応は未確定<br>[再ビルド版の対応ソースと試験記録](../validation/jz47xx-v0.1.0-release-rights.ja.md#race-の差し替え候補) |
 | SMS Plus GG | [GPLv2](https://github.com/gameblabla/sms_sdl/blob/5554715689a41f58715f11cecfb885b7f5c29b51/docs/license) | [`5554715689a4`](https://github.com/gameblabla/sms_sdl/tree/5554715689a41f58715f11cecfb885b7f5c29b51) | 保存済みOPK一致／ビルド元照合中<br>A `runtime-sources/SMS-Plus` |
 | SMS Plus MS | [GPLv2](https://github.com/gameblabla/sms_sdl/blob/5554715689a41f58715f11cecfb885b7f5c29b51/docs/license) | [`5554715689a4`](https://github.com/gameblabla/sms_sdl/tree/5554715689a41f58715f11cecfb885b7f5c29b51) | 保存済みOPK一致／ビルド元照合中<br>A `runtime-sources/SMS-Plus` |
 | Stella | [GPLv2](https://github.com/DavidKnight247/Stella-3.9.3/blob/4c309195f666909e7c0a185bcc46da836fc234dd/LICENSE) | [`4c309195f666`](https://github.com/DavidKnight247/Stella-3.9.3/tree/4c309195f666909e7c0a185bcc46da836fc234dd) | 保存済みOPK一致／ビルド元照合中<br>A `runtime-sources/Stella` |
-| Temper | [本体の再配布条件は未確定](https://github.com/gameblabla/temper/blob/a6c9ef2c5d1a086c22eb51980e07f3c38d0b42ae/win32/readme.txt) | [`a6c9ef2c5d1a`](https://github.com/gameblabla/temper/tree/a6c9ef2c5d1a086c22eb51980e07f3c38d0b42ae) | 保存済みOPK一致／ビルド元照合中<br>A `runtime-sources/Temper` |
+| Temper | [本体の再配布条件は未確定](https://github.com/gameblabla/temper/blob/a6c9ef2c5d1a086c22eb51980e07f3c38d0b42ae/win32/readme.txt) | [`a6c9ef2c5d1a`](https://github.com/gameblabla/temper/tree/a6c9ef2c5d1a086c22eb51980e07f3c38d0b42ae) | 保存済みビルド一致。対応ソースは監査用に保管中。<br>[再配布条件と許諾の範囲](../validation/jz47xx-v0.1.0-release-rights.ja.md#temper-の再配布条件) |
 | UAE4All | [GPLv2](https://github.com/goldmojo/uae4all/blob/9988f9924a5da4d21fde414b8d531301f8b1076c/docs/COPYING) | [`9988f9924a5d`](https://github.com/goldmojo/uae4all/tree/9988f9924a5da4d21fde414b8d531301f8b1076c) | 保存済みOPK一致／ビルド元照合中<br>A `runtime-sources/UAE4All` |
 
 ## Libretroコア
@@ -40,7 +40,7 @@
 | blueMSX (`bluemsx`) | [BSD系／GPL／フリーウェア](https://github.com/libretro/blueMSX-libretro/blob/acf358be18644a9df0ed9602d63c2f73d4fe605a/license.txt) | [`acf358be1864`](https://github.com/libretro/blueMSX-libretro/tree/acf358be18644a9df0ed9602d63c2f73d4fe605a) | ビルド成果物一致<br>A `runtime-sources/libretro-bluemsx` |
 | ChimeraSNES (`chimerasnes`) | [非商用（Snes9x）／複数条件](https://github.com/jamsilva/chimerasnes/blob/0542329f32ab524ce8606c2c859bcd49905a3c98/LICENSES) | [`0542329f32ab`](https://github.com/jamsilva/chimerasnes/tree/0542329f32ab524ce8606c2c859bcd49905a3c98) | ビルド成果物一致<br>A `runtime-sources/libretro-chimerasnes` |
 | FCEUmm (`fceumm`) | [GPLv2](https://github.com/libretro/libretro-fceumm/blob/3f23e2b98f883be9c62a3fdb65c015d376dcd135/Copying) | [`3f23e2b98f88`](https://github.com/libretro/libretro-fceumm/tree/3f23e2b98f883be9c62a3fdb65c015d376dcd135) | ビルド成果物一致<br>A `runtime-sources/libretro-fceumm` |
-| fMSX (`fmsx`) | [非商用（fMSX）](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) | [`4de11755ce4f`](https://github.com/libretro/fmsx-libretro/tree/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4) | ビルド成果物一致<br>A `runtime-sources/libretro-fmsx` |
+| fMSX (`fmsx`) | [非商用（fMSX）](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) | 同梱版はビルド一致。Nuked-OPLLを含む。 [再配布監査](../validation/jz47xx-v0.1.0-release-rights.ja.md#fmsx-の再配布条件とfm音源) |
 | Gambatte (`gambatte`) | [GPLv2](https://github.com/libretro/gambatte-libretro/blob/90701d6e5d68d31ead49f92f222c144c44a2645c/COPYING) | [`90701d6e5d68`](https://github.com/libretro/gambatte-libretro/tree/90701d6e5d68d31ead49f92f222c144c44a2645c) | ビルド成果物一致<br>A `runtime-sources/libretro-gambatte` |
 | Gearboy (`gearboy`) | [GPLv3](https://github.com/drhelius/Gearboy/blob/8762faf754a84891078d4b2597c557a828631c9e/LICENSE) | [`8762faf754a8`](https://github.com/drhelius/Gearboy/tree/8762faf754a84891078d4b2597c557a828631c9e) | ビルド成果物一致<br>A `runtime-sources/libretro-gearboy` |
 | Gearsystem (`gearsystem`) | [GPLv3](https://github.com/drhelius/Gearsystem/blob/5d6fedacb3ef2a9481fa52aac67fefb47aaf72c0/LICENSE) | [`5d6fedacb3ef`](https://github.com/drhelius/Gearsystem/tree/5d6fedacb3ef2a9481fa52aac67fefb47aaf72c0) | ビルド成果物一致<br>A `runtime-sources/libretro-gearsystem` |
@@ -65,19 +65,29 @@ PicoArch自体はBSD-3-Clauseを主体とし、同梱のlibpicofeなどには個
 
 | コンポーネント | リビジョンとライセンス原文 | 照合結果 |
 | --- | --- | --- |
-| Atari800 4.1.0 | [`d9d9ad1`、GPL](https://github.com/atari800/atari800/blob/d9d9ad1b47169d30b41e90b709dfc437844c9b9c/COPYING)。[Altirraファームウェアの原文](https://github.com/atari800/atari800/blob/d9d9ad1b47169d30b41e90b709dfc437844c9b9c/src/roms/altirraos_xl.c) | ELFは保存済みビルドと一致。Altirraの4つのファームウェア配列もソースとバイト一致。 |
+| Atari800 4.1.0 | [`d9d9ad1`、GPL](https://github.com/atari800/atari800/blob/d9d9ad1b47169d30b41e90b709dfc437844c9b9c/COPYING)。[Avery LeeのAltirraファームウェア](https://github.com/atari800/atari800/blob/d9d9ad1b47169d30b41e90b709dfc437844c9b9c/src/roms/altirraos_xl.c)は著作権表示と原文の保持を条件に再配布できます。 | ELFは保存済みビルドと一致。Altirraの4つのファームウェア配列もソースとバイト一致。 |
 | Unreal Speccy Portable | [`11b0980`、GPLv3以降](https://github.com/DavidKnight247/Unreal-Speccy-Emulator-GCW0-Edition/blob/11b0980470e7c52cf77095f327085f31957d4818/LICENSE) | ストリップ後のELFが保存済みビルドと一致。システムROMは利用者が別途配置。 |
 | ReGBA 1.9.2 | [`4396f9e`、GPLv2原文](https://github.com/jdgleaver/ReGBA/blob/4396f9eca3320b7e2955e2815cfe6332542b91be/doc/gpl-2.0_en.txt) | 上流リリースとソースタグを確認。plumOSのSDL互換コードも補足アーカイブに収録。 |
-| Cult of GBA BIOS | [`6cc6bf9`、MIT](https://github.com/Cult-of-GBA/BIOS/blob/6cc6bf9ebab9197baa87d128a8f71062e484f166/LICENSE) | BIOS本体とライセンスが指定リビジョンの上流ファイルに一致。 |
-| C-BIOS | [0.23、BSD 2-Clause](https://sourceforge.net/projects/cbios/files/cbios/0.23/) | 実行時のROM 3本と、blueMSXのソースアーカイブ内のROM 9本が上流配布物と一致。 |
+| Cult of GBA BIOS | DenSinH、fleroviux。[`6cc6bf9`、MIT](https://github.com/Cult-of-GBA/BIOS/blob/6cc6bf9ebab9197baa87d128a8f71062e484f166/LICENSE) | BIOS本体とライセンスが指定リビジョンの上流ファイルに一致。 |
+| C-BIOS | メインROMのソースにBouKiCHi、Reikan、Maarten ter Huurne、Albert Beevendorp、Manuel Bilderbeek、Joost Yervante Damad、Jussi Pitkänen、Eric Boonの記載。[0.23、BSD 2-Clause](https://sourceforge.net/projects/cbios/files/cbios/0.23/) | 実行時のROM 3本と、blueMSXのソースアーカイブ内のROM 9本が上流配布物と一致。ソースごとの原文を保持。 |
 
-CrocoDS 2020-01-15は検証用IMGに維持しています。同梱ELF内の `cpc6128.bin` と `romdisc.bin` は[作者のCrocoDSコアのツリー](https://github.com/redbug26/crocods-core/tree/6091e690a000165fba69065f1f07c6ff3d452d20)とバイト一致しました。[作者の配布ページ](https://crazypiri.eu/crocods/)でOpenDingux版の日付を確認しました。この移植版の対応ソースと、内蔵ファームウェアに適用される再配布条件は確認中です。
+CrocoDS 2020-01-15は整理版の検証用IMGに含まれていました。OpenDinguxのOPKはGPLv2原文を含みます。内蔵CPC 6128 ROMとAMSDOSの派生版は、別途公開された[CrocoDSコアのツリー](https://github.com/redbug26/crocods-core/tree/6091e690a000165fba69065f1f07c6ff3d452d20)のファイルと一致しました。ファームウェアの指紋、権利者の見解、対応ソースの未確認事項は[再配布監査](../validation/jz47xx-v0.1.0-release-rights.ja.md)に記載しています。
+
+## 現行候補で差し替えた実行ファイル
+
+上の表には旧候補の照合結果も含みます。以下は、4機種で起動確認した候補に含まれる差し替え版に対応して用意したファイルです。[現行候補のSHA-256と検証結果](../validation/jz47xx-v0.1.0-update-validation.md)
+
+- CrocoDS — `plumOS-CrocoDS-external-bios-drm-source.tar.gz`
+- RACE — `plumOS-RACE-7fe3dac-source.tar.gz`
+- FCEUX 2.2.3 — `plumOS-FCEUX-2.2.3-bf89b7fd-source.tar.gz`
+- PocketSNES — `plumOS-PocketSNES-1a627d8-source.tar.gz`
+- FBA44 — `plumOS-FBA44-v0.1.0-static-source.tar.gz`, `plumOS-FBA44-v0.1.0-static-relink.tar.gz`
 
 ## 代替FEのソース
 
 | 代替FE | ソースのリビジョンとコードのライセンス |
 | --- | --- |
-| SimpleMenu | [`e70a861`、GPLv3](https://github.com/fgl82/simplemenu/tree/e70a861b1f05fd83cd1b19be53be11c0a0ecd510#code-license)。上流の画像素材はCC BY-NC-SA 3.0。 |
+| SimpleMenu | [`e70a861`、GPLv3](https://github.com/fgl82/simplemenu/tree/e70a861b1f05fd83cd1b19be53be11c0a0ecd510#code-license)。上流のプロジェクト全体では画像素材にCC BY-NC-SA 3.0を記載し、0A作者の画像は0A専用のCC BY-NC-SA 4.0が適用されます。[テーマの著作者表示](../../THIRD_PARTY_NOTICES.ja.md)を参照。 |
 | 350teric（Esoteric） | [`6e0a1ca`、GPLv2原文](https://github.com/podulator/esoteric/blob/6e0a1ca1aa523ec5dff042c4a220582edc1767e9/COPYING) |
 | EmulationStation | [`3ab83b1`、MIT](https://github.com/lualiliu/emulationstation-on-jz4770/blob/3ab83b15b7bf033bd1a02c9e307b4fc4219107b7/LICENSE.md)。[simplegcwテーマ](https://github.com/ManuelSch81/RG350-EmulationStation_configured/tree/3c8f0473e539ae7a36e8dd5e39180dcdc33cf0f8)は画像素材の条件を個別に確認。 |
 | PyMenu | [`68ceb9d`、GPLv3原文](https://github.com/JackD83/PyMenu/blob/68ceb9d17c4016d68abd6cd7c382eea5cbfd2009/LICENSE) |

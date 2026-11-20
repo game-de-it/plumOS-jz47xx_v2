@@ -55,16 +55,41 @@ The shared boot build expects the reference rootfs, modules and mininit in `outp
 
 [make-jz47xx-test-image-in-container.sh](../../scripts/make-jz47xx-test-image-in-container.sh) restores a private development snapshot. Its historical results remain useful for comparison. The snapshot can contain workstation- or device-specific data.
 
+## Connect over USB for development
+
+Use the handheld's USB data port and a data cable. The device exposes ADB over USB Ethernet. After the USB network interface appears, connect and check the selected board.
+
+```sh
+adb connect 10.1.1.2:5555
+adb -s 10.1.1.2:5555 shell 'tr "\000" "\n" </proc/device-tree/compatible | head -1'
+```
+
+Use this connection for runtime checks that can be performed with SD1 installed.
+
+## Sign a runtime update
+
+Build a package from explicit file paths relative to the Runtime root. Use the signing key corresponding to the public key in the target image and increase the revision for every published update.
+
+```sh
+python3 scripts/build-jz47xx-update.py --key /path/to/signing.pem --revision 1 \
+    --runtime /path/to/staged/runtime --output plumOS-JZ47xx-update.plu \
+    VERSION bin/plumos-controller-ui
+```
+
+The updater replaces existing managed frontend and emulator files. The [verifier's allowlist](../../src/frontend/plumos_jz47xx_update_verify.c) defines the eligible files. The format accepts at most 256 files and a signed payload of up to 256 MiB. Use RSA with SHA-256. The runtime verifies against `share/plumos-update/public.pem`. Keep the private key outside the source tree and distribution artifacts, and use a separate key for development.
+
+The request stages verified files on SD1's p2 under `/media/data/plumos/update-state/`. On startup, `S95frontend` applies the pending update before launching the frontend and waits for a successful frame from the new process. It commits the revision at that point. If readiness fails or the next startup finds an interrupted application, it restores the backed-up files. Check `update-state/result`, `Logs/system-update.log` and `Logs/frontend-system-update.log` under `/media/data/plumos/` for the outcome. This is a runtime update. Kernel, bootloader, partitioning and boot services use the SD image workflow.
+
 ## Validate and package one SD image
 
 Distribute the original IMG written for final hardware validation. Release packaging preserves every validated feature, bundled file, launch route, setting and service. It compresses the original IMG and generates checksums. Apply version metadata before final hardware validation, even when it is the only change.
 
 1. Start from the latest validated configuration and review the candidate's changes and final test scope. Record source revisions and check the candidate for user data and redistribution requirements before testing. Report any publication concerns to the user. If a change beyond version metadata is needed, agree on it with the user and test a new candidate on hardware.
-2. Keep the original IMG written to the test card and record its SHA-256 with the hardware results. Check first boot, card expansion, each model's boot and remembered selection, FE controls, representative emulator and app routes, and user storage.
+2. Keep the original IMG written to the test card and record its SHA-256 with the hardware results. For changes to the shared boot sequence or model-specific startup, check the affected models and boot paths. If the boot sequence is unchanged, reuse previous four-model boot results and test the changed features over ADB when possible. Record which image and device each result covers.
 3. Package the original IMG using the recorded SHA-256. The script checks the input and the decompressed archive against that hash. The source IMG is read only, and the outputs are the 7z archive and `SHA256SUMS`.
 
 ```sh
 bash scripts/package-jz47xx-release.sh /path/to/plumOS-JZ47xx-0.1.0.img VERIFIED_SHA256
 ```
 
-The default output directory is `output/release/`. It can also be passed as the third argument. The script requires 7-Zip (`7zz` or `7z`) and a SHA-256 utility. Publish the user and developer guides and required license materials alongside the verified archive. See the [candidate validation record](../validation/jz47xx-release-candidate-2026-11-20.md) for the current results.
+The default output directory is `output/release/`. It can also be passed as the third argument. The script requires 7-Zip (`7zz` or `7z`) and a SHA-256 utility. Publish the user and developer guides and required license materials alongside the verified archive. See the [latest candidate and update validation record](../validation/jz47xx-v0.1.0-update-validation.md) for the current results.

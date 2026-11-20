@@ -29,6 +29,10 @@ FCEUX, Gambatte, PocketSNES, ReGBA, PicoDrive and PCSX4ALL use `/media/data/plum
 | PokeMini | `home/opk/pokemini/saves/`, with `.eep` files for EEPROM and `.sta` files for states. |
 | Other standalone OPKs | Under `home/opk/<emulator-id>/`. The subfolders and formats depend on the emulator. |
 
+## Settings and history
+
+Under `/media/data/plumos/`, `config/frontend/settings.json` holds frontend settings and `config/system/settings.json` holds system settings. Emulator and alternative frontend settings live under `home/`; the standard frontend stores favorites and history under `state/frontend/`. Back up all of SD1 to preserve these together.
+
 ## Back up and restore
 
 1. Choose **Exit** or **Quit** in the emulator, then **Shutdown** in the frontend's power menu.

@@ -2172,14 +2172,16 @@ static void plumos_fbdev_draw_rg280v_header_text(
   int right_x;
   int x;
 
-  if (strcmp(left, "plumOS") == 0 || strcmp(left, "plumOS RG280V") == 0) {
+  if (strcmp(left, "plumOS") == 0) {
     const char *id = getenv("PLUMOS_DEVICE_ID");
     size_t i;
-    snprintf(device_title, sizeof(device_title), "plumOS %s", id ? id : "rg280v");
-    for (i = 7; device_title[i]; ++i) {
-      if (device_title[i] >= 'a' && device_title[i] <= 'z') device_title[i] -= 'a' - 'A';
+    if (id && id[0]) {
+      snprintf(device_title, sizeof(device_title), "plumOS %s", id);
+      for (i = 7; device_title[i]; ++i) {
+        if (device_title[i] >= 'a' && device_title[i] <= 'z') device_title[i] -= 'a' - 'A';
+      }
+      left = device_title;
     }
-    left = device_title;
   }
   if (width >= 640) {
     right_x = width - 14 - plumos_fbdev_text_width(status, 2);
@@ -2278,7 +2280,7 @@ static void plumos_fbdev_draw_tty_top_bar(struct plumos_fbdev_renderer *r) {
   plumos_fbdev_fill_rect(r, 0, 0, w, 34, bg);
   plumos_fbdev_fill_rect(r, 0, 34, w, 2, border);
   if (rg280v) {
-    plumos_fbdev_draw_rg280v_header_text(r, "plumOS RG280V", right, 12,
+    plumos_fbdev_draw_rg280v_header_text(r, "plumOS", right, 12,
                                          prompt, muted);
   } else {
     plumos_fbdev_draw_text(r, 14, 10, "plumOS", 2, prompt, w - 8);

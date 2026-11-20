@@ -1,0 +1,143 @@
+#!/bin/sh
+# Signed runtime updates are staged and journaled on SD1's ext4 partition.
+set -eu
+umask 077
+root=${PLUMOS_ROOT:-/media/data/plumos}
+user=${PLUMOS_USERDATA_ROOT:-/media/user}
+state=$root/update-state
+queued=$state/queued
+pending=$state/pending
+key=$root/share/plumos-update/public.pem
+command=${1:-}
+
+fail() { echo "$*" >&2; exit 1; }
+result() {
+    printf '%s\n' "$1" >"$state/result.tmp"
+    mv -f "$state/result.tmp" "$state/result"
+    sync
+}
+
+# Normal boot needs no writes or lock if the updater has never been used.
+case "$command" in
+    apply) [ -d "$state" ] || exit 0 ;;
+    pending) [ -d "$state" ] || exit 1 ;;
+    request-latest|confirm|rollback) ;;
+    *) exit 2 ;;
+esac
+mkdir -p "$state"
+exec 9>"$state/lock"
+flock -n 9 || fail 'Another update operation is running.'
+
+revision() {
+    if [ -f "$state/revision" ]; then cat "$state/revision"; else echo 0; fi
+}
+
+# Use only existing runtime files and refuse symbolic links in the destination.
+check_target() {
+    [ -f "$root/$1" ] && [ -f "$(readlink -f "$root/$1")" ] &&
+        [ "$(readlink -f "$root/$1")" = "$root/$1" ]
+}
+
+# Per-file renames are atomic. Backups survive until the full update is healthy.
+replace() {
+    target=$root/$1
+    temporary=$target.plumos-update-tmp
+    rm -f "$temporary"
+    cp -p "$2" "$temporary" && mv -f "$temporary" "$target"
+}
+
+recover() {
+    [ -d "$pending" ] || return 0
+    if [ "$(revision)" = "$(cat "$pending/revision")" ]; then
+        result runtime_healthy || return 1
+    else
+        index=0
+        while IFS= read -r item; do
+            index=$((index + 1))
+            check_target "$item" &&
+                replace "$item" "$pending/old/$index" || return 1
+        done <"$pending/files"
+        sync
+        result runtime_rolled_back || return 1
+    fi
+    # Detach the entire journal before cleanup. An interrupted recursive
+    # removal must not leave a half-populated journal for the next boot.
+    mv "$pending" "$state/retired" || return 1
+    sync
+    rm -rf "$state/retired"
+}
+
+case "$command" in
+    request-latest)
+        [ -r "$key" ] || fail 'Update signing key is unavailable.'
+        package=$user/updates/plumOS-JZ47xx-update.plu
+        [ -f "$package" ] || fail 'No update package found on SD1.'
+        [ ! -e "$queued" ] && [ ! -e "$pending" ] ||
+            fail 'An update is already queued or in progress.'
+        for abandoned in "$state"/stage.*; do
+            [ ! -d "$abandoned" ] || rm -rf "$abandoned"
+        done
+        work=$(mktemp -d "$state/stage.XXXXXX")
+        trap 'rm -rf "$work"' EXIT
+        mkdir "$work/new"
+        # Bound the copy even if the file changes on the user partition.
+        head -c 268435969 "$package" >"$work/package"
+        (cd "$work" && "$root/bin/plumos-jz47xx-update-verify" package "$key") ||
+            fail 'Update verification failed.'
+        rm "$work/package"
+        [ "$(cat "$work/revision")" -gt "$(revision)" ] ||
+            fail 'This update has already been applied or is older.'
+        while IFS= read -r item; do
+            check_target "$item" || fail "Incompatible runtime file: $item"
+        done <"$work/files"
+        sync
+        mv "$work" "$queued"
+        result runtime_queued
+        ;;
+    apply)
+        rm -rf "$state/retired"
+        recover || fail 'Update recovery failed.'
+        [ -d "$queued" ] || exit 0
+        # A stopped or interrupted backup pass has not changed any live files.
+        rm -rf "$queued/old"
+        mkdir "$queued/old"
+        index=0
+        while IFS= read -r item; do
+            index=$((index + 1))
+            check_target "$item" && cp -p "$root/$item" "$queued/old/$index" ||
+                fail "Could not back up: $item"
+        done <"$queued/files"
+        sync
+        mv "$queued" "$pending"
+        sync
+        index=0
+        while IFS= read -r item; do
+            index=$((index + 1))
+            # Preserve the installed permissions on every updated file.
+            target=$root/$item
+            temporary=$target.plumos-update-tmp
+            rm -f "$temporary"
+            if ! (cp -p "$pending/old/$index" "$temporary" &&
+                  cat "$pending/new/$index" >"$temporary" &&
+                  mv -f "$temporary" "$target"); then
+                recover || fail 'Update failed and recovery could not finish.'
+                fail "Could not install: $item"
+            fi
+        done <"$pending/files"
+        sync
+        ;;
+    pending)
+        [ -d "$pending" ]
+        ;;
+    confirm)
+        [ -d "$pending" ] || exit 0
+        cp "$pending/revision" "$state/revision.tmp"
+        sync
+        mv -f "$state/revision.tmp" "$state/revision"
+        sync
+        recover
+        ;;
+    rollback)
+        recover
+        ;;
+esac

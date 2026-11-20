@@ -145,11 +145,15 @@ def stage_runtime(tree, workspace):
     (plumos / "provision").mkdir()
     (plumos / "provision/multimodel-user-v1.pending").touch()
     for name in ("plumos-controller-ui", "plumos-text-ui", "plumos-library-scan",
-                 "plumos-rg280v-hotkeys", "plumos-rg280v-power-menu"):
+                 "plumos-rg280v-hotkeys", "plumos-rg280v-power-menu",
+                 "plumos-jz47xx-update-verify"):
         install(FRONTEND / name, plumos / "bin" / name, executable=True)
+    install(ASSETS / "keys/jz47xx-update-public.pem",
+            plumos / "share/plumos-update/public.pem")
     wrappers = (
         "fe-launch jz47xx-device-env jz47xx-media-env prepare-opk-input display-control volume-control "
-        "safe-shutdown standalone-launch opk-emulator-launch picoarch-launch opk-app-launch fceux-prepare"
+        "safe-shutdown standalone-launch opk-emulator-launch picoarch-launch opk-app-launch fceux-prepare "
+        "jz47xx-system-update"
     ).split()
     for name in wrappers:
         install(ASSETS / "bin" / f"plumos-{name}", plumos / "bin" / f"plumos-{name}", executable=True)

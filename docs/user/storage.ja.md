@@ -42,6 +42,10 @@ SD2は任意のデータカードです。先頭パーティションにFAT32を
 | blueMSX | 元のMSX機種プロファイルを使うには `Machines/` と `Databases/` の一式を `bios/` に置きます。同梱のC-BIOSはカートリッジゲーム用です。 |
 | Atari800 | 標準では内蔵のAltirraファームウェアを使います。オリジナルのROMを使う場合は `bios/opk/atari800/` に `5200.rom`、`ataribas.rom`、`atariosb.rom`、`atarixl.rom` を必要に応じて置きます。 |
 | Unreal Speccy | `bios/opk/unrealspeccy/` に `sos128_0.rom`、`sos128_1.rom`、`sos48.rom`、`service.rom`、`dos513f.rom` を置きます。各ファイルは16 KiBです。 |
+| PC Engine CD（Beetle PCE Fast） | 通常は `bios/syscard3.pce` を使います。 |
+| Sega CD（PicoDrive） | ディスクの地域に合わせて `bios/bios_CD_J.bin`（日本）、`bios/bios_CD_U.bin`（北米）、`bios/bios_CD_E.bin`（欧州）を使います。 |
+| CrocoDS（単体版・PicoArch版） | `bios/opk/crocods/` に `cpc6128.rom`（32 KiB）と `amsdos.rom`（16 KiB）を置きます。両方必要です。 |
+| RACE | 外部BIOSを使う場合、Neo Geo Pocketは `bios/opk/race/npbiosb.bin`、Neo Geo Pocket Colorは `bios/opk/race/npbiosc.bin` に置きます。 |
 | UAE4All、GnGeo、NEO4ALL | それぞれ `bios/opk/uae4all/kick.rom`、`bios/opk/gngeo/neogeo.zip`、`bios/opk/neo4all/neocd.bin` を使用します。 |
 
 ## ユーザー領域のフォルダー
@@ -53,6 +57,7 @@ SD2は任意のデータカードです。先頭パーティションにFAT32を
 | `Images/` | `Images/<システムID>/` に置くゲームのサムネイル。 |
 | `Screenshots/` | 初回に用意される画面画像用フォルダー。エミュレーター独自の保存機能は別の場所を使うことがあります。 |
 | `Music/` | 音楽ファイルの置き場所。 |
-| `apps/`、`updates/` | SD1初回起動時に作成されるフォルダー。OPKを使う手順は[ユーザーガイド](README.ja.md#opkアプリ)を参照してください。 |
+| `apps/` | SD1の予約フォルダー。[OPKアプリの扱い](README.ja.md#opkアプリ) |
+| `updates/` | SD1に置く署名付きランタイム更新パッケージ。[更新手順](README.ja.md#sd1からランタイムを更新する) |
 
 セーブ・ステート・設定のバックアップには、SD1の `PLUMOSDATA` を含めます。[セーブの保存先とバックアップ](save-data.ja.md)

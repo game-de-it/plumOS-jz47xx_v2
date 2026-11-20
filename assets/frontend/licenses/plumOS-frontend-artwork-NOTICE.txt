@@ -1,0 +1,36 @@
+plumOS frontend artwork
+
+Scope: default system icons and ROM gallery background carried over from plumOS
+A30, including matching copies used by 350teric, PyMenu and EmulationStation.
+
+Source revision: 68d92d5d950f4d2e247316cf0d7bac776e6d6861
+https://github.com/game-de-it/plumOS-A30/tree/68d92d5d950f4d2e247316cf0d7bac776e6d6861/package/frontend/plumos/themes/default
+
+The Game Boy image and gallery background were stripped of private metadata
+during JZ47xx_v2 image preparation. The decoded pixels match the source.
+
+The following MIT license applies to plumOS-authored work. Names and marks
+shown in the artwork identify the emulated systems. Rights in third-party
+marks and other third-party elements remain with their respective holders.
+
+MIT License
+
+Copyright (c) 2026 plumOS contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

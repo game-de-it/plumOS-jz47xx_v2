@@ -41,3 +41,5 @@ The standard frontend in plumOS JZ47xx_v2 v0.1.0 registers 26 systems and 58 lau
 
 - Keep the disc or track files referenced by a `.cue` or `.m3u` together, with the same names and relative paths. A PlayStation `.cue` needs its associated `.bin` or `.img` files. The PlayStation and Neo Geo CD launchers skip blank lines and comments in an `.m3u` and start its first entry.
 - Put artwork on the same card as the ROM, in `Images/<system-id>/`. For example, `roms/FC/My Game.nes` uses the system ID `nes`, so its artwork goes in `Images/nes/My Game.png`. The system ID is the last component of the recommended folder.
+
+For routes that need a BIOS or System Card, see the [BIOS filenames and locations](storage.md#bios-files-for-specific-emulators).

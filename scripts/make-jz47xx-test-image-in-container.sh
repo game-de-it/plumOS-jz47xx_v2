@@ -34,9 +34,12 @@ if [ -f "$root/plumos/provision/seed-v1" ]; then
     unlink "$root/plumos/provision/seed-v1"
 fi
 cp /workspace/output/rg280v-fe/plumos-controller-ui \
+    /workspace/output/rg280v-fe/plumos-library-scan \
     /workspace/output/rg280v-fe/plumos-rg280v-power-menu "$root/plumos/bin/"
 cp /workspace/assets/frontend/bin/plumos-fe-launch \
     /workspace/assets/frontend/bin/plumos-jz47xx-device-env \
+    /workspace/assets/frontend/bin/plumos-jz47xx-media-env \
+    /workspace/assets/frontend/bin/plumos-picoarch-launch \
     /workspace/assets/frontend/bin/plumos-standalone-launch \
     /workspace/assets/frontend/bin/plumos-opk-emulator-launch "$root/plumos/bin/"
 cp /workspace/output/rg280v-emulators/PicoDrive_rg280v.opk "$root/plumos/emulators/"
@@ -47,7 +50,11 @@ cp /workspace/output/rg280v-emulationstation/runtime/emulationstation \
     "$root/plumos/emulationstation/"
 cp /workspace/output/rg280v-apps/calculator-rg280v.opk "$root/apps/"
 cp /workspace/output/rg280v-apps/calculator-rg280v-source.tar.gz "$root/plumos/licenses/"
-cp /workspace/assets/frontend/S94hotkeys "$root/local/init.d/"
+cp /workspace/assets/frontend/S94hotkeys /workspace/assets/frontend/S95frontend "$root/local/init.d/"
+install -m 0755 /workspace/assets/frontend/bin/plumos-jz47xx-system-update \
+    /workspace/output/rg280v-fe/plumos-jz47xx-update-verify "$root/plumos/bin/"
+install -Dm 0644 /workspace/assets/frontend/keys/jz47xx-update-public.pem \
+    "$root/plumos/share/plumos-update/public.pem"
 if [ "$model" = multimodel ]; then
     install -m 0755 /workspace/assets/frontend/S96remember-boot-model "$root/local/init.d/"
     install -m 0755 /workspace/assets/frontend/S00expand-multimodel-user "$root/local/init.d/"

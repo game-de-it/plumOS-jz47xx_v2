@@ -83,18 +83,18 @@ static void plumos_drm_pageflip_close(struct plumos_drm_pageflip *d) {
 
 static int plumos_drm_pageflip_create_buffer(struct plumos_drm_pageflip *d,
                                               int index, uint32_t width,
-                                              uint32_t height) {
+                                              uint32_t height, uint32_t bpp) {
   struct drm_mode_create_dumb create = {0};
   struct drm_mode_map_dumb map = {0};
   struct plumos_drm_buffer *b = &d->buffers[index];
   create.width = width;
   create.height = height;
-  create.bpp = 32;
+  create.bpp = bpp;
   if (drmIoctl(d->fd, DRM_IOCTL_MODE_CREATE_DUMB, &create) != 0) return 0;
   b->handle = create.handle;
   b->pitch = create.pitch;
   b->size = create.size;
-  if (drmModeAddFB(d->fd, width, height, 24, 32, b->pitch,
+  if (drmModeAddFB(d->fd, width, height, bpp == 16 ? 16 : 24, bpp, b->pitch,
                    b->handle, &b->fb_id) != 0) return 0;
   map.handle = b->handle;
   if (drmIoctl(d->fd, DRM_IOCTL_MODE_MAP_DUMB, &map) != 0) return 0;
@@ -108,8 +108,9 @@ static int plumos_drm_pageflip_create_buffer(struct plumos_drm_pageflip *d,
   return 1;
 }
 
-static int plumos_drm_pageflip_open(struct plumos_drm_pageflip *d,
-                                    uint32_t width, uint32_t height) {
+static int plumos_drm_pageflip_open_format(struct plumos_drm_pageflip *d,
+                                           uint32_t width, uint32_t height,
+                                           uint32_t bpp) {
   drmModeRes *res = NULL;
   drmModeConnector *connector = NULL;
   uint64_t dumb = 0;
@@ -145,7 +146,7 @@ static int plumos_drm_pageflip_open(struct plumos_drm_pageflip *d,
       d->original_crtc->mode.hdisplay != width ||
       d->original_crtc->mode.vdisplay != height) goto fail;
   for (i = 0; i < 2; i++) {
-    if (!plumos_drm_pageflip_create_buffer(d, i, width, height)) goto fail;
+    if (!plumos_drm_pageflip_create_buffer(d, i, width, height, bpp)) goto fail;
   }
   if (d->buffers[0].pitch != d->buffers[1].pitch ||
       d->buffers[0].size != d->buffers[1].size) goto fail;
@@ -166,6 +167,11 @@ fail:
   if (res) drmModeFreeResources(res);
   plumos_drm_pageflip_close(d);
   return 0;
+}
+
+static inline int plumos_drm_pageflip_open(struct plumos_drm_pageflip *d,
+                                          uint32_t width, uint32_t height) {
+  return plumos_drm_pageflip_open_format(d, width, height, 32);
 }
 
 static int plumos_drm_pageflip_present(struct plumos_drm_pageflip *d) {

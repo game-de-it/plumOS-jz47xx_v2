@@ -10,7 +10,7 @@ plumOS JZ47xx_v2 is custom firmware for the Anbernic RG280V, RG300X, RG350 and R
 
 The repository is named `plumOS-jz47xx_v2`. The initial release version is `v0.1.0`.
 
-- [User guide](docs/user/README.md) — Write an SD card, select a model, add games and use the frontend.
+- [User guide](docs/user/README.md) — Write an SD card, select a model, add games, use the frontend and update from SD1.
 - [Developer guide](docs/developer/README.md) — Build the base system, understand the shared boot flow and prepare a clean release.
 
 The development checkout includes a hardware-validation image workflow. Use a verified public release image for normal installation when one is available.

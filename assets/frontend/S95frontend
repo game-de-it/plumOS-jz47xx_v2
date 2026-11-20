@@ -1,6 +1,8 @@
 #!/bin/sh
 root=/media/data/plumos
 pidfile=/var/run/plumos-fe.pid
+updater=$root/bin/plumos-jz47xx-system-update
+ready=/tmp/plumos-fe-ready
 case "${1:-}" in
     start)
         [ -x "$root/bin/plumos-fe-launch" ] || exit 0
@@ -8,16 +10,17 @@ case "${1:-}" in
             exit 0
         fi
         mkdir -p "$root/Logs" "$root/state/frontend"
-        # rcS mounts SD2 with UTF-8. Its mount listing can still include
-        # iocharset=iso8859-1, so testing that string caused a full scan on
-        # every boot. ROM lists refresh on entry, and TOP has a manual refresh.
-        if [ ! -s "$root/state/frontend/library-index.json" ]; then
-            if [ -d /media/data/sd2/roms ]; then
-                sdcard=/media/data/sd2
-            else
-                sdcard=/media/user
-            fi
-            PLUMOS_ROOT="$root" PLUMOS_SDCARD_ROOT="$sdcard" \
+        if [ -x "$updater" ]; then
+            "$updater" apply >>"$root/Logs/system-update.log" 2>&1 ||
+                "$updater" rollback >>"$root/Logs/system-update.log" 2>&1 || exit 1
+        fi
+        . "$root/bin/plumos-jz47xx-media-env" || exit 1
+        plumos_select_media
+        # Discard an index for the other card when SD2 is added or removed.
+        # ROM lists refresh on entry, and TOP has a manual refresh.
+        if ! grep -Fqx "  \"rom_root\": \"$PLUMOS_ROM_ROOT\"," \
+            "$root/state/frontend/library-index.json" 2>/dev/null; then
+            PLUMOS_ROOT="$root" \
                 "$root/bin/plumos-library-scan" >>"$root/Logs/frontend.log" 2>&1
         fi
         # The DRM frontend can expose the old fbdev status image when an OPK
@@ -25,8 +28,24 @@ case "${1:-}" in
         if [ -c /dev/fb0 ]; then
             dd if=/dev/zero of=/dev/fb0 bs=4096 count=150 2>/dev/null || true
         fi
+        rm -f "$ready"
         nohup setsid "$root/bin/plumos-fe-launch" </dev/null >>"$root/Logs/frontend.log" 2>&1 &
-        echo "$!" >"$pidfile"
+        pid=$!
+        echo "$pid" >"$pidfile"
+        if [ -x "$updater" ] && "$updater" pending; then
+            remaining=20
+            while kill -0 "$pid" 2>/dev/null && [ "$remaining" -gt 0 ]; do
+                if grep -Fxq "pid=$pid" "$ready" 2>/dev/null; then
+                    "$updater" confirm >>"$root/Logs/system-update.log" 2>&1 && exit 0
+                    break
+                fi
+                sleep 1
+                remaining=$((remaining - 1))
+            done
+            "$0" stop
+            "$updater" rollback >>"$root/Logs/system-update.log" 2>&1 || exit 1
+            exec "$0" start
+        fi
         ;;
     stop)
         if [ -r "$pidfile" ]; then

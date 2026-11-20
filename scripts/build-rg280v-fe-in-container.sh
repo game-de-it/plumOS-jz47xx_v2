@@ -29,7 +29,11 @@ mkdir -p "$out"
     -I"$sysroot/usr/include/libdrm" \
     /workspace/src/frontend/rg280v_power_menu.c \
     -o "$out/plumos-rg280v-power-menu" -ldrm
+"$cc" -std=gnu99 -Os -pipe -Wall -Wextra \
+    /workspace/src/frontend/plumos_jz47xx_update_verify.c \
+    -o "$out/plumos-jz47xx-update-verify" -lcrypto
 "$strip" "$out/plumos-controller-ui" "$out/plumos-library-scan" \
-    "$out/plumos-text-ui" "$out/plumos-rg280v-hotkeys" "$out/plumos-rg280v-power-menu"
+    "$out/plumos-text-ui" "$out/plumos-rg280v-hotkeys" "$out/plumos-rg280v-power-menu" \
+    "$out/plumos-jz47xx-update-verify"
 file "$out/plumos-controller-ui" "$out/plumos-library-scan" \
     "$out/plumos-text-ui"

@@ -182,6 +182,7 @@ static void label(const struct plane_state *p, struct menu_buffer *b,
 
 static void draw_menu(const struct plane_state *p, struct menu_buffer *b, int cursor) {
   static const char *names[] = {"Sleep", "Reboot", "Shutdown", "Cancel"};
+  const char *device_id = getenv("PLUMOS_DEVICE_ID");
   int row, scale = p->width >= 320 ? 2 : 1;
   int gap = (int)p->height >= 240 ? (int)p->height / 10 : 20;
   int top = (int)p->height * 13 / 30;
@@ -191,7 +192,10 @@ static void draw_menu(const struct plane_state *p, struct menu_buffer *b, int cu
   rect(p, b, 0, 0, p->width, p->height, bg);
   rect(p, b, 0, 0, 4, 35, accent);
   label(p, b, 12, 10, "PLUMOS", scale, fg);
-  label(p, b, (int)p->width - 84, 10, "RG280V", scale, fg);
+  if (device_id && strlen(device_id) <= 6) {
+    int model_width = (int)strlen(device_id) * 6 * scale;
+    label(p, b, (int)p->width - 12 - model_width, 10, device_id, scale, fg);
+  }
   rect(p, b, 0, 34, p->width, 2, rgb(p, 35, 58, 51));
   label(p, b, 12, 47, "POWER", scale, muted);
   for (row = 0; row < 4; row++) {

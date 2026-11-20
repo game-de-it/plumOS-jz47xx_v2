@@ -1,0 +1,27 @@
+--- a/src/drivers/dingux-sdl/gui/settings_menu.cpp
++++ b/src/drivers/dingux-sdl/gui/settings_menu.cpp
+@@ -33,6 +33,7 @@
+ static int cmd_config_save() {
+ 	extern Config *g_config;
+ 	g_config->save();
++	return 0;
+ }
+ 
+ static MenuEntry
+@@ -119,4 +120,5 @@
+ 	dingoo_clear_video();
+ 
+ 	g_dirty = 1;
++	return 0;
+ }
+--- a/src/drivers/dingux-sdl/input.cpp
++++ b/src/drivers/dingux-sdl/input.cpp
+@@ -179,7 +179,7 @@
+ }
+ 
+ // mega hack to reset once pressed key
+-static int resetkey(int sdlk_code)
++static void resetkey(int sdlk_code)
+ {
+ 	Uint8 *keystate = SDL_GetKeyState(NULL);
+ 	keystate[sdlk_code] = 0;

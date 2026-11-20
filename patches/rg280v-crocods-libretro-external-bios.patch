@@ -1,0 +1,296 @@
+diff --git a/Makefile.common b/Makefile.common
+index bcf3f7d..2506a3c 100644
+--- a/Makefile.common
++++ b/Makefile.common
+@@ -1,4 +1,4 @@
+ SOURCES_C := $(CORE_DIR)/libretro.c \
+-    $(wildcard $(CORE_DIR)/crocods-core/*.c) \
++    $(filter-out %.bin.c,$(wildcard $(CORE_DIR)/crocods-core/*.c)) \
+     $(wildcard $(CORE_DIR)/crocods-core/iniparser/*.c) \
+     $(wildcard $(CORE_DIR)/deps/libz/*.c)
+diff --git a/crocods-core/cpc_external_font.h b/crocods-core/cpc_external_font.h
+new file mode 100644
+index 0000000..5aecc53
+--- /dev/null
++++ b/crocods-core/cpc_external_font.h
+@@ -0,0 +1,15 @@
++#ifndef CROCODS_EXTERNAL_FONT_H
++#define CROCODS_EXTERNAL_FONT_H
++
++#define FNT_CHAR_WIDTH 8
++#define FNT_CHAR_HEIGHT 8
++#define FNT_CHARS 96
++#define FNT_MIN_CHAR 32
++#define FNT_MAX_CHAR (FNT_MIN_CHAR + FNT_CHARS - 1)
++#define FNT_BAD_CHAR 95
++
++/* CPC glyphs come from the BIOS supplied by the user. */
++extern unsigned char cpc6128_bin[32768];
++#define bFont (cpc6128_bin + 0x3900)
++
++#endif
+diff --git a/crocods-core/platform.c b/crocods-core/platform.c
+index ba66a3a..d0fbc75 100644
+--- a/crocods-core/platform.c
++++ b/crocods-core/platform.c
+@@ -19,7 +19,7 @@
+ #include "gif.h"
+ #include "monitor.h"
+ 
+-#include "cpcfont.h"
++#include "cpc_external_font.h"
+ 
+ #include "iniparser/iniparser.h"
+ 
+@@ -77,8 +77,6 @@ extern const int menu_gif_length;
+ //  );
+ // }
+ 
+-#define MAX_ROM_MODS 2
+-#include "rom_mods.h"
+ 
+ // Modules
+ 
+@@ -112,25 +110,6 @@ kFctVoidVoid ResetVGA;
+  * }
+  */
+ 
+-int emulator_patch_ROM(core_crocods_t *core, u8 *pbROMlo)
+-{
+-    u8 *pbPtr;
+-
+-    int CPCkeyboard = core->keyboardLayout;
+-
+-    if (CPCkeyboard < 1) {
+-        return 0;
+-    }
+-
+-    // pbPtr = pbROMlo + 0x1d69; // location of the keyboard translation table on 664 or 6128
+-    pbPtr = pbROMlo + 0x1eef; // location of the keyboard translation table on 6128
+-    memcpy(pbPtr, cpc_keytrans[CPCkeyboard - 1], 240); // patch the CPC OS ROM with the chosen keyboard layout
+-
+-    pbPtr = pbROMlo + 0x3800;
+-    memcpy(pbPtr, cpc_charset[CPCkeyboard - 1], 2048); // add the corresponding character set
+-
+-    return 0;
+-}
+ 
+ #define MAXFILE 1024
+ 
+@@ -1003,8 +982,36 @@ void SoftResetCPC(core_crocods_t *core)
+     Reset8912(core);
+ }
+ 
+-extern const unsigned char cpc6128_bin[];
+-extern const unsigned char romdisc_bin[];
++unsigned char cpc6128_bin[32768];
++static unsigned char romdisc_bin[16384];
++
++static int read_firmware(const char *directory, const char *name,
++                         unsigned char *image, size_t size)
++{
++    char path[4096];
++    int length = snprintf(path, sizeof(path), "%s/%s", directory, name);
++    if (length < 0 || (size_t)length >= sizeof(path)) {
++        fprintf(stderr, "CrocoDS: firmware path is too long\n");
++        return 0;
++    }
++    FILE *file = fopen(path, "rb");
++    if (!file) {
++        fprintf(stderr, "CrocoDS: missing firmware %s (%zu bytes)\n", path, size);
++        return 0;
++    }
++    int valid = fread(image, 1, size, file) == size &&
++                fgetc(file) == EOF && !ferror(file);
++    fclose(file);
++    if (!valid)
++        fprintf(stderr, "CrocoDS: invalid firmware %s (expected %zu bytes)\n", path, size);
++    return valid;
++}
++
++int CrocoDSLoadFirmware(const char *directory)
++{
++    return read_firmware(directory, "cpc6128.rom", cpc6128_bin, sizeof(cpc6128_bin)) &&
++           read_firmware(directory, "amsdos.rom", romdisc_bin, sizeof(romdisc_bin));
++}
+ 
+ void HardResetCPC(core_crocods_t *core)
+ {
+@@ -1513,7 +1520,7 @@ void cpcprint16_6w_limit(core_crocods_t *core, u16 *MemBitmap, u32 MemBitmap_wid
+ //                char first = 1;
+ 
+                 pdPixel = pdwLine;
+-                bRow = bFont6x8[iIdx]; // get the bitmap information for one row
++                bRow = bFont[iIdx]; // get the bitmap information for one row
+                 for (iCol = 0; iCol < 8; iCol++) { // loop for all columns in the font character
+                     for (mx = 0; mx < multi; mx++) {
+                         if ((iRow >= miny) && (iRow < maxy)) {
+diff --git a/crocods-core/platform.h b/crocods-core/platform.h
+index 08421cb..cb2f8be 100644
+--- a/crocods-core/platform.h
++++ b/crocods-core/platform.h
+@@ -608,7 +608,6 @@ void UpdateScreen(core_crocods_t *core);
+ 
+ int ExecuteMenu(core_crocods_t *core, int n, struct kmenu *current);
+ 
+-int emulator_patch_ROM(core_crocods_t *core, u8 *pbROMlo);
+ 
+ int nds_ReadKey(core_crocods_t *core);
+ 
+@@ -730,6 +729,7 @@ void CPC_SetScanCode(core_crocods_t *core, CPC_SCANCODE cpc_scancode);
+ void CPC_ClearScanCode(core_crocods_t *core, CPC_SCANCODE cpc_scancode);
+ 
+ void SoftResetCPC(core_crocods_t *core); // Reset CPC without modifiy ROM
++int CrocoDSLoadFirmware(const char *directory);
+ void HardResetCPC(core_crocods_t *core); // Reset CPC AND modifiy ROM
+ 
+ void CalcPoints(core_crocods_t *core);
+diff --git a/crocods-core/vga.c b/crocods-core/vga.c
+index 69dad90..590c35b 100644
+--- a/crocods-core/vga.c
++++ b/crocods-core/vga.c
+@@ -191,7 +191,6 @@ BOOL InitMemCPC(core_crocods_t *core, const char *cpc6128_bin, const char *romdi
+     memcpy(core->ROMEXT[0], cpc6128_bin + 0x4000, sizeof(core->ROMEXT[0]));
+     memcpy(core->ROMEXT[7], romdisc_bin, sizeof(core->ROMEXT[7]));
+ 
+-    emulator_patch_ROM(core, core->ROMINF); // Patch de la langue (entre autres)
+ 
+     WriteVGA(core, 0, 0x89);
+     WriteVGA(core, 0, 0xC0);
+diff --git a/libretro.c b/libretro.c
+index e38b93d..a93a6ff 100644
+--- a/libretro.c
++++ b/libretro.c
+@@ -9,13 +9,12 @@
+ #include <errno.h>
+ 
+ #include "crocods-core/platform.h"
++#include "crocods-core/cpc_external_font.h"
+ #include "crocods-core/gif.h"
+ 
+ int Sound = 1;
+ 
+ extern const unsigned char icons_gif[];
+-extern const unsigned char cpc6128_bin[];
+-extern const unsigned char romdisc_bin[];
+ 
+ #define maxByCycle 400 // 50 fois par frame
+ 
+@@ -24,6 +23,12 @@ char Core_old_Key_Sate[512];
+ 
+ static int KeySymToCPCKey[RETROK_LAST];
+ 
++/* The core retains these by pointer (core->borderX / core->borderY) and
++ * dereferences them for the lifetime of the session, so they must not live
++ * on retro_init's stack frame. */
++static int border_x;
++static int border_y;
++
+ retro_log_printf_t log_cb;
+ retro_video_refresh_t video_cb;
+ 
+@@ -87,8 +92,8 @@ u16 scanlineMask[] = {0b1110111101011101,
+ 
+ u16 textureBytes[384 * 288 * 2];
+ 
+-u32 old_width1 = 0, old_height1 = 0, old_left1 = 0, old_top1 = 0, old_bpl1 = 0;
+-u16 old_width2 = 0, old_height2 = 0;
++static u32 old_width1 = 0, old_height1 = 0, old_left1 = 0, old_top1 = 0, old_bpl1 = 0;
++static u16 old_width2 = 0, old_height2 = 0;
+ 
+ u32 *incX, *incY;
+ 
+@@ -143,9 +148,10 @@ void retro_init(void)
+ {
+     char *savedir = NULL;
+     int i;
+-    int bx, by;
+ 
+     // Set Video
++    free(incX);
++    free(incY);
+     incX = (u32 *)malloc(384 * 2 * sizeof(u32)); // malloc the max width
+     incY = (u32 *)malloc(272 * sizeof(u32));     // malloc the max height
+ 
+@@ -161,8 +167,6 @@ void retro_init(void)
+ 
+     // Get map layout
+ 
+-    gb.keyboardLayout = 1; // French
+-
+     for (i = 0; i < RETROK_LAST; i++)
+         KeySymToCPCKey[i] = CPC_NIL;
+ 
+@@ -257,7 +261,7 @@ void retro_init(void)
+ 
+     // Init nds
+ 
+-    nds_initBorder(&gb, &bx, &by);
++    nds_initBorder(&gb, &border_x, &border_y);
+     nds_init(&gb);
+ 
+     updateFromEnvironment();
+@@ -265,14 +269,26 @@ void retro_init(void)
+     AutoType_Init(&gb);
+ 
+     Sound = 1;
+-    HardResetCPC(&gb);
+-
+-    initSound(&gb, 44100);
+ }
+ 
+ void retro_deinit(void)
+ {
+-
++    free(incX);
++    incX = NULL;
++    free(incY);
++    incY = NULL;
++
++    /* The scaling LUTs above are only rebuilt when the blit geometry changes,
++     * so the cached geometry has to be invalidated together with them.
++     * Otherwise a second retro_init/retro_load_game cycle indexes freshly
++     * allocated, still uninitialised LUTs. */
++    old_width1  = 0;
++    old_height1 = 0;
++    old_left1   = 0;
++    old_top1    = 0;
++    old_bpl1    = 0;
++    old_width2  = 0;
++    old_height2 = 0;
+ }
+ 
+ unsigned retro_api_version(void)
+@@ -926,7 +942,31 @@ bool retro_load_game(const struct retro_game_info *info)
+         return 0;
+     }
+ 
+-    // Load .dsk or .sna
++    const char *system_dir = NULL;
++    char firmware_dir[4096];
++    int len;
++    if (!environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) ||
++        !system_dir || !*system_dir) {
++        if (log_cb)
++            log_cb(RETRO_LOG_ERROR, "CrocoDS requires a system directory for the CPC firmware.\n");
++        return false;
++    }
++    len = snprintf(firmware_dir, sizeof(firmware_dir), "%s/opk/crocods", system_dir);
++    if (len < 0 || (size_t)len >= sizeof(firmware_dir) ||
++        !CrocoDSLoadFirmware(firmware_dir))
++        return false;
++
++    if (!info || !info->path || strlen(info->path) >= sizeof(gb.openFilename))
++        return false;
++
++    /* Detect AZERTY from the unshifted Q and A positions in the CPC ROM. */
++    const unsigned char *key_table = cpc6128_bin + 0x1eef;
++    gb.keyboardLayout = key_table[0x43] == 'a' && key_table[0x45] == 'q';
++
++    HardResetCPC(&gb);
++    initSound(&gb, 44100);
++
++    // Load .dsk or .sna.
+     strcpy(gb.openFilename, info->path);
+     ExecuteMenu(&gb, ID_AUTORUN, NULL); // Do: open disk & autorun // TODO
+     return 1;
