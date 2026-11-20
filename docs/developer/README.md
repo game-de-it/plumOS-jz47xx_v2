@@ -93,3 +93,5 @@ bash scripts/package-jz47xx-release.sh /path/to/plumOS-JZ47xx-0.1.0.img VERIFIED
 ```
 
 The default output directory is `output/release/`. It can also be passed as the third argument. The script requires 7-Zip (`7zz` or `7z`) and a SHA-256 utility. Publish the user and developer guides and required license materials alongside the verified archive. See the [latest candidate and update validation record](../validation/jz47xx-v0.1.0-update-validation.md) for the current results.
+
+[v0.1.0 source bundles](v0.1.0-source-bundles.md)

@@ -38,7 +38,6 @@ Place these files under the `bios/` folder selected above. Use firmware you have
 | Emulator | Files and location |
 | --- | --- |
 | PCSX4ALL | `bios/scph1001.bin`, or the BIOS filename selected in the emulator. |
-| fMSX | MSX system ROMs at the root of `bios/`, using the filenames expected by fMSX, such as `MSX.ROM`, `MSX2.ROM` and `MSX2EXT.ROM`. |
 | blueMSX | Put the complete `Machines/` and `Databases/` directories under `bios/` for the original MSX hardware profiles. The bundled C-BIOS fallback supports cartridge games. |
 | Atari800 | Uses the built-in Altirra firmware by default. Optional original ROMs use `bios/opk/atari800/` with the names `5200.rom`, `ataribas.rom`, `atariosb.rom` and `atarixl.rom`. |
 | Unreal Speccy | `bios/opk/unrealspeccy/` must contain `sos128_0.rom`, `sos128_1.rom`, `sos48.rom`, `service.rom` and `dos513f.rom`. Each file is 16 KiB. |

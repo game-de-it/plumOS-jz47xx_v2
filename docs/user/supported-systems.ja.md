@@ -2,7 +2,7 @@
 
 [English](supported-systems.md) · [ユーザーガイド](README.ja.md) · [SDカード構成](storage.ja.md)
 
-plumOS JZ47xx_v2 v0.1.0の標準フロントエンドに登録されている26システムと57起動経路です。表のフォルダーをSD1の `PLUMOS` ボリューム、またはSD2の先頭パーティションの直下に作ります。[どちらのカードが使われるか](storage.ja.md#romとbiosの参照先)
+plumOS JZ47xx_v2 v0.1.0の標準フロントエンドに登録されている26システムと56起動経路です。表のフォルダーをSD1の `PLUMOS` ボリューム、またはSD2の先頭パーティションの直下に作ります。[どちらのカードが使われるか](storage.ja.md#romとbiosの参照先)
 
 - 1システムにつき推奨フォルダーを1つ使うと、別名のフォルダーに同じゲームを置いて重複表示するのを防げます。SD2をext4で使う場合は、フォルダー名の大文字・小文字を表にそろえてください。
 - 拡張子はFEが一覧に載せる条件です。大文字・小文字は区別しません。実際に起動できる形式は、選んだエミュレーター、BIOS、ROMセットなどに依存します。
@@ -25,7 +25,7 @@ plumOS JZ47xx_v2 v0.1.0の標準フロントエンドに登録されている26�
 | PlayStation | `roms/psx/` | `roms/PS/` | `.cue`, `.chd`, `.iso`, `.pbp`, `.m3u` | **`SA: pcsx4all`** |
 | NGPC | `roms/ngpc/` | `roms/NGPC/`, `roms/NGP/` | `.ngc`, `.ngpc`, `.zip`, `.7z` | **`SA: race`** |
 | WonderSwan | `roms/wonderswan/` | `roms/WS/`, `roms/WSC/` | `.ws`, `.zip`, `.7z` | **`PICO: mednafen_wswan`**, `SA: oswan` |
-| MSX | `roms/msx/` | `roms/MSX/`, `roms/msx2/` | `.rom`, `.mx1`, `.mx2`, `.dsk`, `.cas`, `.zip`, `.7z` | **`PICO: fmsx`**, `PICO: bluemsx` |
+| MSX | `roms/msx/` | `roms/MSX/`, `roms/msx2/` | `.rom`, `.mx1`, `.mx2`, `.dsk`, `.cas`, `.zip`, `.7z` | **`PICO: bluemsx`** |
 | Atari 800 | `roms/atari800/` | `roms/ATARI800/`, `roms/ATARI/800/` | `.car`, `.atr`, `.xex`, `.rom`, `.xfd`, `.bin` | **`SA: atari800`** |
 | Atari 2600 | `roms/atari2600/` | `roms/ATARI2600/` | `.a26`, `.bin`, `.rom` | **`SA: stella`** |
 | Pokemon Mini | `roms/pokemini/` | `roms/POKEMINI/` | `.min` | **`SA: pokemini`** |

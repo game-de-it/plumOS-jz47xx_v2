@@ -2,7 +2,7 @@
 
 [日本語](supported-systems.ja.md) · [User guide](README.md) · [SD card layout](storage.md)
 
-The standard frontend in plumOS JZ47xx_v2 v0.1.0 registers 26 systems and 57 launch profiles. Create the folders below at the root of SD1's `PLUMOS` volume or of the first partition on SD2. [How plumOS chooses a card](storage.md#how-plumos-selects-roms-and-bios)
+The standard frontend in plumOS JZ47xx_v2 v0.1.0 registers 26 systems and 56 launch profiles. Create the folders below at the root of SD1's `PLUMOS` volume or of the first partition on SD2. [How plumOS chooses a card](storage.md#how-plumos-selects-roms-and-bios)
 
 - Use one recommended folder per system to avoid duplicate entries from copies of the same game under aliases. On ext4, match the capitalization of the folder names shown here.
 - The extensions determine which files appear in the frontend. Extension matching is case-insensitive. Launch support depends on the emulator, BIOS and game set.
@@ -25,7 +25,7 @@ The standard frontend in plumOS JZ47xx_v2 v0.1.0 registers 26 systems and 57 lau
 | PlayStation | `roms/psx/` | `roms/PS/` | `.cue`, `.chd`, `.iso`, `.pbp`, `.m3u` | **`SA: pcsx4all`** |
 | NGPC | `roms/ngpc/` | `roms/NGPC/`, `roms/NGP/` | `.ngc`, `.ngpc`, `.zip`, `.7z` | **`SA: race`** |
 | WonderSwan | `roms/wonderswan/` | `roms/WS/`, `roms/WSC/` | `.ws`, `.zip`, `.7z` | **`PICO: mednafen_wswan`**, `SA: oswan` |
-| MSX | `roms/msx/` | `roms/MSX/`, `roms/msx2/` | `.rom`, `.mx1`, `.mx2`, `.dsk`, `.cas`, `.zip`, `.7z` | **`PICO: fmsx`**, `PICO: bluemsx` |
+| MSX | `roms/msx/` | `roms/MSX/`, `roms/msx2/` | `.rom`, `.mx1`, `.mx2`, `.dsk`, `.cas`, `.zip`, `.7z` | **`PICO: bluemsx`** |
 | Atari 800 | `roms/atari800/` | `roms/ATARI800/`, `roms/ATARI/800/` | `.car`, `.atr`, `.xex`, `.rom`, `.xfd`, `.bin` | **`SA: atari800`** |
 | Atari 2600 | `roms/atari2600/` | `roms/ATARI2600/` | `.a26`, `.bin`, `.rom` | **`SA: stella`** |
 | Pokemon Mini | `roms/pokemini/` | `roms/POKEMINI/` | `.min` | **`SA: pokemini`** |

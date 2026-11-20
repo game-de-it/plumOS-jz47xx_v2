@@ -38,7 +38,7 @@ plumOS独自のコードとフロントエンドには[MITライセンス](LICEN
 
 ## 個別の条件があるもの
 
-- **fMSX**は非商用の独自ライセンスです。現在の候補にはfMSX標準FM音源を使用する版を収録しています。fMSX本体の再配布条件は確認中です。 [ライセンス原文](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) [再配布監査](docs/validation/jz47xx-v0.1.0-release-rights.ja.md#fmsx-の再配布条件とfm音源)
+- **fMSX**は今回の配布候補から外しました。MSXの既定経路はblueMSXです。
 - **PicoDrive**には非商用の条件があります。単体版とLibretroコアの両方について、改変版のソースと著作権表示を配布する条件を`COPYING`で確認できます。 [PicoDriveのライセンス原文](https://github.com/irixxxx/picodrive/blob/master/COPYING)
 - **Snes9x 2005、Snes9x 2005 Plus、ChimeraSNES**には非商用条件のあるSnes9x由来のコードが含まれます。バイナリ再配布と著作権表記の条件は各`copyright`または`LICENSES`を参照してください。 [Snes9x 2005の著作権表記](https://github.com/libretro/snes9x2005/blob/master/copyright)
 - **Temper**は今回の配布候補から外しました。PC Engineの既定経路はBeetle PCE Fastです。[過去の再配布監査](docs/validation/jz47xx-v0.1.0-release-rights.ja.md#temper-の再配布条件)

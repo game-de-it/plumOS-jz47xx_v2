@@ -93,3 +93,5 @@ bash scripts/package-jz47xx-release.sh /path/to/plumOS-JZ47xx-0.1.0.img VERIFIED
 ```
 
 既定の出力先は `output/release/` です。第3引数で変更できます。7-Zip（`7zz` または `7z`）とSHA-256の計算コマンドが必要です。検証済みのアーカイブとともに日英のユーザー・開発者ガイド、必要なライセンス表記を公開します。現在の確認結果は[最新候補とアップデートの検証記録](../validation/jz47xx-v0.1.0-update-validation.md)にあります。
+
+[v0.1.0の対応ソース](v0.1.0-source-bundles.md)

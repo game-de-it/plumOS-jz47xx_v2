@@ -38,7 +38,7 @@ The [release rights audit](docs/validation/jz47xx-v0.1.0-release-rights.md) reco
 
 ## Components with additional restrictions
 
-- **fMSX** has a custom non-commercial license. The current candidate uses the standard fMSX FM backend. Redistribution terms for fMSX itself remain open. [License text](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) [Redistribution audit](docs/validation/jz47xx-v0.1.0-release-rights.md#fmsx-redistribution-and-fm-audio)
+- **fMSX** is excluded from this release candidate. The default MSX route is blueMSX.
 - **PicoDrive** contains non-commercial material. Its `COPYING` requires notices and source for modified redistributions. This applies to the standalone and Libretro builds in this image. [PicoDrive upstream license](https://github.com/irixxxx/picodrive/blob/master/COPYING)
 - **Snes9x 2005, Snes9x 2005 Plus and ChimeraSNES** contain Snes9x code with non-commercial conditions. See the respective `copyright` or `LICENSES` files for the per-file terms and the conditions on binary redistribution. [Snes9x 2005 copyright](https://github.com/libretro/snes9x2005/blob/master/copyright)
 - **Temper** is excluded from this release candidate. The default PC Engine route is Beetle PCE Fast. [Historical redistribution audit](docs/validation/jz47xx-v0.1.0-release-rights.md#temper-redistribution)

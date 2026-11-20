@@ -38,7 +38,6 @@ SD2は任意のデータカードです。先頭パーティションにFAT32を
 | エミュレーター | ファイルと配置先 |
 | --- | --- |
 | PCSX4ALL | `bios/scph1001.bin`、またはエミュレーターで選んだBIOS名。 |
-| fMSX | `MSX.ROM`、`MSX2.ROM`、`MSX2EXT.ROM` など、fMSXが参照するシステムROMを `bios/` 直下に置きます。 |
 | blueMSX | 元のMSX機種プロファイルを使うには `Machines/` と `Databases/` の一式を `bios/` に置きます。同梱のC-BIOSはカートリッジゲーム用です。 |
 | Atari800 | 標準では内蔵のAltirraファームウェアを使います。オリジナルのROMを使う場合は `bios/opk/atari800/` に `5200.rom`、`ataribas.rom`、`atariosb.rom`、`atarixl.rom` を必要に応じて置きます。 |
 | Unreal Speccy | `bios/opk/unrealspeccy/` に `sos128_0.rom`、`sos128_1.rom`、`sos48.rom`、`service.rom`、`dos513f.rom` を置きます。各ファイルは16 KiBです。 |

@@ -8,7 +8,7 @@
 - **B** は `plumOS-JZ47xx-v0.1.0-source-followup.tar.gz`。PokeMini本体・minizipのソース、FCEUX 2.2.3候補のソースとビルド手順、OPK内ライブラリの照合を収録しています。
 - どちらも公開準備中の確認用アーカイブです。上流のリンクは元のコードを指し、plumOSの改変を含むスナップショットはアーカイブ内にあります。候補・参考と記載した行は同梱版の対応ソースが未確定です。
 
-**fMSXとFBA44は非商用と表示し、v0.1.0の配布候補に維持します。** fMSXは著作者を明記し、FBA44はライセンス全文と変更ソースを用意します。個別条件の確認状況は[再配布監査](../validation/jz47xx-v0.1.0-release-rights.ja.md)に記録しています。
+**FBA44は非商用で、v0.1.0の配布候補に維持します。** ライセンス全文と変更ソースを用意します。TemperとfMSXは旧候補のみです。
 
 ## 単体エミュレーター
 
@@ -40,7 +40,7 @@
 | blueMSX (`bluemsx`) | [BSD系／GPL／フリーウェア](https://github.com/libretro/blueMSX-libretro/blob/acf358be18644a9df0ed9602d63c2f73d4fe605a/license.txt) | [`acf358be1864`](https://github.com/libretro/blueMSX-libretro/tree/acf358be18644a9df0ed9602d63c2f73d4fe605a) | ビルド成果物一致<br>A `runtime-sources/libretro-bluemsx` |
 | ChimeraSNES (`chimerasnes`) | [非商用（Snes9x）／複数条件](https://github.com/jamsilva/chimerasnes/blob/0542329f32ab524ce8606c2c859bcd49905a3c98/LICENSES) | [`0542329f32ab`](https://github.com/jamsilva/chimerasnes/tree/0542329f32ab524ce8606c2c859bcd49905a3c98) | ビルド成果物一致<br>A `runtime-sources/libretro-chimerasnes` |
 | FCEUmm (`fceumm`) | [GPLv2](https://github.com/libretro/libretro-fceumm/blob/3f23e2b98f883be9c62a3fdb65c015d376dcd135/Copying) | [`3f23e2b98f88`](https://github.com/libretro/libretro-fceumm/tree/3f23e2b98f883be9c62a3fdb65c015d376dcd135) | ビルド成果物一致<br>A `runtime-sources/libretro-fceumm` |
-| fMSX (`fmsx`) | [非商用（fMSX）](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) | 同梱版はビルド一致。Nuked-OPLLを含む。 [再配布監査](../validation/jz47xx-v0.1.0-release-rights.ja.md#fmsx-の再配布条件とfm音源) |
+| fMSX（旧候補のみ） | [非商用（fMSX）](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) | 旧候補の対応ソースは監査用に保管中。 [再配布監査](../validation/jz47xx-v0.1.0-release-rights.ja.md#fmsx-の再配布条件とfm音源) |
 | Gambatte (`gambatte`) | [GPLv2](https://github.com/libretro/gambatte-libretro/blob/90701d6e5d68d31ead49f92f222c144c44a2645c/COPYING) | [`90701d6e5d68`](https://github.com/libretro/gambatte-libretro/tree/90701d6e5d68d31ead49f92f222c144c44a2645c) | ビルド成果物一致<br>A `runtime-sources/libretro-gambatte` |
 | Gearboy (`gearboy`) | [GPLv3](https://github.com/drhelius/Gearboy/blob/8762faf754a84891078d4b2597c557a828631c9e/LICENSE) | [`8762faf754a8`](https://github.com/drhelius/Gearboy/tree/8762faf754a84891078d4b2597c557a828631c9e) | ビルド成果物一致<br>A `runtime-sources/libretro-gearboy` |
 | Gearsystem (`gearsystem`) | [GPLv3](https://github.com/drhelius/Gearsystem/blob/5d6fedacb3ef2a9481fa52aac67fefb47aaf72c0/LICENSE) | [`5d6fedacb3ef`](https://github.com/drhelius/Gearsystem/tree/5d6fedacb3ef2a9481fa52aac67fefb47aaf72c0) | ビルド成果物一致<br>A `runtime-sources/libretro-gearsystem` |

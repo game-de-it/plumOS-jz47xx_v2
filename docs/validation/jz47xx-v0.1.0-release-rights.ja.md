@@ -187,7 +187,7 @@ bubble2k16のTemperPCE for 3DSは、ExophaseのTemperを移植し、作者を明
 
 検証済みIMGのfMSXコアは、非商用の独自条件が付くfMSX本体と、GPL-2.0-or-laterのNuked-OPLLを静的にリンクしている。fMSX標準のFM音源が既定値でも、同梱ELFにはNuked-OPLLのコードが含まれる。両者を組み合わせて配布できる例外許諾は確認できていない。 [fMSXの原文](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/LICENSE) [Nuked-OPLLの原文](https://github.com/libretro/fmsx-libretro/blob/4de11755ce4f196ac1c8a7bb20bb4eccbc87a7d4/NukeYKT/opll.c)
 
-同じ上流リビジョンからfMSX標準のFM音源だけを使う試験版を作成した。MIPS用の旧ステート形式にあるNuked-OPLL用の領域はサイズと位置を維持する。旧版でNuked-OPLLを選んでいた場合、その音源内部の状態は引き継げない。ソースアーカイブを展開して再ビルドし、試験版ELFとのバイト一致を確認した。試験版ELFのSHA-256は `ccee613e443bf755159ef3240cf0f4da4cee6401be7af0246508d044fb13b451`。 [試験版パッチ](../../patches/rg280v-fmsx-native-opll.patch)
+同じ上流リビジョンからfMSX標準のFM音源だけを使う試験版を作成した。MIPS用の旧ステート形式にあるNuked-OPLL用の領域はサイズと位置を維持する。旧版でNuked-OPLLを選んでいた場合、その音源内部の状態は引き継げない。ソースアーカイブを展開して再ビルドし、試験版ELFとのバイト一致を確認した。試験版ELFのSHA-256は `ccee613e443bf755159ef3240cf0f4da4cee6401be7af0246508d044fb13b451`。
 
 RG350MでADBを使い、既存のFE → MSX → PicoArch fMSX経路から試験版でUSASを起動した。旧コアで作成したステートのスロット0を試験版で読み込み、タイトル画面とゲーム内画面を取得した。メニューのExitでFEに戻り、ALSA再生デバイスが開くことを確認した。スピーカーの音とFM音源対応タイトルでの発音は未確認。試験後に元のコアとFE設定に戻し、試験前のSHA-256と一致することを確認した。
 

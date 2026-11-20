@@ -1169,10 +1169,9 @@
         ]
       },
       "launch_profiles": [
-        "picoarch:fmsx",
         "picoarch:bluemsx"
       ],
-      "default_launch_profile": "picoarch:fmsx",
+      "default_launch_profile": "picoarch:bluemsx",
       "default_cpu_policy": "ondemand",
       "scraper": {
         "enabled": true,

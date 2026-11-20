@@ -16,7 +16,7 @@ FRONTEND = Path("output/rg280v-fe")
 CORES = (
     "fceumm nestopia quicknes snes9x2005 chimerasnes snes9x2005_plus "
     "gambatte gearboy vbam picodrive gearsystem mednafen_pce_fast "
-    "mednafen_supergrafx mednafen_wswan fmsx bluemsx mednafen_ngp"
+    "mednafen_supergrafx mednafen_wswan bluemsx mednafen_ngp"
 ).split()
 STANDALONE = {
     "fceux": "fceux_gcw0-2.6.6-2023-08-30.opk",
